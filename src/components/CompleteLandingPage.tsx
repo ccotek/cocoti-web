@@ -1,0 +1,221 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+
+// Import des traductions
+import frMessages from "@/i18n/messages/fr.json";
+import enMessages from "@/i18n/messages/en.json";
+
+// Import des sections
+import HeaderSection from "./sections/HeaderSection";
+import HeroSection from "./sections/HeroSection";
+import SolutionsSection from "./sections/SolutionsSection";
+import HowSection from "./sections/HowSection";
+import WhySection from "./sections/WhySection";
+import PricingSection from "./sections/PricingSection";
+import TestimonialsSection from "./sections/TestimonialsSection";
+import FaqSection from "./sections/FaqSection";
+import ContactSection from "./sections/ContactSection";
+import FooterSection from "./sections/FooterSection";
+import AuthModal from "./modals/AuthModal";
+
+export default function CompleteLandingPage() {
+  const pathname = usePathname();
+  const [locale, setLocale] = useState<'fr' | 'en'>('fr');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  useEffect(() => {
+    // Détecter la locale basée sur l'URL
+    if (pathname.startsWith('/en')) {
+      setLocale('en');
+    } else {
+      setLocale('fr');
+    }
+  }, [pathname]);
+
+  const messages = locale === 'fr' ? frMessages : enMessages;
+  const t = (key: string) => {
+    const keys = key.split('.');
+    let value: any = messages;
+    for (const k of keys) {
+      value = value?.[k];
+    }
+    return value || key;
+  };
+
+  const handleLocaleChange = (targetLocale: 'fr' | 'en') => {
+    const newPath = pathname.replace(/^\/(fr|en)/, `/${targetLocale}`);
+    window.location.href = newPath;
+  };
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleLoginClick = () => {
+    setIsAuthModalOpen(true);
+  };
+
+  const handleCloseAuthModal = () => {
+    setIsAuthModalOpen(false);
+  };
+
+  // Extraire les données des traductions
+  const navItems = t("navigation.items") as Array<{ id: string; label: string }>;
+  const navCta = t("navigation.cta");
+  
+  const hero = {
+    badge: t("hero.badge"),
+    title: t("hero.title"),
+    subtitle: t("hero.subtitle"),
+    download: t("hero.download"),
+    viewDashboard: t("hero.viewDashboard"),
+    viewDashboardLink: t("hero.viewDashboardLink"),
+    apps: t("hero.apps") as Array<{ store: string; label: string; href: string }>,
+    stats: t("hero.stats") as Array<{ value: string; label: string }>,
+    mockupAlt: t("hero.mockupAlt")
+  };
+
+  const solutions = {
+    title: t("solutions.title"),
+    subtitle: t("solutions.subtitle"),
+    items: t("solutions.items") as Array<{ id: string; title: string; description: string }>
+  };
+
+  const how = {
+    title: t("how.title"),
+    steps: t("how.steps") as Array<{ title: string; description: string }>
+  };
+
+  const why = {
+    title: t("why.title"),
+    subtitle: t("why.subtitle"),
+    values: t("why.values") as Array<{ title: string; description: string }>
+  };
+
+  const pricing = {
+    title: t("pricing.title"),
+    plans: t("pricing.plans") as Array<{
+      name: string;
+      price: string;
+      period: string;
+      description: string;
+      features: string[];
+      cta: string;
+      highlight?: boolean;
+    }>
+  };
+
+  const testimonials = {
+    title: t("testimonials.title"),
+    subtitle: t("testimonials.subtitle"),
+    items: t("testimonials.items") as Array<{
+      name: string;
+      role: string;
+      quote: string;
+      avatar: string;
+    }>
+  };
+
+  const faq = {
+    title: t("faq.title"),
+    items: t("faq.items") as Array<{ question: string; answer: string }>
+  };
+
+  const contact = {
+    title: t("contact.title"),
+    description: t("contact.description"),
+    button: t("contact.button"),
+    whatsapp: t("contact.whatsapp"),
+    whatsappLink: t("contact.whatsappLink")
+  };
+
+  const footer = {
+    links: t("footer.links") as Array<{ label: string; href: string }>,
+    socials: t("footer.socials") as Array<{ label: string; href: string }>,
+    company: t("footer.company")
+  };
+
+  return (
+    <div className="bg-sand text-night">
+      <HeaderSection
+        navItems={navItems}
+        navCta={navCta}
+        locale={locale}
+        onLocaleChange={handleLocaleChange}
+        onLoginClick={handleLoginClick}
+      />
+
+      <main>
+        <HeroSection hero={hero} />
+        <SolutionsSection solutions={solutions} />
+        <HowSection how={how} />
+        <WhySection why={why} />
+        <PricingSection pricing={pricing} />
+        <TestimonialsSection testimonials={testimonials} />
+        <FaqSection faq={faq} />
+        <ContactSection contact={contact} onOpenModal={handleOpenModal} />
+      </main>
+
+      <FooterSection footer={footer} />
+
+      {/* Modal d'authentification */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={handleCloseAuthModal}
+        locale={locale}
+      />
+
+      {/* Modal de contact - version simplifiée pour l'instant */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-night/50 p-4 backdrop-blur">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-2xl font-semibold text-night">Contactez-nous</h3>
+                <p className="mt-2 text-sm text-ink-muted">
+                  Parlez-nous de votre communauté et de vos projets, nous vous répondons sous 24h.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="rounded-full border border-cloud p-2"
+                aria-label="Fermer"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="mt-6 text-center">
+              <p className="text-sm text-ink-muted">
+                Pour l'instant, contactez-nous directement par email ou WhatsApp.
+              </p>
+              <div className="mt-4 flex gap-4">
+                <a
+                  href="mailto:hello@cocoti.africa"
+                  className="rounded-full bg-magenta px-6 py-3 text-sm font-semibold text-white"
+                >
+                  Envoyer un email
+                </a>
+                <a
+                  href="https://wa.me/221771234567"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-magenta px-6 py-3 text-sm font-semibold text-magenta"
+                >
+                  WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

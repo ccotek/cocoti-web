@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   description: "Cocoti est la plateforme moderne pour gérer tontines digitales, cagnottes solidaires et projets collectifs en toute confiance."
 };
 
-export default function RootLayout({
+export default function FrenchLayout({
   children,
 }: {
   children: React.ReactNode;

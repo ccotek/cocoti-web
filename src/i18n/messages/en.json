@@ -1,0 +1,225 @@
+{
+  "meta": {
+    "title": "Cocoti – Reinventing tontines and collective projects",
+    "description": "Cocoti makes it simple to run digital tontines, solidarity funds and collective projects with a smooth, secure experience."
+  },
+  "navigation": {
+    "cta": "Download the app",
+    "items": [
+      { "id": "solutions", "label": "Solutions" },
+      { "id": "how", "label": "How it works" },
+      { "id": "pricing", "label": "Pricing" },
+      { "id": "faq", "label": "FAQ" },
+      { "id": "contact", "label": "Contact" }
+    ]
+  },
+  "language": {
+    "label": "Language",
+    "switchTo": {
+      "fr": "Passer en français",
+      "en": "Switch to English"
+    }
+  },
+  "hero": {
+    "badge": "The app digitizing African solidarity",
+    "title": "Reinventing tontines and collective projects.",
+    "subtitle": "With Cocoti, manage your tontines, group savings, and community projects effortlessly. Invite your crew, automate contributions, and track progress in real time.",
+    "download": "Download the app",
+    "viewDashboard": "View the dashboard",
+    "viewDashboardLink": "https://app.cocoti.com",
+    "apps": [
+      { "store": "App Store", "label": "Coming soon", "href": "https://apps.apple.com/" },
+      { "store": "Google Play", "label": "Coming soon", "href": "https://play.google.com/store" }
+    ],
+    "stats": [
+      { "value": "12K+", "label": "Members onboarded" },
+      { "value": "€3.5M", "label": "Collected through Cocoti" },
+      { "value": "15", "label": "Countries connected" }
+    ],
+    "mockupAlt": "Preview of the Cocoti mobile application"
+  },
+  "solutions": {
+    "title": "One app, all your collective solutions.",
+    "subtitle": "Bring every tontine and community project together in a secure, real-time workspace.",
+    "items": [
+      {
+        "id": "tontines",
+        "title": "Digital tontines",
+        "description": "Schedule rounds, automate reminders and payouts, monitor the cash stack minute by minute."
+      },
+      {
+        "id": "cagnottes",
+        "title": "Solidarity funds",
+        "description": "Launch contribution drives for family, associations or special events with full transparency."
+      },
+      {
+        "id": "crowdfunding",
+        "title": "Crowdfunding",
+        "description": "Finance your community initiatives with dynamic campaigns and trusted allies."
+      },
+      {
+        "id": "group-buys",
+        "title": "Group purchases & installments",
+        "description": "Negotiate better deals and spread payments smoothly for every collective buy."
+      }
+    ]
+  },
+  "how": {
+    "title": "Get started in 3 steps.",
+    "steps": [
+      {
+        "title": "Create or join",
+        "description": "Invite your people or explore public tontines tailored to your goals."
+      },
+      {
+        "title": "Contribute easily",
+        "description": "Schedule payments, receive smart reminders and pay in one tap."
+      },
+      {
+        "title": "Track & withdraw",
+        "description": "Visualize the cashflow, secure withdrawals and get automatic receipts."
+      }
+    ]
+  },
+  "why": {
+    "title": "Why choose us?",
+    "subtitle": "Designed for the diaspora and African communities everywhere.",
+    "values": [
+      {
+        "title": "Low fees",
+        "description": "Transparent pricing aligned with your community goals."
+      },
+      {
+        "title": "Bank-grade security",
+        "description": "End-to-end encryption, multi-factor approvals and a digital vault."
+      },
+      {
+        "title": "Full transparency",
+        "description": "Detailed history, traceable flows and visibility for every member."
+      },
+      {
+        "title": "Diaspora-ready",
+        "description": "Multi-currency, multiple payment methods and 24/7 support from Dakar to Paris."
+      }
+    ]
+  },
+  "pricing": {
+    "title": "Pricing built for growth.",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "$0",
+        "period": "to get started",
+        "description": "Perfect to launch your first private tontines.",
+        "features": [
+          "Unlimited private groups",
+          "Secure payments",
+          "Automated reminders",
+          "Community support"
+        ],
+        "cta": "Create a free account"
+      },
+      {
+        "name": "Premium",
+        "price": "$15",
+        "period": "per month",
+        "description": "Unlock advanced tools to scale and shine.",
+        "features": [
+          "Full analytics dashboard",
+          "Public tontines & showcases",
+          "Advanced automation",
+          "Priority support + Success manager"
+        ],
+        "cta": "Start 14-day trial",
+        "highlight": true
+      }
+    ]
+  },
+  "testimonials": {
+    "title": "Communities thriving with Cocoti.",
+    "subtitle": "From Dakar to Paris to Montreal.",
+    "items": [
+      {
+        "name": "Aminata Diop",
+        "role": "Founder, Tontine Mame Diarra",
+        "quote": "We digitized a 120-member tontine without losing our family spirit. Cocoti saves us so much time.",
+        "avatar": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80"
+      },
+      {
+        "name": "Youssou Ndoye",
+        "role": "Cooperative Diaspora Growth",
+        "quote": "Our fundraising campaigns are smooth and transparent. Members abroad follow everything live.",
+        "avatar": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=200&q=80"
+      },
+      {
+        "name": "Fatoumata Barry",
+        "role": "Association Women Solidaires Paris",
+        "quote": "Managing contributions and receipts has never been easier. The support team is outstanding.",
+        "avatar": "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=200&q=80"
+      }
+    ]
+  },
+  "faq": {
+    "title": "Frequently asked questions.",
+    "items": [
+      {
+        "question": "How does Cocoti keep my tontines secure?",
+        "answer": "We rely on bank-grade encryption, multi-factor approvals and access monitoring to protect every transaction."
+      },
+      {
+        "question": "What fees should I expect?",
+        "answer": "Private tontines stay free. Advanced features (public tontines, automation) live in Premium starting at $15 per month."
+      },
+      {
+        "question": "Is it built for the diaspora?",
+        "answer": "Absolutely. Cocoti supports multiple currencies and payment methods while optimizing transfer rates across Europe, the US and Africa."
+      },
+      {
+        "question": "Can I try it before subscribing?",
+        "answer": "Yes, enjoy a 14-day free trial on the Premium plan to explore every capability."
+      },
+      {
+        "question": "How can I reach support?",
+        "answer": "Chat with us in-app, send an email or use WhatsApp Business 7 days a week. Premium groups also get a dedicated Success Manager."
+      }
+    ]
+  },
+  "contact": {
+    "title": "Ready to activate your community?",
+    "description": "Book a tailored walkthrough or drop us a quick message.",
+    "button": "Contact us",
+    "whatsapp": "Continue on WhatsApp",
+    "whatsappLink": "https://wa.me/221771234567",
+    "modal": {
+      "title": "Send us a message",
+      "subtitle": "Tell us about your community and goals, we reply within 24 hours.",
+      "name": "Full name",
+      "email": "Email",
+      "message": "Your message",
+      "submit": "Send message",
+      "success": "Thank you! We will get back to you shortly.",
+      "error": "Something went wrong. Please try again in a moment."
+    }
+  },
+  "finalCta": {
+    "title": "Join the new generation of tontines and collective projects.",
+    "subtitle": "Energize your community, streamline your finances, amplify solidarity.",
+    "primary": "Download the app",
+    "secondary": "Create a free account"
+  },
+  "footer": {
+    "links": [
+      { "label": "Solutions", "href": "#solutions" },
+      { "label": "Pricing", "href": "#pricing" },
+      { "label": "Support", "href": "#faq" },
+      { "label": "Terms", "href": "#" }
+    ],
+    "socials": [
+      { "label": "Facebook", "href": "https://facebook.com" },
+      { "label": "Instagram", "href": "https://instagram.com" },
+      { "label": "LinkedIn", "href": "https://linkedin.com" },
+      { "label": "X", "href": "https://twitter.com" }
+    ],
+    "company": "Developed between Dakar and Paris to digitize African solidarity."
+  }
+}
