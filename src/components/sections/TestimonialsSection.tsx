@@ -26,14 +26,21 @@ type TestimonialsSectionProps = {
 
 export default function TestimonialsSection({ testimonials }: TestimonialsSectionProps) {
   const [index, setIndex] = useState(0);
-  const items = testimonials.items;
+  const items = Array.isArray(testimonials.items) ? testimonials.items : [];
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % items.length);
-    }, 6000);
-    return () => clearInterval(interval);
+    if (items.length > 0) {
+      const interval = setInterval(() => {
+        setIndex((prev) => (prev + 1) % items.length);
+      }, 6000);
+      return () => clearInterval(interval);
+    }
   }, [items.length]);
+
+  // Ne pas rendre si pas de données
+  if (items.length === 0) {
+    return null;
+  }
 
   return (
     <section id="testimonials" className="section-padding">
@@ -67,18 +74,18 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
             >
               <div className="flex items-center gap-4">
                 <Image
-                  src={items[index].avatar}
-                  alt={items[index].name}
+                  src={items[index]?.avatar || '/placeholder-avatar.jpg'}
+                  alt={items[index]?.name || 'Utilisateur'}
                   width={64}
                   height={64}
                   className="h-16 w-16 rounded-full object-cover"
                 />
                 <div>
-                  <p className="text-lg font-semibold text-night">{items[index].name}</p>
-                  <p className="text-sm text-ink-muted">{items[index].role}</p>
+                  <p className="text-lg font-semibold text-night">{items[index]?.name || 'Utilisateur'}</p>
+                  <p className="text-sm text-ink-muted">{items[index]?.role || 'Client'}</p>
                 </div>
               </div>
-              <p className="mt-6 text-base italic text-night">"{items[index].quote}"</p>
+              <p className="mt-6 text-base italic text-night">"{items[index]?.quote || 'Témoignage par défaut'}"</p>
             </motion.div>
           </AnimatePresence>
         </div>

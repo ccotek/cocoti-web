@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Cog6ToothIcon,
@@ -16,7 +16,10 @@ import {
   ArrowRightOnRectangleIcon
 } from "@heroicons/react/24/outline";
 import GenericSectionForm from "./forms/GenericSectionForm";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
+import FooterEditor from "./FooterEditor";
+import { useAdminAuthContext } from "@/contexts/AdminAuthContext";
+import { useContent } from "@/hooks/useContent";
+import Notification from "../Notification";
 
 type AdminSection = {
   id: string;
@@ -26,62 +29,171 @@ type AdminSection = {
   color: string;
 };
 
-const adminSections: AdminSection[] = [
+// Traductions pour l'interface admin
+const adminTranslations = {
+  fr: {
+    title: "Administration Cocoti",
+    subtitle: "Gérez le contenu de votre site",
+    sections: {
+      hero: {
+        title: "Section Hero",
+        description: "Gérer le titre principal, sous-titre et boutons d'action"
+      },
+      solutions: {
+        title: "Solutions",
+        description: "Modifier les solutions proposées (tontines, cagnottes, etc.)"
+      },
+      how: {
+        title: "Comment ça marche",
+        description: "Éditer les étapes du processus"
+      },
+      why: {
+        title: "Pourquoi nous choisir",
+        description: "Gérer les valeurs et avantages"
+      },
+      pricing: {
+        title: "Tarifs",
+        description: "Modifier les plans et prix"
+      },
+      testimonials: {
+        title: "Témoignages",
+        description: "Gérer les avis clients"
+      },
+      faq: {
+        title: "FAQ",
+        description: "Questions fréquentes"
+      },
+      contact: {
+        title: "Contact",
+        description: "Informations de contact"
+      },
+      footer: {
+        title: "Footer",
+        description: "Modifier les liens et informations du pied de page"
+      }
+    },
+    navigation: {
+      dashboard: "Tableau de bord",
+      edit: "Éditer",
+      back: "Retour au dashboard",
+      save: "Sauvegarder",
+      cancel: "Annuler"
+    }
+  },
+  en: {
+    title: "Cocoti Administration",
+    subtitle: "Manage your website content",
+    sections: {
+      hero: {
+        title: "Hero Section",
+        description: "Manage main title, subtitle and action buttons"
+      },
+      solutions: {
+        title: "Solutions",
+        description: "Edit proposed solutions (tontines, money pots, etc.)"
+      },
+      how: {
+        title: "How it works",
+        description: "Edit process steps"
+      },
+      why: {
+        title: "Why choose us",
+        description: "Edit values and benefits"
+      },
+      pricing: {
+        title: "Pricing",
+        description: "Manage plans and prices"
+      },
+      testimonials: {
+        title: "Testimonials",
+        description: "Edit customer reviews"
+      },
+      faq: {
+        title: "FAQ",
+        description: "Manage frequently asked questions"
+      },
+      contact: {
+        title: "Contact",
+        description: "Edit contact information"
+      },
+      footer: {
+        title: "Footer",
+        description: "Manage footer links and information"
+      }
+    },
+    navigation: {
+      dashboard: "Dashboard",
+      edit: "Edit",
+      back: "Back to dashboard",
+      save: "Save",
+      cancel: "Cancel"
+    }
+  }
+};
+
+const getAdminSections = (locale: string): AdminSection[] => [
   {
     id: "hero",
-    title: "Section Hero",
-    description: "Gérer le titre principal, sous-titre et boutons d'action",
+    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.hero.title || "Hero Section",
+    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.hero.description || "Manage main title, subtitle and action buttons",
     icon: DocumentTextIcon,
     color: "bg-blue-500"
   },
   {
     id: "solutions",
-    title: "Solutions",
-    description: "Modifier les solutions proposées (tontines, cagnottes, etc.)",
+    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.solutions.title || "Solutions",
+    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.solutions.description || "Edit proposed solutions",
     icon: Cog6ToothIcon,
     color: "bg-green-500"
   },
   {
     id: "how",
-    title: "Comment ça marche",
-    description: "Éditer les étapes du processus",
+    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.how.title || "How it works",
+    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.how.description || "Edit process steps",
     icon: UsersIcon,
     color: "bg-purple-500"
   },
   {
     id: "why",
-    title: "Pourquoi nous choisir",
-    description: "Gérer les valeurs et avantages",
+    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.why.title || "Why choose us",
+    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.why.description || "Edit values and benefits",
     icon: QuestionMarkCircleIcon,
     color: "bg-orange-500"
   },
   {
     id: "pricing",
-    title: "Tarifs",
-    description: "Modifier les plans et prix",
+    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.pricing.title || "Pricing",
+    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.pricing.description || "Manage plans and prices",
     icon: CurrencyDollarIcon,
     color: "bg-yellow-500"
   },
   {
     id: "testimonials",
-    title: "Témoignages",
-    description: "Gérer les avis clients",
+    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.testimonials.title || "Testimonials",
+    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.testimonials.description || "Edit customer reviews",
     icon: ChatBubbleLeftRightIcon,
     color: "bg-pink-500"
   },
   {
     id: "faq",
-    title: "FAQ",
-    description: "Questions fréquentes",
+    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.faq.title || "FAQ",
+    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.faq.description || "Manage frequently asked questions",
     icon: QuestionMarkCircleIcon,
     color: "bg-indigo-500"
   },
   {
     id: "contact",
-    title: "Contact",
-    description: "Informations de contact",
+    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.contact.title || "Contact",
+    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.contact.description || "Edit contact information",
     icon: EnvelopeIcon,
     color: "bg-red-500"
+  },
+  {
+    id: "footer",
+    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.footer.title || "Footer",
+    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.footer.description || "Manage footer links and information",
+    icon: DocumentTextIcon,
+    color: "bg-gray-500"
   }
 ];
 
@@ -89,7 +201,25 @@ export default function AdminDashboard() {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [locale, setLocale] = useState<'fr' | 'en'>('fr');
-  const { user, logout } = useAdminAuth();
+  
+  // Obtenir les sections traduites
+  const adminSections = getAdminSections(locale);
+  const t = adminTranslations[locale];
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const { user, logout } = useAdminAuthContext();
+  const { content, updateContent } = useContent(locale);
+
+  console.log('🔍 AdminDashboard: Re-render, notification:', notification);
+
+  // Gérer la notification avec un useEffect
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   const handleSectionClick = (sectionId: string) => {
     setSelectedSection(sectionId);
@@ -99,9 +229,22 @@ export default function AdminDashboard() {
     setSelectedSection(null);
   };
 
-  const handleSaveContent = (data: any) => {
-    console.log('Content saved:', data);
-    // Optionnel : afficher une notification de succès
+  const handleSaveContent = async (section: string, data: any) => {
+    console.log('🔍 AdminDashboard handleSaveContent: Début');
+    console.log('🔍 AdminDashboard handleSaveContent: Section:', section);
+    console.log('🔍 AdminDashboard handleSaveContent: Data:', data);
+    
+    try {
+      const result = await updateContent(section, data);
+      if (result.success) {
+        setNotification({ message: 'Contenu sauvegardé avec succès !', type: 'success' });
+      } else {
+        setNotification({ message: 'Erreur lors de la sauvegarde', type: 'error' });
+      }
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      setNotification({ message: 'Erreur lors de la sauvegarde', type: 'error' });
+    }
   };
 
   return (
@@ -201,8 +344,36 @@ export default function AdminDashboard() {
           {!selectedSection ? (
             <div>
               <div className="mb-8">
-                <h2 className="text-3xl font-bold text-night mb-2">Gestion du contenu</h2>
-                <p className="text-ink-muted">Modifiez le contenu de votre site Cocoti en temps réel</p>
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h2 className="text-3xl font-bold text-night mb-2">{t.title}</h2>
+                    <p className="text-ink-muted">{t.subtitle}</p>
+                  </div>
+                  
+                  {/* Sélecteur de langue */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setLocale('fr')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        locale === 'fr'
+                          ? 'bg-magenta text-white'
+                          : 'bg-ivory text-ink-muted hover:bg-cloud'
+                      }`}
+                    >
+                      🇫🇷 FR
+                    </button>
+                    <button
+                      onClick={() => setLocale('en')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        locale === 'en'
+                          ? 'bg-magenta text-white'
+                          : 'bg-ivory text-ink-muted hover:bg-cloud'
+                      }`}
+                    >
+                      🇬🇧 EN
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -238,26 +409,35 @@ export default function AdminDashboard() {
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                Retour au dashboard
+{t.navigation.back}
               </button>
 
               <div className="bg-white rounded-2xl shadow-sm border border-cloud p-6">
                 <h3 className="text-xl font-semibold text-night mb-4">
-                  Éditer : {adminSections.find(s => s.id === selectedSection)?.title}
+                  {t.navigation.edit} : {adminSections.find(s => s.id === selectedSection)?.title}
                 </h3>
                 <p className="text-ink-muted mb-6">
                   {adminSections.find(s => s.id === selectedSection)?.description}
                 </p>
                 
-                {/* Formulaire d'édition générique */}
-                <GenericSectionForm
-                  section={selectedSection}
-                  sectionTitle={adminSections.find(s => s.id === selectedSection)?.title || ''}
-                  sectionDescription={adminSections.find(s => s.id === selectedSection)?.description || ''}
-                  onSave={handleSaveContent}
-                  onCancel={handleBackToDashboard}
-                  locale={locale}
-                />
+                {/* Formulaire d'édition spécialisé pour le footer */}
+                {selectedSection === 'footer' ? (
+                  <FooterEditor
+                    footer={content?.footer || { company: '', legalLinks: [], socialLinks: [], quickLinks: [] }}
+                    onUpdate={(data) => handleSaveContent('footer', data)}
+                    locale={locale}
+                  />
+                ) : (
+                  /* Formulaire d'édition générique */
+                  <GenericSectionForm
+                    section={selectedSection}
+                    sectionTitle={adminSections.find(s => s.id === selectedSection)?.title || ''}
+                    sectionDescription={adminSections.find(s => s.id === selectedSection)?.description || ''}
+                    onSave={(data) => handleSaveContent(selectedSection!, data)}
+                    onCancel={handleBackToDashboard}
+                    locale={locale}
+                  />
+                )}
               </div>
             </div>
           )}
@@ -269,6 +449,15 @@ export default function AdminDashboard() {
         <div
           className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
           onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Notification */}
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
         />
       )}
     </div>

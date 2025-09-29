@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
 
 export const metadata: Metadata = {
   title: "Admin - Cocoti",
@@ -11,8 +12,10 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-sand text-night">
-      {children}
-    </div>
+    <AdminAuthProvider>
+      <div className="min-h-screen bg-sand text-night">
+        {children}
+      </div>
+    </AdminAuthProvider>
   );
 }

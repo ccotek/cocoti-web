@@ -1,5 +1,5 @@
 // Service d'authentification admin avec l'API réelle
-import { API_CONFIG, API_ENDPOINTS } from '@/config/api';
+import { ADMIN_API_CONFIG, ADMIN_API_ENDPOINTS } from '@/config/adminApi';
 
 export interface AdminLoginRequest {
   email: string;
@@ -32,12 +32,13 @@ class AdminAuthService {
 
   async login(credentials: AdminLoginRequest): Promise<AdminLoginResponse> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.LOGIN}`, {
+      const response = await fetch(`${ADMIN_API_CONFIG.BASE_URL}${ADMIN_API_ENDPOINTS.AUTH.LOGIN}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(credentials),
+        credentials: 'include', // Inclure les cookies
       });
 
       if (!response.ok) {
@@ -47,10 +48,19 @@ class AdminAuthService {
 
       const data: AdminLoginResponse = await response.json();
       
+      console.log('🔍 adminAuthService login: Données reçues:', data);
+      
+      // Calculer l'expiration nous-mêmes (24h à partir de maintenant)
+      const now = new Date();
+      const expiration = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 heures
+      
       // Stocker le token
       localStorage.setItem('admin_token', data.access_token);
       localStorage.setItem('admin_refresh_token', data.refresh_token);
-      localStorage.setItem('admin_expires_at', data.expires_at);
+      localStorage.setItem('admin_expires_at', expiration.toISOString());
+      
+      console.log('🔍 adminAuthService login: Token stocké:', data.access_token ? 'Oui' : 'Non');
+      console.log('🔍 adminAuthService login: Expiration calculée:', expiration.toISOString());
       
       return data;
     } catch (error) {
@@ -61,7 +71,7 @@ class AdminAuthService {
 
   async getCurrentAdmin(): Promise<AdminUser> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/admin/me`, {
+      const response = await fetch(`${ADMIN_API_CONFIG.BASE_URL}/admin/me`, {
         method: 'GET',
         headers: await this.getAuthHeaders(),
       });
@@ -90,7 +100,7 @@ class AdminAuthService {
         throw new Error('Aucun refresh token disponible');
       }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/refresh`, {
+      const response = await fetch(`${ADMIN_API_CONFIG.BASE_URL}/auth/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -128,15 +138,39 @@ class AdminAuthService {
     const token = localStorage.getItem('admin_token');
     const expiresAt = localStorage.getItem('admin_expires_at');
     
+    console.log('🔍 adminAuthService isAuthenticated: Token:', token ? 'Présent' : 'Absent');
+    console.log('🔍 adminAuthService isAuthenticated: ExpiresAt:', expiresAt);
+    
     if (!token || !expiresAt) {
+      console.log('🔍 adminAuthService isAuthenticated: Token ou expiration manquant');
       return false;
     }
     
-    // Vérifier si le token est expiré
-    const now = new Date();
-    const expiration = new Date(expiresAt);
-    
-    return now < expiration;
+    try {
+      // Vérifier si le token est expiré
+      const now = new Date();
+      
+      // Nettoyer le format de date si nécessaire (enlever les microsecondes)
+      let cleanExpiresAt = expiresAt;
+      if (cleanExpiresAt.includes('.')) {
+        // Garder seulement les millisecondes, pas les microsecondes
+        cleanExpiresAt = cleanExpiresAt.split('.')[0] + 'Z';
+      }
+      
+      const expiration = new Date(cleanExpiresAt);
+      const isValid = now < expiration;
+      
+      console.log('🔍 adminAuthService isAuthenticated: Maintenant:', now.toISOString());
+      console.log('🔍 adminAuthService isAuthenticated: Expiration brute:', expiresAt);
+      console.log('🔍 adminAuthService isAuthenticated: Expiration nettoyée:', cleanExpiresAt);
+      console.log('🔍 adminAuthService isAuthenticated: Expiration parsée:', expiration.toISOString());
+      console.log('🔍 adminAuthService isAuthenticated: Valide:', isValid);
+      
+      return isValid;
+    } catch (error) {
+      console.error('🔍 adminAuthService isAuthenticated: Erreur de parsing de date:', error);
+      return false;
+    }
   }
 
   getToken(): string | null {

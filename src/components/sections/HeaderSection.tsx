@@ -35,7 +35,7 @@ export default function HeaderSection({ navItems, navCta, locale, onLocaleChange
           </a>
 
           <nav className="hidden items-center gap-8 text-sm md:flex">
-            {navItems.map((item) => (
+            {Array.isArray(navItems) && navItems.map((item) => (
               <a
                 key={item.id}
                 href={`#${item.id}`}

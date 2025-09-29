@@ -9,18 +9,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/fr', request.url));
   }
   
-  // Protection des routes admin
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-    // Vérifier si l'admin est activé
-    if (!isAdminEnabled()) {
-      return NextResponse.redirect(new URL('/fr', request.url));
-    }
-    
-    // Vérifier l'authentification
-    const token = request.cookies.get('admin_token')?.value;
-    if (!token) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
-    }
+  // Rediriger /admin vers l'accueil
+  if (pathname.startsWith('/admin')) {
+    return NextResponse.redirect(new URL('/fr', request.url));
+  }
+  
+  // Rediriger les routes inconnues vers l'accueil
+  if (!pathname.startsWith('/fr') && !pathname.startsWith('/en') && !pathname.startsWith('/cms') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/favicon') && !pathname.startsWith('/privacy-policy') && !pathname.startsWith('/terms-of-service') && !pathname.startsWith('/legal-notice')) {
+    return NextResponse.redirect(new URL('/fr', request.url));
   }
   
   // Pour toutes les autres routes, laisser passer
@@ -28,5 +24,15 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/fr/:path*', '/en/:path*', '/admin/:path*']
+  matcher: [
+    '/',
+    '/fr/:path*', 
+    '/en/:path*', 
+    '/admin/:path*',
+    '/cms/:path*',
+    '/privacy-policy',
+    '/terms-of-service',
+    '/legal-notice',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)'
+  ]
 };

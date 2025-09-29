@@ -22,10 +22,12 @@ type HeroSectionProps = {
     apps: Array<{ store: string; label: string; href: string }>;
     stats: Array<{ value: string; label: string }>;
     mockupAlt: string;
+    image?: string;
   };
 };
 
 export default function HeroSection({ hero }: HeroSectionProps) {
+  
   return (
     <section id="hero" className="relative overflow-hidden bg-ivory">
       <div className="absolute inset-0" aria-hidden>
@@ -84,14 +86,13 @@ export default function HeroSection({ hero }: HeroSectionProps) {
             animate={{ y: [0, -16, 0] }}
             transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
           >
-            <Image
-              src="https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=720&q=80"
-              alt={hero.mockupAlt}
-              width={360}
-              height={720}
-              priority
-              className="h-full w-full object-cover"
-            />
+                <img
+                  src={hero.image && hero.image.startsWith('http') ? hero.image : "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=720&q=80"}
+                  alt={hero.mockupAlt}
+                  width={360}
+                  height={720}
+                  className="h-full w-full object-cover"
+                />
           </motion.div>
         </motion.div>
       </div>

@@ -6,11 +6,26 @@
   "navigation": {
     "cta": "Télécharger l'app",
     "items": [
-      { "id": "solutions", "label": "Nos solutions" },
-      { "id": "how", "label": "Comment ça marche" },
-      { "id": "pricing", "label": "Tarifs" },
-      { "id": "faq", "label": "FAQ" },
-      { "id": "contact", "label": "Contact" }
+      {
+        "id": "solutions",
+        "label": "Nos solutions"
+      },
+      {
+        "id": "how",
+        "label": "Comment ça marche"
+      },
+      {
+        "id": "pricing",
+        "label": "Tarifs"
+      },
+      {
+        "id": "faq",
+        "label": "FAQ"
+      },
+      {
+        "id": "contact",
+        "label": "Contact"
+      }
     ]
   },
   "language": {
@@ -21,26 +36,44 @@
     }
   },
   "hero": {
-    "badge": "L'app qui digitalise la solidarité africaine",
-    "title": "Réinventons les tontines et projets collectifs.",
+    "badge": "L'app qui digitalise la solidarité humaine",
+    "title": "La finance collective, simple et transparente.",
     "subtitle": "Avec Cocoti, gérez vos tontines, cagnottes et projets en toute simplicité. Invitez votre communauté, automatisez les contributions et suivez vos progrès en temps réel.",
     "download": "Télécharger l'app",
-    "viewDashboard": "Voir le dashboard",
+    "viewDashboard": "Commencer maintenant",
     "viewDashboardLink": "https://app.cocoti.com",
     "apps": [
-      { "store": "App Store", "label": "Disponible bientôt", "href": "https://apps.apple.com/" },
-      { "store": "Google Play", "label": "Disponible bientôt", "href": "https://play.google.com/store" }
+      {
+        "store": "App Store",
+        "label": "Disponible bientôt",
+        "href": "https://apps.apple.com/"
+      },
+      {
+        "store": "Google Play",
+        "label": "Disponible bientôt",
+        "href": "https://play.google.com/store"
+      }
     ],
     "stats": [
-      { "value": "12K+", "label": "Membres accompagnés" },
-      { "value": "3,5M€", "label": "Collectés avec Cocoti" },
-      { "value": "15", "label": "Pays connectés" }
+      {
+        "value": "1K+",
+        "label": "Membres accompagnés"
+      },
+      {
+        "value": "500K+ FCFA",
+        "label": "Collectés avec Cocoti"
+      },
+      {
+        "value": "4",
+        "label": "Pays connectés"
+      }
     ],
-    "mockupAlt": "Aperçu de l'application mobile Cocoti"
+    "mockupAlt": "Aperçu de l'application mobile Cocoti",
+    "image": "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=720&q=80"
   },
   "solutions": {
     "title": "Une app, toutes vos solutions collectives.",
-    "subtitle": "Centralisez vos tontines et projets en un seul espace sécurisé et animé en temps réel.",
+    "subtitle": "Centralisez vos projets en un seul espace sécurisé et animé en temps réel.",
     "items": [
       {
         "id": "tontines",
@@ -137,7 +170,7 @@
   },
   "testimonials": {
     "title": "Ils font confiance à Cocoti.",
-    "subtitle": "Des communautés engagées entre Dakar, Paris et Montréal.",
+    "subtitle": "Des communautés engagées.",
     "items": [
       {
         "name": "Aminata Diop",
@@ -208,18 +241,57 @@
     "secondary": "Créer un compte gratuit"
   },
   "footer": {
-    "links": [
-      { "label": "Solutions", "href": "#solutions" },
-      { "label": "Tarifs", "href": "#pricing" },
-      { "label": "Support", "href": "#faq" },
-      { "label": "CGU", "href": "#" }
+    "company": "Développé entre Dakar et Paris pour digitaliser la solidarité humaine.",
+    "copyright": "Tous droits réservés.",
+    "legalLinks": [
+      {
+        "label": "Politique de confidentialité",
+        "href": "/fr/privacy-policy"
+      },
+      {
+        "label": "Conditions générales",
+        "href": "/fr/terms-of-service"
+      },
+      {
+        "label": "Mentions légales",
+        "href": "/fr/legal-notice"
+      }
     ],
-    "socials": [
-      { "label": "Facebook", "href": "https://facebook.com" },
-      { "label": "Instagram", "href": "https://instagram.com" },
-      { "label": "LinkedIn", "href": "https://linkedin.com" },
-      { "label": "X", "href": "https://twitter.com" }
+    "socialLinks": [
+      {
+        "label": "Facebook",
+        "href": "https://facebook.com/cocoti",
+        "icon": "📘"
+      },
+      {
+        "label": "Instagram",
+        "href": "https://instagram.com/cocoti",
+        "icon": "📷"
+      },
+      {
+        "label": "LinkedIn",
+        "href": "https://linkedin.com/company/cocoti",
+        "icon": "💼"
+      },
+      {
+        "label": "X",
+        "href": "https://twitter.com/cocoti",
+        "icon": "🐦"
+      }
     ],
-    "company": "Développé entre Dakar et Paris pour digitaliser la solidarité africaine."
+    "quickLinks": [
+      {
+        "label": "Solutions",
+        "href": "#solutions"
+      },
+      {
+        "label": "Tarifs",
+        "href": "#pricing"
+      },
+      {
+        "label": "Support",
+        "href": "#faq"
+      }
+    ]
   }
 }

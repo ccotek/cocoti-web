@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useContent } from "@/hooks/useContent";
 
-// Import des traductions
-import frMessages from "@/i18n/messages/fr.json";
-import enMessages from "@/i18n/messages/en.json";
+// Import de l'utilitaire de traduction
+import { translate } from "@/utils/translations";
 
 // Import des sections
 import HeaderSection from "./sections/HeaderSection";
@@ -26,6 +26,20 @@ export default function CompleteLandingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
+  // Utiliser le hook useContent pour charger depuis l'API
+  let content, loading, error;
+  try {
+    const result = useContent(locale);
+    content = result.content;
+    loading = result.loading;
+    error = result.error;
+  } catch (hookError) {
+    console.error('Erreur dans le hook useContent:', hookError);
+    content = null;
+    loading = false;
+    error = 'Erreur dans le hook useContent';
+  }
+
   useEffect(() => {
     // Détecter la locale basée sur l'URL
     if (pathname.startsWith('/en')) {
@@ -35,15 +49,8 @@ export default function CompleteLandingPage() {
     }
   }, [pathname]);
 
-  const messages = locale === 'fr' ? frMessages : enMessages;
-  const t = (key: string) => {
-    const keys = key.split('.');
-    let value: any = messages;
-    for (const k of keys) {
-      value = value?.[k];
-    }
-    return value || key;
-  };
+  // Fonction de traduction simplifiée
+  const t = (key: string) => translate(key, locale, content);
 
   const handleLocaleChange = (targetLocale: 'fr' | 'en') => {
     const newPath = pathname.replace(/^\/(fr|en)/, `/${targetLocale}`);
@@ -67,19 +74,28 @@ export default function CompleteLandingPage() {
   };
 
   // Extraire les données des traductions
-  const navItems = t("navigation.items") as Array<{ id: string; label: string }>;
+  const navItemsRaw = t("navigation.items");
+  const navItems = Array.isArray(navItemsRaw) ? navItemsRaw : [
+    { id: 'solutions', label: 'Solutions' },
+    { id: 'how', label: 'Comment ça marche' },
+    { id: 'why', label: 'Pourquoi nous' },
+    { id: 'pricing', label: 'Tarifs' },
+    { id: 'contact', label: 'Contact' }
+  ];
   const navCta = t("navigation.cta");
   
+  
   const hero = {
-    badge: t("hero.badge"),
-    title: t("hero.title"),
-    subtitle: t("hero.subtitle"),
-    download: t("hero.download"),
-    viewDashboard: t("hero.viewDashboard"),
-    viewDashboardLink: t("hero.viewDashboardLink"),
-    apps: t("hero.apps") as Array<{ store: string; label: string; href: string }>,
-    stats: t("hero.stats") as Array<{ value: string; label: string }>,
-    mockupAlt: t("hero.mockupAlt")
+    badge: content?.hero?.badge || t("hero.badge"),
+    title: content?.hero?.title || t("hero.title"),
+    subtitle: content?.hero?.subtitle || t("hero.subtitle"),
+    download: content?.hero?.download || t("hero.download"),
+    viewDashboard: content?.hero?.viewDashboard || t("hero.viewDashboard"),
+    viewDashboardLink: content?.hero?.viewDashboardLink || t("hero.viewDashboardLink"),
+    apps: content?.hero?.apps || t("hero.apps") as Array<{ store: string; label: string; href: string }>,
+    stats: content?.hero?.stats || t("hero.stats") as Array<{ value: string; label: string }>,
+    mockupAlt: content?.hero?.mockupAlt || t("hero.mockupAlt"),
+    image: content?.hero?.image || t("hero.image")
   };
 
   const solutions = {
@@ -115,12 +131,12 @@ export default function CompleteLandingPage() {
   const testimonials = {
     title: t("testimonials.title"),
     subtitle: t("testimonials.subtitle"),
-    items: t("testimonials.items") as Array<{
+    items: Array.isArray(t("testimonials.items")) ? t("testimonials.items") as Array<{
       name: string;
       role: string;
       quote: string;
       avatar: string;
-    }>
+    }> : []
   };
 
   const faq = {
@@ -137,10 +153,13 @@ export default function CompleteLandingPage() {
   };
 
   const footer = {
-    links: t("footer.links") as Array<{ label: string; href: string }>,
-    socials: t("footer.socials") as Array<{ label: string; href: string }>,
-    company: t("footer.company")
+    company: content?.footer?.company || t("footer.company"),
+    copyright: content?.footer?.copyright || t("footer.copyright"),
+    legalLinks: content?.footer?.legalLinks || t("footer.legalLinks") as Array<{ label: string; href: string }>,
+    socialLinks: content?.footer?.socialLinks || t("footer.socialLinks") as Array<{ label: string; href: string; icon?: string }>,
+    quickLinks: content?.footer?.quickLinks || t("footer.quickLinks") as Array<{ label: string; href: string }>
   };
+
 
   return (
     <div className="bg-sand text-night">

@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { EyeIcon, EyeSlashIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { useAdminAuthContext } from "@/contexts/AdminAuthContext";
 
-export default function AdminLoginPage() {
+export default function CmsLoginPage() {
   const [credentials, setCredentials] = useState({
     email: "",
     password: ""
@@ -26,7 +26,7 @@ export default function AdminLoginPage() {
       console.log('🔍 Login: Connexion réussie, redirection...');
       // Attendre un peu pour que le token soit stocké
       setTimeout(() => {
-        console.log('🔍 Login: Redirection vers /admin');
+        console.log('🔍 Login: Redirection vers /cms');
         router.push("/cms");
       }, 100);
     } else {
@@ -48,10 +48,10 @@ export default function AdminLoginPage() {
               <LockClosedIcon className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-night mb-2">
-              Connexion Admin
+              Connexion CMS
             </h1>
             <p className="text-ink-muted">
-              Accès réservé aux administrateurs
+              Accès au système de gestion de contenu
             </p>
           </div>
 

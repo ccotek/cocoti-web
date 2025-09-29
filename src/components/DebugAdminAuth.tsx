@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { adminAuthService } from "@/services/adminAuthService";
-import { API_CONFIG, API_ENDPOINTS } from "@/config/api";
+import { ADMIN_ADMIN_API_CONFIG } from "@/config/adminApi";
 
 export default function DebugAdminAuth() {
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
@@ -17,7 +17,7 @@ export default function DebugAdminAuth() {
     addDebugInfo("🔍 Test direct de l'API...");
     
     try {
-      const url = `${API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.LOGIN}`;
+      const url = `${ADMIN_API_CONFIG.BASE_URL}${API_ENDPOINTS.AUTH.LOGIN}`;
       addDebugInfo(`URL: ${url}`);
       
       const response = await fetch(url, {
@@ -38,7 +38,7 @@ export default function DebugAdminAuth() {
         addDebugInfo(`✅ Connexion réussie ! Token: ${data.access_token.substring(0, 20)}...`);
         
         // Test /admin/me
-        const meResponse = await fetch(`${API_CONFIG.BASE_URL}/admin/me`, {
+        const meResponse = await fetch(`${ADMIN_API_CONFIG.BASE_URL}/admin/me`, {
           headers: {
             'Authorization': `Bearer ${data.access_token}`,
           },
@@ -148,9 +148,9 @@ export default function DebugAdminAuth() {
       <div className="mb-4">
         <h3 className="text-lg font-semibold mb-2">Configuration:</h3>
         <div className="text-sm bg-gray-100 p-3 rounded">
-          <div>API_BASE_URL: {API_CONFIG.BASE_URL}</div>
+          <div>API_BASE_URL: {ADMIN_API_CONFIG.BASE_URL}</div>
           <div>AUTH_LOGIN: {API_ENDPOINTS.AUTH.LOGIN}</div>
-          <div>Full URL: {API_CONFIG.BASE_URL}{API_ENDPOINTS.AUTH.LOGIN}</div>
+          <div>Full URL: {ADMIN_API_CONFIG.BASE_URL}{API_ENDPOINTS.AUTH.LOGIN}</div>
         </div>
       </div>
 

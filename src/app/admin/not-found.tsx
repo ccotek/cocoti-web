@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export default function AdminPage() {
+export default function AdminNotFound() {
   const router = useRouter();
 
   useEffect(() => {

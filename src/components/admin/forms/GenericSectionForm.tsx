@@ -28,23 +28,40 @@ export default function GenericSectionForm({
 
   useEffect(() => {
     if (content && content[section]) {
-      setFormData(content[section]);
+      const sectionData = content[section];
+      // Pour la section hero, s'assurer que le champ image existe
+      if (section === 'hero') {
+        if (!sectionData.image) {
+          sectionData.image = 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=720&q=80';
+        }
+      }
+      setFormData(sectionData);
     }
   }, [content, section]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🔍 GenericSectionForm handleSubmit: Début');
+    console.log('🔍 GenericSectionForm: formData avant sauvegarde:', formData);
     setSaving(true);
     setError(null);
     
     try {
+      console.log('🔍 GenericSectionForm: Sauvegarde de la section:', section);
+      console.log('🔍 GenericSectionForm: Données à sauvegarder:', formData);
+      
       const result = await updateContent(section, formData);
+      console.log('🔍 GenericSectionForm: Résultat de la sauvegarde:', result);
+      
       if (result.success) {
+        console.log('🔍 GenericSectionForm: Sauvegarde réussie, appel de onSave');
         onSave(formData);
+        console.log('🔍 GenericSectionForm: onSave appelé');
       } else {
         setError(result.error || 'Erreur lors de la sauvegarde');
       }
     } catch (err) {
+      console.error('🔍 GenericSectionForm: Erreur lors de la sauvegarde:', err);
       setError('Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);
@@ -90,7 +107,64 @@ export default function GenericSectionForm({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             {key.charAt(0).toUpperCase() + key.slice(1)}
           </label>
-          {value.length > 100 ? (
+          {key === 'image' ? (
+            <div>
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/avif"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    try {
+                      console.log('🔍 Upload: Début de l\'upload du fichier:', file.name);
+                      const response = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData,
+                      });
+                      
+                      const result = await response.json();
+                      console.log('🔍 Upload: Résultat de l\'upload:', result);
+                      
+                      if (result.success) {
+                        console.log('🔍 Upload: URL générée:', result.url);
+                        handleFieldChange(key, result.url);
+                      } else {
+                        console.error('🔍 Upload: Échec de l\'upload:', result.error);
+                        alert('Erreur lors de l\'upload: ' + result.error);
+                      }
+                    } catch (error) {
+                      console.error('🔍 Upload: Erreur lors de l\'upload:', error);
+                      alert('Erreur lors de l\'upload: ' + error);
+                    }
+                  }
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-sm text-gray-500 mt-1">Ou entrez une URL :</p>
+              <input
+                type="url"
+                value={formData[key] || ''}
+                onChange={(e) => handleFieldChange(key, e.target.value)}
+                placeholder="https://example.com/image.jpg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
+              />
+              {formData[key] && (
+                <div className="mt-2">
+                  <img 
+                    src={formData[key]} 
+                    alt="Preview" 
+                    className="w-32 h-32 object-cover rounded border"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          ) : value.length > 100 ? (
             <textarea
               value={formData[key] || ''}
               onChange={(e) => handleFieldChange(key, e.target.value)}
@@ -222,6 +296,7 @@ export default function GenericSectionForm({
         {Object.entries(formData).map(([key, value]) => 
           renderField(key, value)
         )}
+        
 
         <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
           <button
