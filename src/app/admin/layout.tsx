@@ -3,7 +3,12 @@ import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
 
 export const metadata: Metadata = {
   title: "Admin - Cocoti",
-  description: "Gestion du contenu du site Cocoti"
+  description: "Gestion du contenu du site Cocoti",
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg'
+  }
 };
 
 export default function AdminLayout({

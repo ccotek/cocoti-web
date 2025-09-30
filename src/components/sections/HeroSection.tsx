@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { SparklesIcon, PhoneIcon } from "@heroicons/react/24/outline";
 
@@ -27,6 +28,25 @@ type HeroSectionProps = {
 };
 
 export default function HeroSection({ hero }: HeroSectionProps) {
+  // Images du carousel
+  const heroImages = [
+    "/hero1.png",
+    "/hero2.png", 
+    "/hero3.png"
+  ];
+  
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Auto-rotation des images
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => 
+        (prevIndex + 1) % heroImages.length
+      );
+    }, 5000); // Change d'image toutes les 5 secondes
+
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
   
   return (
     <section id="hero" className="relative overflow-hidden bg-ivory">
@@ -65,7 +85,7 @@ export default function HeroSection({ hero }: HeroSectionProps) {
             </a>
           </motion.div>
           <motion.div className="flex flex-col gap-3 text-sm text-ink-muted" {...fadeInUp} transition={{ delay: 0.3 }}>
-            {hero.apps.map((app) => (
+            {hero.apps && Array.isArray(hero.apps) && hero.apps.map((app) => (
               <div key={app.store} className="flex items-center gap-2">
                 <PhoneIcon className="h-4 w-4 text-magenta" />
                 <span className="font-semibold text-night">{app.store}</span>
@@ -86,13 +106,45 @@ export default function HeroSection({ hero }: HeroSectionProps) {
             animate={{ y: [0, -16, 0] }}
             transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
           >
-                <img
-                  src={hero.image && hero.image.startsWith('http') ? hero.image : "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=720&q=80"}
-                  alt={hero.mockupAlt}
-                  width={360}
-                  height={720}
-                  className="h-full w-full object-cover"
+            {/* Image avec animation fade + scale */}
+            <motion.div
+              key={currentImageIndex}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
+              className="relative"
+            >
+              <img
+                src={heroImages[currentImageIndex]}
+                alt={hero.mockupAlt}
+                width={360}
+                height={720}
+                className="h-full w-full object-cover"
+              />
+            </motion.div>
+            
+            {/* Indicateurs de pagination avec animation */}
+            <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+              {heroImages.map((_, index) => (
+                <motion.button
+                  key={index}
+                  onClick={() => setCurrentImageIndex(index)}
+                  className={`h-2 w-8 rounded-full transition-all duration-300 ${
+                    index === currentImageIndex 
+                      ? 'bg-white shadow-lg' 
+                      : 'bg-white/50 hover:bg-white/75'
+                  }`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  animate={{
+                    scale: index === currentImageIndex ? 1.1 : 1,
+                    opacity: index === currentImageIndex ? 1 : 0.6
+                  }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
                 />
+              ))}
+            </div>
           </motion.div>
         </motion.div>
       </div>
@@ -102,7 +154,7 @@ export default function HeroSection({ hero }: HeroSectionProps) {
         {...fadeInUp}
         transition={{ delay: 0.1 }}
       >
-        {hero.stats.map((stat) => (
+        {hero.stats && Array.isArray(hero.stats) && hero.stats.map((stat) => (
           <div key={stat.label} className="rounded-3xl border border-white bg-white/70 px-6 py-5 shadow-sm backdrop-blur">
             <span className="text-3xl font-bold text-magenta">{stat.value}</span>
             <p className="text-sm text-ink-muted">{stat.label}</p>

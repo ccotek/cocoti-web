@@ -44,18 +44,46 @@ export default function WhySection({ why }: WhySectionProps) {
           <p className="text-lg text-ink-muted">{why.subtitle}</p>
         </motion.div>
         <div className="grid gap-6 md:grid-cols-2">
-          {why.values.map((value, index) => {
+          {why.values && Array.isArray(why.values) && why.values.map((value, index) => {
             const Icon = valueIcons[index] ?? BanknotesIcon;
             return (
               <motion.div
                 key={value.title}
-                className="flex flex-col gap-4 rounded-3xl border border-cloud bg-white/80 p-8 shadow-sm"
+                className="group relative flex flex-col gap-4 rounded-3xl border border-cloud bg-white/90 p-8 shadow-lg backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-sunset/10"
                 {...scaleIn}
                 transition={{ delay: index * 0.1 }}
+                whileHover={{ 
+                  scale: 1.02,
+                  rotateY: 1,
+                  transition: { duration: 0.3 }
+                }}
+                animate={{ 
+                  y: [0, -1, 0],
+                  transition: { 
+                    duration: 4 + index * 0.5, 
+                    repeat: Infinity, 
+                    ease: "easeInOut" 
+                  }
+                }}
               >
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sunset/10 text-sunset">
+                <motion.div 
+                  className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sunset/20 to-magenta/20 text-sunset shadow-lg"
+                  whileHover={{ 
+                    scale: 1.1,
+                    rotate: 15,
+                    transition: { duration: 0.3 }
+                  }}
+                  animate={{ 
+                    rotate: [0, 1, -1, 0],
+                    transition: { 
+                      duration: 4 + index * 0.4, 
+                      repeat: Infinity, 
+                      ease: "easeInOut" 
+                    }
+                  }}
+                >
                   <Icon className="h-6 w-6" />
-                </div>
+                </motion.div>
                 <h3 className="text-xl font-semibold text-night">{value.title}</h3>
                 <p className="text-sm text-ink-muted">{value.description}</p>
               </motion.div>

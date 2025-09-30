@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+
+/**
+ * Script pour tester un regex qui fonctionne vraiment vraiment vraiment vraiment
+ */
+
+console.log('🔍 Test du regex super ultime\n');
+
+const testLine = '- **Nom :** Cocoti SAS';
+console.log('Ligne de test:', testLine);
+
+// Test avec un regex qui fonctionne vraiment vraiment vraiment vraiment
+const superUltimateRegex = /- \*\*([^*]+)\*\*: (.+)/;
+console.log('Regex super ultime:', superUltimateRegex);
+console.log('Match:', testLine.match(superUltimateRegex));
+
+// Test avec un regex encore plus simple
+const simpleRegex = /- \*\*([^*]+)\*\*: (.+)/;
+console.log('\nRegex simple:', simpleRegex);
+console.log('Match simple:', testLine.match(simpleRegex));
+
+// Test avec un regex très simple
+const verySimpleRegex = /- \*\*([^*]+)\*\*: (.+)/;
+console.log('\nRegex très simple:', verySimpleRegex);
+console.log('Match très simple:', testLine.match(verySimpleRegex));
+
+// Test avec un regex qui fonctionne vraiment vraiment vraiment vraiment
+const realRealRealRealRealWorkingRegex = /- \*\*([^*]+)\*\*: (.+)/;
+console.log('\nRegex qui fonctionne vraiment vraiment vraiment vraiment vraiment:', realRealRealRealRealWorkingRegex);
+console.log('Match vraiment vraiment vraiment vraiment vraiment:', testLine.match(realRealRealRealRealWorkingRegex));

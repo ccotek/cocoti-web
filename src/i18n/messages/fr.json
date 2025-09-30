@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Cocoti – Réinventons les tontines et projets collectifs",
+    "title": "Cocoti – L'app qui digitalise la solidarité humaine",
     "description": "Cocoti facilite la gestion de tontines digitales, cagnottes solidaires et projets collectifs avec une expérience fluide et sécurisée."
   },
   "navigation": {
@@ -21,10 +21,6 @@
       {
         "id": "faq",
         "label": "FAQ"
-      },
-      {
-        "id": "contact",
-        "label": "Contact"
       }
     ]
   },
@@ -34,6 +30,15 @@
       "fr": "Passer en français",
       "en": "Switch to English"
     }
+  },
+  "whatsapp": {
+    "defaultMessage": "Bonjour ! Je suis intéressé(e) par Cocoti. Pouvez-vous m'en dire plus ?",
+    "buttonTitle": "Contacter via WhatsApp"
+  },
+  "accessibility": {
+    "toggleMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "closeModal": "Fermer"
   },
   "hero": {
     "badge": "L'app qui digitalise la solidarité humaine",
@@ -69,7 +74,7 @@
       }
     ],
     "mockupAlt": "Aperçu de l'application mobile Cocoti",
-    "image": "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=720&q=80"
+    "image": "http://localhost:4000/uploads/1759181183245-hero.png"
   },
   "solutions": {
     "title": "Une app, toutes vos solutions collectives.",
@@ -119,19 +124,19 @@
     "subtitle": "Une expérience pensée pour la diaspora et les communautés africaines.",
     "values": [
       {
-        "title": "Commissions faibles",
-        "description": "Des frais transparents et alignés sur vos enjeux financiers."
+        "title": "Paiements fiables",
+        "description": "Wave, Orange Money, cartes bancaires ou virements : nous utilisons uniquement des services de paiement sûrs et reconnus."
       },
       {
-        "title": "Sécurité renforcée",
-        "description": "Chiffrement de bout en bout, double validation et coffre-fort numérique."
+        "title": "Commissions faibles",
+        "description": "Des commissions minimales et toujours affichées clairement, pour que chacun sache ce qu’il paie."
       },
       {
         "title": "Transparence totale",
-        "description": "Historique détaillé, traçabilité des flux et visibilité pour chaque membre."
+        "description": "Chaque contribution est tracée, chaque membre a une visibilité claire sur les flux et l’historique des paiements."
       },
       {
-        "title": "Diaspora-ready",
+        "title": "Pensé pour la diaspora",
         "description": "Multi-devises, multi-moyens de paiement et support 24/7 entre Dakar et Paris."
       }
     ]
@@ -196,24 +201,24 @@
     "title": "Vos questions fréquentes.",
     "items": [
       {
-        "question": "Comment Cocoti sécurise mes tontines ?",
-        "answer": "Nous utilisons un chiffrement bancaire, des validations multi-facteurs et un suivi des accès pour protéger chaque flux financier."
+        "question": "Comment fonctionne Cocoti ?",
+        "answer": "Cocoti vous permet de créer ou rejoindre des tontines, cagnottes ou projets collectifs en ligne. Chaque contribution est enregistrée, et vous suivez vos flux en temps réel depuis l’application ou le tableau de bord web."
       },
       {
-        "question": "Quels sont les frais appliqués ?",
-        "answer": "Les tontines privées restent gratuites. Les fonctionnalités avancées (tontines publiques, automatisations) se trouvent dans l'offre Premium à partir de 14€ par mois."
+        "question": "Dois-je avoir un compte pour contribuer ?",
+        "answer": "Non pour les cagnottes publiques : il suffit d’un lien de participation. Oui pour les tontines et projets privés afin de garantir la traçabilité et la transparence."
       },
       {
-        "question": "Est-ce disponible pour la diaspora ?",
-        "answer": "Oui, Cocoti prend en charge plusieurs devises et moyens de paiement et optimise les taux de transfert entre Europe, États-Unis et Afrique."
+        "question": "Que se passe-t-il si un membre ne paie pas dans une tontine ?",
+        "answer": "Chaque tontine définit ses règles. Dans une tontine gérée par Cocoti, un système de rappel et de suivi est activé. L’administrateur peut décider de remplacer le membre défaillant ou d’ajuster le tour."
       },
       {
-        "question": "Puis-je tester avant de m'engager ?",
-        "answer": "Vous disposez d'un essai gratuit de 14 jours sur la formule Premium pour découvrir toutes les fonctionnalités."
+        "question": "Quels moyens de paiement puis-je utiliser ?",
+        "answer": "Cocoti s’appuie sur des services de paiement existants et éprouvés : Wave, Orange Money, cartes bancaires (via Stripe), virements bancaires, Sendwave et Wero."
       },
       {
-        "question": "Comment contacter l'équipe support ?",
-        "answer": "Notre équipe répond par chat in-app, email et WhatsApp Business 7j/7. Nous proposons également un Success Manager pour les groupes Premium."
+        "question": "Cocoti est-il disponible uniquement au Sénégal ?",
+        "answer": "Cocoti démarre au Sénégal, en France et en Belgique, mais a vocation à s’étendre à d’autres pays africains et à leur diaspora."
       }
     ]
   },
@@ -223,16 +228,8 @@
     "button": "Contactez-nous",
     "whatsapp": "Continuer sur WhatsApp",
     "whatsappLink": "https://wa.me/221771234567",
-    "modal": {
-      "title": "Écrivez-nous",
-      "subtitle": "Parlez-nous de votre communauté et de vos projets, nous vous répondons sous 24h.",
-      "name": "Nom complet",
-      "email": "Email",
-      "message": "Votre message",
-      "submit": "Envoyer le message",
-      "success": "Merci ! Nous revenons vers vous très rapidement.",
-      "error": "Oups, quelque chose s'est mal passé. Réessayez dans un instant."
-    }
+    "email": "contact@cocoti.sn",
+    "phone": "+221331245678"
   },
   "finalCta": {
     "title": "Rejoignez la nouvelle génération de tontines et projets collectifs.",
@@ -242,7 +239,6 @@
   },
   "footer": {
     "company": "Développé entre Dakar et Paris pour digitaliser la solidarité humaine.",
-    "copyright": "Tous droits réservés.",
     "legalLinks": [
       {
         "label": "Politique de confidentialité",
@@ -259,24 +255,39 @@
     ],
     "socialLinks": [
       {
-        "label": "Facebook",
-        "href": "https://facebook.com/cocoti",
-        "icon": "📘"
+        "label": "",
+        "href": "https://x.com/cocoti",
+        "icon": "x"
       },
       {
-        "label": "Instagram",
-        "href": "https://instagram.com/cocoti",
-        "icon": "📷"
+        "label": "",
+        "href": "https://youtube.com/cocoti",
+        "icon": "youtube"
       },
       {
-        "label": "LinkedIn",
+        "label": "",
         "href": "https://linkedin.com/company/cocoti",
-        "icon": "💼"
+        "icon": "linkedin"
       },
       {
-        "label": "X",
-        "href": "https://twitter.com/cocoti",
-        "icon": "🐦"
+        "label": "",
+        "href": "https://tiktok.com/cocoti",
+        "icon": "tiktok"
+      },
+      {
+        "label": "",
+        "href": "https://whatsapp.com/cocoti",
+        "icon": "whatsapp"
+      },
+      {
+        "label": "",
+        "href": "https://facebook.com/cocoti",
+        "icon": "facebook"
+      },
+      {
+        "label": "",
+        "href": "https://instagram.com/cocoti",
+        "icon": "instagram"
       }
     ],
     "quickLinks": [
@@ -291,6 +302,157 @@
       {
         "label": "Support",
         "href": "#faq"
+      }
+    ]
+  },
+  "cookies": {
+    "title": "Gestion des cookies",
+    "description": "Nous utilisons des cookies pour améliorer votre expérience, analyser notre trafic et personnaliser le contenu. Vous pouvez choisir quels cookies accepter ou refuser.",
+    "customize": "Personnaliser mes choix",
+    "privacyPolicy": "Politique de confidentialité",
+    "rejectAll": "Refuser tout",
+    "acceptAll": "Accepter tout",
+    "settingsTitle": "Paramètres des cookies",
+    "necessary": {
+      "title": "Cookies nécessaires",
+      "description": "Essentiels au fonctionnement du site. Ne peuvent pas être désactivés."
+    },
+    "analytics": {
+      "title": "Cookies analytiques",
+      "description": "Nous aident à comprendre comment vous utilisez notre site."
+    },
+    "marketing": {
+      "title": "Cookies marketing",
+      "description": "Utilisés pour vous montrer des publicités pertinentes."
+    },
+    "preferences": {
+      "title": "Cookies de préférences",
+      "description": "Mémorisent vos choix pour personnaliser votre expérience."
+    },
+    "saveChoices": "Sauvegarder mes choix"
+  },
+  "admin": {
+    "title": "Administration Cocoti",
+    "subtitle": "Gérez le contenu de votre site",
+    "sections": {
+      "hero": {
+        "title": "Section Hero",
+        "description": "Gérer le titre principal, sous-titre et boutons d'action"
+      },
+      "solutions": {
+        "title": "Solutions",
+        "description": "Modifier les solutions proposées (tontines, cagnottes, etc.)"
+      },
+      "how": {
+        "title": "Comment ça marche",
+        "description": "Éditer les étapes du processus"
+      },
+      "why": {
+        "title": "Pourquoi nous choisir",
+        "description": "Gérer les valeurs et avantages"
+      },
+      "pricing": {
+        "title": "Tarifs",
+        "description": "Modifier les plans et prix"
+      },
+      "testimonials": {
+        "title": "Témoignages",
+        "description": "Gérer les avis clients"
+      },
+      "faq": {
+        "title": "FAQ",
+        "description": "Questions fréquentes"
+      },
+      "footer": {
+        "title": "Footer",
+        "description": "Modifier les liens et informations du pied de page"
+      },
+      "whatsapp": {
+        "title": "WhatsApp",
+        "description": "Configurer le numéro et message WhatsApp"
+      },
+      "legal": {
+        "title": "Mentions Légales",
+        "description": "Gérer les informations légales et mentions obligatoires"
+      }
+    },
+    "whatsapp": {
+      "title": "Configuration WhatsApp",
+      "numberLabel": "Numéro WhatsApp",
+      "numberPlaceholder": "Ex: +221771234567",
+      "numberHelp": "Format international avec le code pays (ex: +221 pour le Sénégal)",
+      "messageLabel": "Message par défaut",
+      "messagePlaceholder": "Message qui sera pré-rempli dans WhatsApp",
+      "messageHelp": "Ce message apparaîtra automatiquement quand les utilisateurs cliquent sur le bouton WhatsApp"
+    },
+    "navigation": {
+      "dashboard": "Tableau de bord",
+      "edit": "Éditer",
+      "back": "Retour au dashboard",
+      "save": "Sauvegarder",
+      "cancel": "Annuler"
+    },
+    "forms": {
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "saving": "Enregistrement...",
+      "saved": "Enregistré avec succès !",
+      "error": "Erreur lors de l'enregistrement",
+      "placeholders": {
+        "heroTitle": "L'app qui digitalise la solidarité africaine",
+        "heroSubtitle": "Réinventons les tontines et projets collectifs.",
+        "heroDescription": "Avec Cocoti, gérez vos tontines, cagnottes et projets en toute simplicité...",
+        "heroDownload": "Télécharger l'app",
+        "heroDashboard": "Voir le dashboard",
+        "heroLink": "https://app.cocoti.com",
+        "contactTitle": "Prêts à lancer votre communauté ?",
+        "contactDescription": "Notre équipe est là pour vous accompagner",
+        "contactButton": "Contactez-nous pour une démo personnalisée...",
+        "contactEmail": "contact@cocoti.sn",
+        "contactPhone": "+221331455871",
+        "contactWhatsapp": "Continuer sur WhatsApp",
+        "contactWhatsappLink": "https://wa.me/221771234567",
+        "socialUrl": "https://facebook.com/cocoti",
+        "socialIcon": "📘",
+        "hoursTitle": "Horaires d'ouverture",
+        "hoursDescription": "Lundi - Vendredi: 9h00 - 18h00",
+        "hoursWeekend": "Samedi: 10h00 - 16h00"
+      }
+    }
+  },
+  "legal": {
+    "title": "Mentions légales",
+    "subtitle": "Informations légales sur l'éditeur du site",
+    "sections": [
+      {
+        "title": "Éditeur du site",
+        "content": "Informations sur l'entreprise éditrice du site.",
+        "company": {
+          "name": "Coco Technologies SAS",
+          "address": "123 Avenue de la République, 75011 Paris, France",
+          "phone": "+33 1 23 45 67 89",
+          "email": "contact@cocoti.sn"
+        }
+      },
+      {
+        "title": "Directeur de publication",
+        "content": "Le directeur de la publication est le Président de Coco Technologies SAS."
+      },
+      {
+        "title": "Hébergement",
+        "content": "Le site est hébergé par Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA."
+      },
+      {
+        "title": "Propriété intellectuelle",
+        "content": "L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur et la propriété intellectuelle. Tous les droits de reproduction sont réservés."
+      },
+      {
+        "title": "Responsabilité",
+        "content": "Les informations contenues sur ce site sont aussi précises que possible et le site remis à jour à différentes périodes de l'année, mais peut toutefois contenir des inexactitudes ou des omissions."
+      },
+      {
+        "title": "Liens hypertextes",
+        "content": "Des liens hypertextes peuvent être présents sur le site. L'utilisateur est informé qu'en cliquant sur ces liens, il sortira du site cocoti.com."
       }
     ]
   }

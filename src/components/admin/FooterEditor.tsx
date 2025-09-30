@@ -10,6 +10,7 @@ import {
   DocumentTextIcon,
   GlobeAltIcon
 } from "@heroicons/react/24/outline";
+import { socialIcons, socialColors, SocialIcon } from "./SocialIcons";
 
 interface FooterEditorProps {
   footer: {
@@ -264,16 +265,59 @@ export default function FooterEditor({ footer, onUpdate, locale }: FooterEditorP
                 {t.labels.add}
               </motion.button>
             </div>
+            {/* Icônes disponibles */}
+            <div className="mb-6 p-4 bg-ivory rounded-lg border border-cloud">
+              <h5 className="text-sm font-medium text-night mb-3">Icônes disponibles</h5>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(socialIcons).map(([platform, icon]) => (
+                  <button
+                    key={platform}
+                    onClick={() => {
+                      const newLink = { label: platform, href: '', icon: platform };
+                      setLocalFooter(prev => ({
+                        ...prev,
+                        socialLinks: [...prev.socialLinks, newLink]
+                      }));
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 bg-white border border-cloud rounded-lg hover:border-magenta transition-colors"
+                  >
+                    <span style={{ color: socialColors[platform as keyof typeof socialColors] }}>
+                      {icon}
+                    </span>
+                    <span className="text-sm font-medium capitalize">{platform}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="space-y-3">
               {localFooter.socialLinks.map((link, index) => (
                 <div key={index} className="flex gap-3 p-3 bg-ivory rounded-lg border border-cloud">
-                  <input
-                    type="text"
-                    value={link.icon || ''}
-                    onChange={(e) => updateLink('socialLinks', index, 'icon', e.target.value)}
-                    placeholder="Emoji (ex: 📘)"
-                    className="w-20 px-3 py-2 border border-cloud rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta transition-colors bg-white text-center"
-                  />
+                  {/* Sélecteur d'icône */}
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={link.icon || ''}
+                      onChange={(e) => updateLink('socialLinks', index, 'icon', e.target.value)}
+                      className="px-3 py-2 border border-cloud rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta transition-colors bg-white"
+                    >
+                      <option value="">Choisir une icône</option>
+                      {Object.entries(socialIcons).map(([platform]) => (
+                        <option key={platform} value={platform}>
+                          {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                    {link.icon && (
+                      <div className="flex items-center gap-1">
+                        <SocialIcon 
+                          platform={link.icon as keyof typeof socialIcons} 
+                          className="w-5 h-5"
+                          color={socialColors[link.icon as keyof typeof socialColors]}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
                   <input
                     type="text"
                     value={link.label}

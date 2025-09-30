@@ -23,6 +23,18 @@ export async function GET(request: NextRequest) {
     
     const content = await readJsonFile(locale);
     
+    console.log(`📖 Contenu récupéré pour ${locale}:`, content.legal ? 'Section legal présente' : 'Section legal manquante');
+    if (content.legal) {
+      console.log(`📝 Titre legal:`, content.legal.title);
+      if (content.legal.sections) {
+        const editeurSection = content.legal.sections.find(s => s.title.includes('Éditeur'));
+        if (editeurSection && editeurSection.company) {
+          console.log(`🏢 Nom entreprise:`, editeurSection.company.name);
+          console.log(`📧 Email entreprise:`, editeurSection.company.email);
+        }
+      }
+    }
+    
     return NextResponse.json({ success: true, content });
   } catch (error) {
     console.error('Erreur lors de la récupération du contenu:', error);
@@ -54,6 +66,7 @@ export async function PUT(request: NextRequest) {
     await writeJsonFile(locale, data);
     
     console.log(`✅ Contenu mis à jour: ${section} (${locale})`);
+    console.log(`📝 Données sauvegardées:`, JSON.stringify(content, null, 2));
     
     return NextResponse.json({ success: true, message: 'Contenu mis à jour avec succès' });
   } catch (error) {

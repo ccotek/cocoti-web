@@ -45,14 +45,27 @@ export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
           <p className="text-lg text-ink-muted">{solutions.subtitle}</p>
         </motion.div>
         <div className="grid gap-6 md:grid-cols-2">
-          {solutions.items.map((item, index) => {
+          {solutions.items && Array.isArray(solutions.items) && solutions.items.map((item, index) => {
             const IconComponent = solutionIcons[item.id] ?? SparklesIcon;
             return (
               <motion.div
                 key={item.id}
-                className="group relative overflow-hidden rounded-3xl border border-cloud bg-white/80 p-8 shadow-sm backdrop-blur transition hover:-translate-y-1 hover:shadow-xl"
+                className="group relative overflow-hidden rounded-3xl border border-cloud bg-white/90 p-8 shadow-lg backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-magenta/10"
                 {...scaleIn}
                 transition={{ delay: index * 0.1 }}
+                whileHover={{ 
+                  scale: 1.02,
+                  rotateY: 2,
+                  transition: { duration: 0.3 }
+                }}
+                animate={{ 
+                  y: [0, -2, 0],
+                  transition: { 
+                    duration: 4 + index * 0.3, 
+                    repeat: Infinity, 
+                    ease: "easeInOut" 
+                  }
+                }}
               >
                 <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-magenta/10 text-magenta">
                   <IconComponent className="h-6 w-6" />

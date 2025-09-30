@@ -15,7 +15,7 @@ export function middleware(request: NextRequest) {
   }
   
   // Rediriger les routes inconnues vers l'accueil
-  if (!pathname.startsWith('/fr') && !pathname.startsWith('/en') && !pathname.startsWith('/cms') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/favicon') && !pathname.startsWith('/privacy-policy') && !pathname.startsWith('/terms-of-service') && !pathname.startsWith('/legal-notice')) {
+  if (!pathname.startsWith('/fr') && !pathname.startsWith('/en') && !pathname.startsWith('/cms') && !pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/favicon') && !pathname.startsWith('/privacy-policy') && !pathname.startsWith('/terms-of-service') && !pathname.startsWith('/legal-notice') && !pathname.match(/\.(png|jpg|jpeg|gif|webp|svg|ico|css|js)$/)) {
     return NextResponse.redirect(new URL('/fr', request.url));
   }
   

@@ -16,9 +16,9 @@ import WhySection from "./sections/WhySection";
 import PricingSection from "./sections/PricingSection";
 import TestimonialsSection from "./sections/TestimonialsSection";
 import FaqSection from "./sections/FaqSection";
-import ContactSection from "./sections/ContactSection";
 import FooterSection from "./sections/FooterSection";
 import AuthModal from "./modals/AuthModal";
+import WhatsAppButtonSimple from "./WhatsAppButtonSimple";
 
 export default function CompleteLandingPage() {
   const pathname = usePathname();
@@ -80,7 +80,6 @@ export default function CompleteLandingPage() {
     { id: 'how', label: 'Comment ça marche' },
     { id: 'why', label: 'Pourquoi nous' },
     { id: 'pricing', label: 'Tarifs' },
-    { id: 'contact', label: 'Contact' }
   ];
   const navCta = t("navigation.cta");
   
@@ -141,24 +140,30 @@ export default function CompleteLandingPage() {
 
   const faq = {
     title: t("faq.title"),
-    items: t("faq.items") as Array<{ question: string; answer: string }>
+    items: t("faq.items") as Array<{ question: string; answer: string }>,
+    cta: {
+      title: t("faq.cta.title"),
+      description: t("faq.cta.description"),
+      whatsapp: t("faq.cta.whatsapp")
+    },
+    whatsappNumber: content?.whatsapp?.number || "+221771234567",
+    whatsappMessage: content?.whatsapp?.message || t("whatsapp.defaultMessage")
   };
 
-  const contact = {
-    title: t("contact.title"),
-    description: t("contact.description"),
-    button: t("contact.button"),
-    whatsapp: t("contact.whatsapp"),
-    whatsappLink: t("contact.whatsappLink")
-  };
 
+  // Données stables pour éviter le flash
   const footer = {
     company: content?.footer?.company || t("footer.company"),
     copyright: content?.footer?.copyright || t("footer.copyright"),
     legalLinks: content?.footer?.legalLinks || t("footer.legalLinks") as Array<{ label: string; href: string }>,
-    socialLinks: content?.footer?.socialLinks || t("footer.socialLinks") as Array<{ label: string; href: string; icon?: string }>,
+    socialLinks: (() => {
+      const jsonSocialLinks = t("footer.socialLinks") as Array<{ label: string; href: string; icon?: string }>;
+      // S'assurer que les données sont stables et valides
+      return jsonSocialLinks && Array.isArray(jsonSocialLinks) ? jsonSocialLinks : [];
+    })(),
     quickLinks: content?.footer?.quickLinks || t("footer.quickLinks") as Array<{ label: string; href: string }>
   };
+
 
 
   return (
@@ -179,7 +184,6 @@ export default function CompleteLandingPage() {
         <PricingSection pricing={pricing} />
         <TestimonialsSection testimonials={testimonials} />
         <FaqSection faq={faq} />
-        <ContactSection contact={contact} onOpenModal={handleOpenModal} />
       </main>
 
       <FooterSection footer={footer} />
@@ -206,7 +210,7 @@ export default function CompleteLandingPage() {
                 type="button"
                 onClick={handleCloseModal}
                 className="rounded-full border border-cloud p-2"
-                aria-label="Fermer"
+                aria-label={t("accessibility.closeModal")}
               >
                 ✕
               </button>
@@ -235,6 +239,12 @@ export default function CompleteLandingPage() {
           </div>
         </div>
       )}
+
+      {/* Bouton WhatsApp flottant */}
+      <WhatsAppButtonSimple 
+        phoneNumber="+221771234567"
+        message="Bonjour ! Je suis intéressé(e) par Cocoti. Pouvez-vous m'en dire plus ?"
+      />
     </div>
   );
 }

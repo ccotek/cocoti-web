@@ -10,13 +10,15 @@ import {
   CurrencyDollarIcon,
   ChatBubbleLeftRightIcon,
   QuestionMarkCircleIcon,
-  EnvelopeIcon,
   Bars3Icon,
   XMarkIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  ScaleIcon
 } from "@heroicons/react/24/outline";
 import GenericSectionForm from "./forms/GenericSectionForm";
 import FooterEditor from "./FooterEditor";
+import WhatsAppEditor from "./WhatsAppEditor";
+import LegalEditor from "./LegalEditor";
 import { useAdminAuthContext } from "@/contexts/AdminAuthContext";
 import { useContent } from "@/hooks/useContent";
 import Notification from "../Notification";
@@ -29,171 +31,78 @@ type AdminSection = {
   color: string;
 };
 
-// Traductions pour l'interface admin
-const adminTranslations = {
-  fr: {
-    title: "Administration Cocoti",
-    subtitle: "Gérez le contenu de votre site",
-    sections: {
-      hero: {
-        title: "Section Hero",
-        description: "Gérer le titre principal, sous-titre et boutons d'action"
-      },
-      solutions: {
-        title: "Solutions",
-        description: "Modifier les solutions proposées (tontines, cagnottes, etc.)"
-      },
-      how: {
-        title: "Comment ça marche",
-        description: "Éditer les étapes du processus"
-      },
-      why: {
-        title: "Pourquoi nous choisir",
-        description: "Gérer les valeurs et avantages"
-      },
-      pricing: {
-        title: "Tarifs",
-        description: "Modifier les plans et prix"
-      },
-      testimonials: {
-        title: "Témoignages",
-        description: "Gérer les avis clients"
-      },
-      faq: {
-        title: "FAQ",
-        description: "Questions fréquentes"
-      },
-      contact: {
-        title: "Contact",
-        description: "Informations de contact"
-      },
-      footer: {
-        title: "Footer",
-        description: "Modifier les liens et informations du pied de page"
-      }
-    },
-    navigation: {
-      dashboard: "Tableau de bord",
-      edit: "Éditer",
-      back: "Retour au dashboard",
-      save: "Sauvegarder",
-      cancel: "Annuler"
-    }
-  },
-  en: {
-    title: "Cocoti Administration",
-    subtitle: "Manage your website content",
-    sections: {
-      hero: {
-        title: "Hero Section",
-        description: "Manage main title, subtitle and action buttons"
-      },
-      solutions: {
-        title: "Solutions",
-        description: "Edit proposed solutions (tontines, money pots, etc.)"
-      },
-      how: {
-        title: "How it works",
-        description: "Edit process steps"
-      },
-      why: {
-        title: "Why choose us",
-        description: "Edit values and benefits"
-      },
-      pricing: {
-        title: "Pricing",
-        description: "Manage plans and prices"
-      },
-      testimonials: {
-        title: "Testimonials",
-        description: "Edit customer reviews"
-      },
-      faq: {
-        title: "FAQ",
-        description: "Manage frequently asked questions"
-      },
-      contact: {
-        title: "Contact",
-        description: "Edit contact information"
-      },
-      footer: {
-        title: "Footer",
-        description: "Manage footer links and information"
-      }
-    },
-    navigation: {
-      dashboard: "Dashboard",
-      edit: "Edit",
-      back: "Back to dashboard",
-      save: "Save",
-      cancel: "Cancel"
-    }
-  }
-};
+import { translate } from "@/utils/translations";
 
-const getAdminSections = (locale: string): AdminSection[] => [
+const getAdminSections = (locale: 'fr' | 'en'): AdminSection[] => [
   {
     id: "hero",
-    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.hero.title || "Hero Section",
-    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.hero.description || "Manage main title, subtitle and action buttons",
+    title: translate("admin.sections.hero.title", locale),
+    description: translate("admin.sections.hero.description", locale),
     icon: DocumentTextIcon,
     color: "bg-blue-500"
   },
   {
     id: "solutions",
-    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.solutions.title || "Solutions",
-    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.solutions.description || "Edit proposed solutions",
+    title: translate("admin.sections.solutions.title", locale),
+    description: translate("admin.sections.solutions.description", locale),
     icon: Cog6ToothIcon,
     color: "bg-green-500"
   },
   {
     id: "how",
-    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.how.title || "How it works",
-    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.how.description || "Edit process steps",
+    title: translate("admin.sections.how.title", locale),
+    description: translate("admin.sections.how.description", locale),
     icon: UsersIcon,
     color: "bg-purple-500"
   },
   {
     id: "why",
-    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.why.title || "Why choose us",
-    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.why.description || "Edit values and benefits",
+    title: translate("admin.sections.why.title", locale),
+    description: translate("admin.sections.why.description", locale),
     icon: QuestionMarkCircleIcon,
     color: "bg-orange-500"
   },
   {
     id: "pricing",
-    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.pricing.title || "Pricing",
-    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.pricing.description || "Manage plans and prices",
+    title: translate("admin.sections.pricing.title", locale),
+    description: translate("admin.sections.pricing.description", locale),
     icon: CurrencyDollarIcon,
     color: "bg-yellow-500"
   },
   {
     id: "testimonials",
-    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.testimonials.title || "Testimonials",
-    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.testimonials.description || "Edit customer reviews",
+    title: translate("admin.sections.testimonials.title", locale),
+    description: translate("admin.sections.testimonials.description", locale),
     icon: ChatBubbleLeftRightIcon,
     color: "bg-pink-500"
   },
   {
     id: "faq",
-    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.faq.title || "FAQ",
-    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.faq.description || "Manage frequently asked questions",
+    title: translate("admin.sections.faq.title", locale),
+    description: translate("admin.sections.faq.description", locale),
     icon: QuestionMarkCircleIcon,
     color: "bg-indigo-500"
   },
   {
-    id: "contact",
-    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.contact.title || "Contact",
-    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.contact.description || "Edit contact information",
-    icon: EnvelopeIcon,
-    color: "bg-red-500"
-  },
-  {
     id: "footer",
-    title: adminTranslations[locale as keyof typeof adminTranslations]?.sections.footer.title || "Footer",
-    description: adminTranslations[locale as keyof typeof adminTranslations]?.sections.footer.description || "Manage footer links and information",
+    title: translate("admin.sections.footer.title", locale),
+    description: translate("admin.sections.footer.description", locale),
     icon: DocumentTextIcon,
     color: "bg-gray-500"
+  },
+  {
+    id: "whatsapp",
+    title: translate("admin.sections.whatsapp.title", locale),
+    description: translate("admin.sections.whatsapp.description", locale),
+    icon: ChatBubbleLeftRightIcon,
+    color: "bg-green-500"
+  },
+  {
+    id: "legal",
+    title: translate("admin.sections.legal.title", locale),
+    description: translate("admin.sections.legal.description", locale),
+    icon: ScaleIcon,
+    color: "bg-indigo-500"
   }
 ];
 
@@ -204,7 +113,7 @@ export default function AdminDashboard() {
   
   // Obtenir les sections traduites
   const adminSections = getAdminSections(locale);
-  const t = adminTranslations[locale];
+  const t = (key: string) => translate(key, locale);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const { user, logout } = useAdminAuthContext();
   const { content, updateContent } = useContent(locale);
@@ -238,12 +147,15 @@ export default function AdminDashboard() {
       const result = await updateContent(section, data);
       if (result.success) {
         setNotification({ message: 'Contenu sauvegardé avec succès !', type: 'success' });
+        return { success: true };
       } else {
         setNotification({ message: 'Erreur lors de la sauvegarde', type: 'error' });
+        return { success: false, error: result.error };
       }
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       setNotification({ message: 'Erreur lors de la sauvegarde', type: 'error' });
+      return { success: false, error: 'Erreur lors de la sauvegarde' };
     }
   };
 
@@ -301,12 +213,12 @@ export default function AdminDashboard() {
                 <Bars3Icon className="h-6 w-6" />
               </button>
               <h1 className="ml-2 text-2xl font-semibold text-night">
-                {selectedSection ? `Éditer - ${adminSections.find(s => s.id === selectedSection)?.title}` : 'Dashboard Admin'}
+                {selectedSection ? `${t("admin.navigation.edit")} - ${t(`admin.sections.${selectedSection}.title`)}` : t("admin.title")}
               </h1>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-ink-muted">Langue:</span>
+                <span className="text-sm text-ink-muted">{t("language.label")}:</span>
                 <select
                   value={locale}
                   onChange={(e) => setLocale(e.target.value as 'fr' | 'en')}
@@ -346,8 +258,8 @@ export default function AdminDashboard() {
               <div className="mb-8">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h2 className="text-3xl font-bold text-night mb-2">{t.title}</h2>
-                    <p className="text-ink-muted">{t.subtitle}</p>
+                    <h2 className="text-3xl font-bold text-night mb-2">{t("admin.title")}</h2>
+                    <p className="text-ink-muted">{t("admin.subtitle")}</p>
                   </div>
                   
                   {/* Sélecteur de langue */}
@@ -409,35 +321,82 @@ export default function AdminDashboard() {
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-{t.navigation.back}
+{t("admin.navigation.back")}
               </button>
 
               <div className="bg-white rounded-2xl shadow-sm border border-cloud p-6">
                 <h3 className="text-xl font-semibold text-night mb-4">
-                  {t.navigation.edit} : {adminSections.find(s => s.id === selectedSection)?.title}
+                  {t("admin.navigation.edit")} : {t(`admin.sections.${selectedSection}.title`)}
                 </h3>
                 <p className="text-ink-muted mb-6">
-                  {adminSections.find(s => s.id === selectedSection)?.description}
+                  {t(`admin.sections.${selectedSection}.description`)}
                 </p>
                 
-                {/* Formulaire d'édition spécialisé pour le footer */}
-                {selectedSection === 'footer' ? (
-                  <FooterEditor
-                    footer={content?.footer || { company: '', legalLinks: [], socialLinks: [], quickLinks: [] }}
-                    onUpdate={(data) => handleSaveContent('footer', data)}
-                    locale={locale}
-                  />
-                ) : (
-                  /* Formulaire d'édition générique */
-                  <GenericSectionForm
-                    section={selectedSection}
-                    sectionTitle={adminSections.find(s => s.id === selectedSection)?.title || ''}
-                    sectionDescription={adminSections.find(s => s.id === selectedSection)?.description || ''}
-                    onSave={(data) => handleSaveContent(selectedSection!, data)}
-                    onCancel={handleBackToDashboard}
-                    locale={locale}
-                  />
-                )}
+                {/* Formulaire d'édition spécialisé */}
+        {selectedSection === 'footer' ? (
+          <FooterEditor
+            footer={content?.footer || { company: '', legalLinks: [], socialLinks: [], quickLinks: [] }}
+            onUpdate={(data) => handleSaveContent('footer', data)}
+            locale={locale}
+          />
+        ) : selectedSection === 'whatsapp' ? (
+          <WhatsAppEditor
+            whatsapp={content?.whatsapp || { number: '', message: '' }}
+            onUpdate={(data) => handleSaveContent('whatsapp', data)}
+            locale={locale}
+          />
+        ) : selectedSection === 'legal' ? (
+          <LegalEditor
+            legal={content?.legal || {
+              title: locale === 'fr' ? 'Mentions légales' : 'Legal Notice',
+              subtitle: locale === 'fr' ? 'Informations légales sur l\'éditeur du site' : 'Legal information about the site publisher',
+              sections: [
+                {
+                  title: locale === 'fr' ? 'Éditeur du site' : 'Site publisher',
+                  content: locale === 'fr' ? 'Informations sur l\'entreprise éditrice du site.' : 'Information about the company publishing the site.',
+                  company: {
+                    name: 'Cocoti SAS',
+                    address: '123 Avenue de la République, 75011 Paris, France',
+                    phone: '+33 1 23 45 67 89',
+                    email: 'contact@cocoti.com'
+                  }
+                },
+                {
+                  title: locale === 'fr' ? 'Directeur de publication' : 'Publication director',
+                  content: locale === 'fr' ? 'Le directeur de la publication est le Président de Cocoti SAS.' : 'The publication director is the President of Cocoti SAS.'
+                },
+                {
+                  title: locale === 'fr' ? 'Hébergement' : 'Hosting',
+                  content: locale === 'fr' ? 'Le site est hébergé par Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA.' : 'The site is hosted by Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA.'
+                },
+                {
+                  title: locale === 'fr' ? 'Propriété intellectuelle' : 'Intellectual property',
+                  content: locale === 'fr' ? 'L\'ensemble de ce site relève de la législation française et internationale sur le droit d\'auteur et la propriété intellectuelle. Tous les droits de reproduction sont réservés.' : 'This entire site is subject to French and international legislation on copyright and intellectual property. All reproduction rights are reserved.'
+                },
+                {
+                  title: locale === 'fr' ? 'Responsabilité' : 'Liability',
+                  content: locale === 'fr' ? 'Les informations contenues sur ce site sont aussi précises que possible et le site remis à jour à différentes périodes de l\'année, mais peut toutefois contenir des inexactitudes ou des omissions.' : 'The information contained on this site is as accurate as possible and the site is updated at different times of the year, but may nevertheless contain inaccuracies or omissions.'
+                },
+                {
+                  title: locale === 'fr' ? 'Liens hypertextes' : 'Hyperlinks',
+                  content: locale === 'fr' ? 'Des liens hypertextes peuvent être présents sur le site. L\'utilisateur est informé qu\'en cliquant sur ces liens, il sortira du site cocoti.com.' : 'Hyperlinks may be present on the site. The user is informed that by clicking on these links, they will leave the cocoti.com site.'
+                }
+              ]
+            }}
+            onUpdate={(data) => handleSaveContent('legal', data)}
+            locale={locale}
+          />
+        ) : (
+          /* Formulaire d'édition générique */
+          <GenericSectionForm
+            section={selectedSection}
+            sectionTitle={adminSections.find(s => s.id === selectedSection)?.title || ''}
+            sectionDescription={adminSections.find(s => s.id === selectedSection)?.description || ''}
+            onSave={(data) => handleSaveContent(selectedSection!, data)}
+            onCancel={handleBackToDashboard}
+            locale={locale}
+          />
+        )}
               </div>
             </div>
           )}

@@ -1,5 +1,7 @@
 "use client";
 
+import { SocialIcon, socialColors } from "../admin/SocialIcons";
+
 type FooterSectionProps = {
   footer: {
     company: string;
@@ -27,11 +29,6 @@ export default function FooterSection({ footer }: FooterSectionProps) {
   const company = footer?.company || "";
   const copyright = footer?.copyright || "";
 
-  // Debug: afficher les données reçues
-  console.log('🔍 FooterSection: Données footer reçues:', footer);
-  console.log('🔍 FooterSection: quickLinks:', quickLinks);
-  console.log('🔍 FooterSection: legalLinks:', legalLinks);
-  console.log('🔍 FooterSection: socialLinks:', socialLinks);
 
   return (
     <footer className="border-t border-cloud/60 bg-ivory/90">
@@ -54,7 +51,7 @@ export default function FooterSection({ footer }: FooterSectionProps) {
           <div>
             <h3 className="font-semibold text-night mb-4">Liens rapides</h3>
             <ul className="space-y-2">
-              {quickLinks.map((link, index) => (
+              {quickLinks && Array.isArray(quickLinks) && quickLinks.map((link, index) => (
                 <li key={link.label || index}>
                   <a 
                     href={link.href || '#'} 
@@ -70,35 +67,44 @@ export default function FooterSection({ footer }: FooterSectionProps) {
           {/* Liens légaux */}
           <div>
             <h3 className="font-semibold text-night mb-4">Légal</h3>
-            <ul className="space-y-2">
-              {legalLinks.map((link, index) => (
-                <li key={link.label || index}>
-                  <a 
-                    href={link.href || '#'} 
-                    className="text-sm text-ink-muted transition hover:text-night"
-                  >
-                    {link.label || 'Lien légal'}
-                  </a>
-                </li>
-              ))}
-            </ul>
+                <ul className="space-y-2">
+                  {legalLinks && Array.isArray(legalLinks) && legalLinks.map((link, index) => (
+                    <li key={link.label || index}>
+                      <a 
+                        href={link.href || '#'} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-ink-muted transition hover:text-night"
+                      >
+                        {link.label || 'Lien légal'}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
           </div>
         </div>
 
         {/* Réseaux sociaux et copyright */}
         <div className="mt-8 pt-8 border-t border-cloud/60 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex gap-3">
-            {socialLinks.map((social, index) => (
+            {socialLinks && Array.isArray(socialLinks) && socialLinks.map((social, index) => (
               <a
                 key={social.label || index}
                 href={social.href || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-full border border-cloud px-3 py-2 text-sm text-ink-muted transition hover:border-magenta hover:text-magenta"
-                title={social.label || 'Réseau social'}
+                className="flex items-center justify-center w-10 h-10 rounded-full border border-cloud text-ink-muted transition hover:border-magenta hover:text-magenta hover:scale-110"
+                title={social.label || social.icon || 'Réseau social'}
               >
-                {social.icon && <span className="text-base">{social.icon}</span>}
-                <span className="hidden sm:inline">{social.label || 'Social'}</span>
+                {social.icon && social.icon in socialColors ? (
+                  <SocialIcon 
+                    platform={social.icon as keyof typeof socialColors} 
+                    className="w-5 h-5"
+                    color={socialColors[social.icon as keyof typeof socialColors]}
+                  />
+                ) : (
+                  <span className="text-lg">{social.icon}</span>
+                )}
               </a>
             ))}
           </div>

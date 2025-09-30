@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { XMarkIcon, Cog6ToothIcon, ShieldCheckIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
+import { usePathname } from "next/navigation";
+import { translate } from "@/utils/translations";
 
 interface CookiePreferences {
   necessary: boolean;
@@ -20,6 +22,12 @@ export default function CookieBanner() {
     marketing: false,
     preferences: false,
   });
+  
+  const pathname = usePathname();
+  const locale = pathname.startsWith('/en') ? 'en' : 'fr';
+  
+  // Fonction de traduction
+  const t = (key: string) => translate(key, locale);
 
   useEffect(() => {
     // Vérifier si l'utilisateur a déjà fait un choix
@@ -91,12 +99,11 @@ export default function CookieBanner() {
                     <ShieldCheckIcon className="w-5 h-5 text-white" />
                   </div>
                   <h3 className="text-lg font-semibold text-night">
-                    Gestion des cookies
+                    {t("cookies.title")}
                   </h3>
                 </div>
                 <p className="text-ink-muted text-sm leading-relaxed">
-                  Nous utilisons des cookies pour améliorer votre expérience, analyser notre trafic et personnaliser le contenu. 
-                  Vous pouvez choisir quels cookies accepter ou refuser.
+                  {t("cookies.description")}
                 </p>
                 <div className="flex items-center gap-4 mt-3">
                   <button
@@ -104,14 +111,16 @@ export default function CookieBanner() {
                     className="text-sm text-magenta hover:text-sunset font-medium flex items-center gap-1 transition-colors"
                   >
                     <Cog6ToothIcon className="w-4 h-4" />
-                    Personnaliser mes choix
+                    {t("cookies.customize")}
                   </button>
                   <a
-                    href="/privacy-policy"
+                    href={`/${locale}/privacy-policy`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-sm text-ink-muted hover:text-night transition-colors flex items-center gap-1"
                   >
                     <InformationCircleIcon className="w-4 h-4" />
-                    Politique de confidentialité
+                    {t("cookies.privacyPolicy")}
                   </a>
                 </div>
               </div>
@@ -121,13 +130,13 @@ export default function CookieBanner() {
                   onClick={handleRejectAll}
                   className="px-6 py-3 border border-cloud text-night rounded-2xl font-medium hover:bg-ivory transition-all whitespace-nowrap"
                 >
-                  Refuser tout
+                  {t("cookies.rejectAll")}
                 </button>
                 <button
                   onClick={handleAcceptAll}
                   className="px-6 py-3 bg-gradient-to-r from-sunset to-magenta text-white rounded-2xl font-medium hover:shadow-glow transition-all whitespace-nowrap"
                 >
-                  Accepter tout
+                  {t("cookies.acceptAll")}
                 </button>
               </div>
             </div>
@@ -140,7 +149,7 @@ export default function CookieBanner() {
                     <Cog6ToothIcon className="w-5 h-5 text-white" />
                   </div>
                   <h3 className="text-lg font-semibold text-night">
-                    Paramètres des cookies
+                    {t("cookies.settingsTitle")}
                   </h3>
                 </div>
                 <button
@@ -155,9 +164,9 @@ export default function CookieBanner() {
                 {/* Cookies nécessaires */}
                 <div className="flex items-center justify-between p-4 bg-ivory rounded-2xl border border-cloud">
                   <div className="flex-1">
-                    <h4 className="font-medium text-night mb-1">Cookies nécessaires</h4>
+                    <h4 className="font-medium text-night mb-1">{t("cookies.necessary.title")}</h4>
                     <p className="text-sm text-ink-muted">
-                      Essentiels au fonctionnement du site. Ne peuvent pas être désactivés.
+                      {t("cookies.necessary.description")}
                     </p>
                   </div>
                   <div className="ml-4">
@@ -170,9 +179,9 @@ export default function CookieBanner() {
                 {/* Cookies analytiques */}
                 <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-cloud">
                   <div className="flex-1">
-                    <h4 className="font-medium text-night mb-1">Cookies analytiques</h4>
+                    <h4 className="font-medium text-night mb-1">{t("cookies.analytics.title")}</h4>
                     <p className="text-sm text-ink-muted">
-                      Nous aident à comprendre comment vous utilisez notre site.
+                      {t("cookies.analytics.description")}
                     </p>
                   </div>
                   <div className="ml-4">
@@ -190,9 +199,9 @@ export default function CookieBanner() {
                 {/* Cookies marketing */}
                 <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-cloud">
                   <div className="flex-1">
-                    <h4 className="font-medium text-night mb-1">Cookies marketing</h4>
+                    <h4 className="font-medium text-night mb-1">{t("cookies.marketing.title")}</h4>
                     <p className="text-sm text-ink-muted">
-                      Utilisés pour vous montrer des publicités pertinentes.
+                      {t("cookies.marketing.description")}
                     </p>
                   </div>
                   <div className="ml-4">
@@ -210,9 +219,9 @@ export default function CookieBanner() {
                 {/* Cookies de préférences */}
                 <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-cloud">
                   <div className="flex-1">
-                    <h4 className="font-medium text-night mb-1">Cookies de préférences</h4>
+                    <h4 className="font-medium text-night mb-1">{t("cookies.preferences.title")}</h4>
                     <p className="text-sm text-ink-muted">
-                      Mémorisent vos choix pour personnaliser votre expérience.
+                      {t("cookies.preferences.description")}
                     </p>
                   </div>
                   <div className="ml-4">
@@ -233,13 +242,13 @@ export default function CookieBanner() {
                   onClick={handleRejectAll}
                   className="px-6 py-3 border border-cloud text-night rounded-2xl font-medium hover:bg-ivory transition-all"
                 >
-                  Refuser tout
+                  {t("cookies.rejectAll")}
                 </button>
                 <button
                   onClick={handleSavePreferences}
                   className="px-6 py-3 bg-gradient-to-r from-sunset to-magenta text-white rounded-2xl font-medium hover:shadow-glow transition-all"
                 >
-                  Sauvegarder mes choix
+                  {t("cookies.saveChoices")}
                 </button>
               </div>
             </div>

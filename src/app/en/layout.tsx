@@ -9,8 +9,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Cocoti – Reinventing tontines and collective projects",
-  description: "Cocoti makes it simple to run digital tontines, solidarity funds and collective projects with a smooth, secure experience."
+  title: "Cocoti – The app digitalizing human solidarity",
+  description: "Cocoti makes it simple to run digital tontines, solidarity funds and collective projects with a smooth, secure experience.",
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg'
+  }
 };
 
 export default function EnglishLayout({

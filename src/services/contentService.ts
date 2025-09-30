@@ -16,36 +16,52 @@ export interface ContentUpdate {
 class ContentService {
   // Méthode d'authentification supprimée - plus utilisée avec l'API locale
 
+  private getBaseUrl(): string {
+    // Côté serveur, utiliser une URL relative ou une variable d'environnement
+    if (typeof window === 'undefined') {
+      // Côté serveur - utiliser une URL relative ou une variable d'environnement
+      return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    }
+    // Côté client - utiliser window.location.origin
+    return window.location.origin;
+  }
+
   async getAllContent(locale?: string): Promise<ContentData[]> {
     try {
        // Utiliser l'API locale pour récupérer le contenu
-       const url = new URL('/api/cms/content', window.location.origin);
+       const url = new URL('/api/cms/content', this.getBaseUrl());
       if (locale) {
         url.searchParams.append('locale', locale);
       }
 
-      console.log('🔍 contentService getAllContent: URL:', url.toString());
+      console.log('🔍 ContentService: Appel API vers', url.toString());
 
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+          const response = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
 
-      if (!response.ok) {
-        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
-      }
+          console.log('🔍 ContentService: Réponse API reçue, status:', response.status);
 
-      const result = await response.json();
-      console.log('🔍 contentService getAllContent: Result:', result);
+          if (!response.ok) {
+            throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+          }
+
+          const result = await response.json();
+          console.log('🔍 ContentService: Résultat API:', result.success ? 'Succès' : 'Échec');
+          console.log('🔍 ContentService: Données complètes reçues:', result);
       
       if (!result.success) {
+        console.error('🔍 ContentService: Erreur API:', result.error);
         throw new Error(result.error || 'Erreur lors de la récupération du contenu');
       }
 
       // Transformer les données JSON en format ContentData
       const data = result.content;
+      console.log('🔍 ContentService: Données brutes reçues:', data.legal ? 'Section legal présente' : 'Section legal manquante');
+      
       const contentData: ContentData[] = [
         {
           id: 'hero',
@@ -126,13 +142,33 @@ class ContentService {
           content: data.footer,
           updated_at: new Date().toISOString(),
           updated_by: 'local'
+        },
+        {
+          id: 'whatsapp',
+          section: 'whatsapp',
+          locale: locale || 'fr',
+          content: data.whatsapp,
+          updated_at: new Date().toISOString(),
+          updated_by: 'local'
+        },
+        {
+          id: 'legal',
+          section: 'legal',
+          locale: locale || 'fr',
+          content: data.legal,
+          updated_at: new Date().toISOString(),
+          updated_by: 'local'
         }
       ];
 
-      console.log('🔍 contentService getAllContent: Données JSON chargées:', contentData);
-      return contentData;
+      console.log('🔍 ContentService: Sections finales:', contentData.map(item => item.section));
+      console.log('🔍 ContentService: Section legal incluse:', contentData.some(item => item.section === 'legal'));
+
+          return contentData;
     } catch (error) {
-      console.error('Erreur lors de la récupération du contenu:', error);
+      console.error('🔍 ContentService: Erreur lors de la récupération du contenu:', error);
+      console.error('🔍 ContentService: Type d\'erreur:', typeof error);
+      console.error('🔍 ContentService: Message d\'erreur:', error.message);
       throw error;
     }
   }
@@ -144,17 +180,11 @@ class ContentService {
     content: Record<string, any>,
     locale: string = 'fr'
   ): Promise<ContentData> {
-    try {
-      console.log('🔍 contentService: Mise à jour de la section:', section);
-      console.log('🔍 contentService: Contenu:', content);
-      console.log('🔍 contentService: Locale:', locale);
-      
-       // Utiliser l'API locale pour mettre à jour le fichier JSON
-       const url = new URL('/api/cms/content', window.location.origin);
-      url.searchParams.append('section', section);
-      url.searchParams.append('locale', locale);
-      
-      console.log('🔍 contentService: URL:', url.toString());
+        try {
+          // Utiliser l'API locale pour mettre à jour le fichier JSON
+          const url = new URL('/api/cms/content', this.getBaseUrl());
+          url.searchParams.append('section', section);
+          url.searchParams.append('locale', locale);
 
       const response = await fetch(url.toString(), {
         method: 'PUT',
@@ -164,17 +194,13 @@ class ContentService {
         body: JSON.stringify({ content }),
       });
 
-      console.log('🔍 contentService: Status:', response.status);
-      console.log('🔍 contentService: StatusText:', response.statusText);
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Erreur response:', errorText);
+            throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+          }
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('🔍 contentService: Erreur response:', errorText);
-        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log('🔍 contentService: Résultat:', result);
+          const result = await response.json();
       
       if (!result.success) {
         throw new Error(result.error || 'Erreur lors de la sauvegarde');
@@ -189,10 +215,10 @@ class ContentService {
         updated_at: new Date().toISOString(),
         updated_by: 'admin'
       };
-    } catch (error) {
-      console.error(`🔍 contentService: Erreur lors de la mise à jour de la section ${section}:`, error);
-      throw error;
-    }
+        } catch (error) {
+          console.error(`Erreur lors de la mise à jour de la section ${section}:`, error);
+          throw error;
+        }
   }
 
   // Méthodes supprimées - plus utilisées avec la nouvelle architecture JSON locale

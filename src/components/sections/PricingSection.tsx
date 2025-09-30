@@ -39,7 +39,7 @@ export default function PricingSection({ pricing }: PricingSectionProps) {
           {pricing.title}
         </motion.h2>
         <div className="grid gap-6 md:grid-cols-2">
-          {pricing.plans.map((plan, index) => (
+          {pricing.plans && Array.isArray(pricing.plans) && pricing.plans.map((plan, index) => (
             <motion.div
               key={plan.name}
               className={`rounded-3xl border p-8 shadow-sm transition ${
@@ -59,7 +59,7 @@ export default function PricingSection({ pricing }: PricingSectionProps) {
               </p>
               <p className="mt-4 text-sm text-ink-muted">{plan.description}</p>
               <ul className="mt-6 space-y-3 text-sm text-night">
-                {plan.features.map((feature) => (
+                {plan.features && Array.isArray(plan.features) && plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
                     <span className="mt-1 inline-block h-2 w-2 rounded-full bg-magenta" aria-hidden />
                     <span>{feature}</span>

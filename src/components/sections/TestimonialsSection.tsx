@@ -49,7 +49,7 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
           <h2 className="text-3xl font-bold sm:text-4xl">{testimonials.title}</h2>
           <p className="text-lg text-ink-muted">{testimonials.subtitle}</p>
           <div className="flex gap-3">
-            {items.map((_, indicatorIndex) => (
+            {items && Array.isArray(items) && items.map((_, indicatorIndex) => (
               <button
                 key={indicatorIndex}
                 type="button"
@@ -66,20 +66,56 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
           <AnimatePresence mode="wait">
             <motion.div
               key={items[index].name}
-              className="rounded-3xl border border-cloud bg-white/90 p-8 shadow-xl backdrop-blur"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
+              className="group relative rounded-3xl border border-cloud bg-white/95 p-8 shadow-2xl backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-3xl"
+              initial={{ opacity: 0, x: 40, scale: 0.95 }}
+              animate={{ 
+                opacity: 1, 
+                x: 0, 
+                scale: 1,
+                y: [0, -2, 0],
+                transition: { 
+                  duration: 0.5,
+                  y: { 
+                    duration: 4, 
+                    repeat: Infinity, 
+                    ease: "easeInOut" 
+                  }
+                }
+              }}
+              exit={{ opacity: 0, x: -40, scale: 0.95 }}
               transition={{ duration: 0.5 }}
+              whileHover={{ 
+                scale: 1.02,
+                rotateY: 2,
+                transition: { duration: 0.3 }
+              }}
             >
               <div className="flex items-center gap-4">
-                <Image
-                  src={items[index]?.avatar || '/placeholder-avatar.jpg'}
-                  alt={items[index]?.name || 'Utilisateur'}
-                  width={64}
-                  height={64}
-                  className="h-16 w-16 rounded-full object-cover"
-                />
+                <motion.div
+                  className="relative"
+                  whileHover={{ 
+                    scale: 1.1,
+                    rotate: 5,
+                    transition: { duration: 0.3 }
+                  }}
+                  animate={{ 
+                    rotate: [0, 2, -2, 0],
+                    transition: { 
+                      duration: 3, 
+                      repeat: Infinity, 
+                      ease: "easeInOut" 
+                    }
+                  }}
+                >
+                  <Image
+                    src={items[index]?.avatar || '/placeholder-avatar.jpg'}
+                    alt={items[index]?.name || 'Utilisateur'}
+                    width={64}
+                    height={64}
+                    className="h-16 w-16 rounded-full object-cover shadow-lg ring-2 ring-white"
+                  />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-magenta/20 to-sunset/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                </motion.div>
                 <div>
                   <p className="text-lg font-semibold text-night">{items[index]?.name || 'Utilisateur'}</p>
                   <p className="text-sm text-ink-muted">{items[index]?.role || 'Client'}</p>

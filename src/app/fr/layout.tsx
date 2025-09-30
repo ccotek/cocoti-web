@@ -9,8 +9,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Cocoti – Réinventons les tontines et projets collectifs",
-  description: "Cocoti est la plateforme moderne pour gérer tontines digitales, cagnottes solidaires et projets collectifs en toute confiance."
+  title: "Cocoti – L'app qui digitalise la solidarité humaine",
+  description: "Cocoti facilite la gestion de tontines digitales, cagnottes solidaires et projets collectifs avec une expérience fluide et sécurisée.",
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg'
+  }
 };
 
 export default function FrenchLayout({

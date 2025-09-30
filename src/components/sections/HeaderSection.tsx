@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bars3BottomRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { translate } from "@/utils/translations";
 
 type HeaderSectionProps = {
   navItems: Array<{
@@ -70,7 +71,7 @@ export default function HeaderSection({ navItems, navCta, locale, onLocaleChange
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-cloud/70 md:hidden"
             onClick={() => setShowMobileMenu((prev) => !prev)}
-            aria-label="Toggle menu"
+            aria-label={translate("accessibility.toggleMenu", locale)}
           >
             {showMobileMenu ? (
               <XMarkIcon className="h-6 w-6" />
@@ -95,7 +96,7 @@ export default function HeaderSection({ navItems, navCta, locale, onLocaleChange
                 type="button"
                 className="rounded-full border border-cloud/80 p-2"
                 onClick={() => setShowMobileMenu(false)}
-                aria-label="Close menu"
+                aria-label={translate("accessibility.closeMenu", locale)}
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
