@@ -41,20 +41,17 @@ export default async function LegalNoticePage({ params }: { params: Promise<{ lo
   // Lire les données directement depuis le fichier JSON
   let legalData;
   try {
-    console.log('🔍 LegalNoticePage: Chargement des données depuis le fichier JSON pour', locale);
     const jsonPath = path.join(process.cwd(), 'src', 'i18n', 'messages', `${locale}.json`);
     const fileContent = await fs.readFile(jsonPath, 'utf-8');
     const data = JSON.parse(fileContent);
     
     if (data.legal) {
-      console.log('🔍 LegalNoticePage: Données légales trouvées dans le fichier JSON');
-      console.log('🔍 LegalNoticePage: Titre:', data.legal.title);
       legalData = data.legal;
     } else {
       throw new Error('No legal data in JSON file');
     }
   } catch (error) {
-    console.warn('🔍 LegalNoticePage: Impossible de lire le fichier JSON, utilisation des données par défaut:', error);
+    console.warn('Impossible de lire le fichier JSON, utilisation des données par défaut:', error);
     // Données par défaut si le fichier JSON n'est pas accessible
     legalData = {
       title: locale === 'fr' ? "Mentions légales" : "Legal Notice",

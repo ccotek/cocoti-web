@@ -41,27 +41,19 @@ export default function GenericSectionForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🔍 GenericSectionForm handleSubmit: Début');
-    console.log('🔍 GenericSectionForm: formData avant sauvegarde:', formData);
     setSaving(true);
     setError(null);
     
     try {
-      console.log('🔍 GenericSectionForm: Sauvegarde de la section:', section);
-      console.log('🔍 GenericSectionForm: Données à sauvegarder:', formData);
       
       const result = await updateContent(section, formData);
-      console.log('🔍 GenericSectionForm: Résultat de la sauvegarde:', result);
-      
       if (result.success) {
-        console.log('🔍 GenericSectionForm: Sauvegarde réussie, appel de onSave');
         onSave(formData);
-        console.log('🔍 GenericSectionForm: onSave appelé');
       } else {
         setError(result.error || 'Erreur lors de la sauvegarde');
       }
     } catch (err) {
-      console.error('🔍 GenericSectionForm: Erreur lors de la sauvegarde:', err);
+      console.error('Erreur lors de la sauvegarde:', err);
       setError('Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);
@@ -119,24 +111,21 @@ export default function GenericSectionForm({
                     formData.append('file', file);
                     
                     try {
-                      console.log('🔍 Upload: Début de l\'upload du fichier:', file.name);
                       const response = await fetch('/api/upload', {
                         method: 'POST',
                         body: formData,
                       });
                       
                       const result = await response.json();
-                      console.log('🔍 Upload: Résultat de l\'upload:', result);
                       
                       if (result.success) {
-                        console.log('🔍 Upload: URL générée:', result.url);
                         handleFieldChange(key, result.url);
                       } else {
-                        console.error('🔍 Upload: Échec de l\'upload:', result.error);
+                        console.error('Échec de l\'upload:', result.error);
                         alert('Erreur lors de l\'upload: ' + result.error);
                       }
                     } catch (error) {
-                      console.error('🔍 Upload: Erreur lors de l\'upload:', error);
+                      console.error('Erreur lors de l\'upload:', error);
                       alert('Erreur lors de l\'upload: ' + error);
                     }
                   }

@@ -132,7 +132,6 @@ export function useContent(locale: 'fr' | 'en') {
         useEffect(() => {
           const loadContent = async () => {
             try {
-              console.log('🔍 useContent: Début du chargement pour locale:', locale);
               setLoading(true);
               setError(null);
 
@@ -270,34 +269,15 @@ export function useContent(locale: 'fr' | 'en') {
 
         const updateContent = async (section: keyof ContentData, data: any) => {
           try {
-            console.log('🔍 useContent updateContent: Section:', section);
-            console.log('🔍 useContent updateContent: Data:', data);
-            console.log('🔍 useContent updateContent: Locale:', locale);
             
             // Envoyer les données à l'API
             const result = await contentService.updateContentSection(section, data, locale);
-            console.log('🔍 useContent updateContent: Résultat API:', result);
-
             // Mettre à jour le state local
             setContent(prev => prev ? { ...prev, [section]: data } : null);
-            console.log('🔍 useContent updateContent: State local mis à jour');
-
-            // Vérifier que les données sont bien sauvegardées en relançant un get
-            console.log('🔍 useContent updateContent: Vérification - rechargement des données...');
-            const verifyContent = await contentService.getAllContent(locale);
-            console.log('🔍 useContent updateContent: Données vérifiées:', verifyContent);
-            
-            // Vérifier spécifiquement la section hero
-            const heroSection = verifyContent.find(item => item.section === 'hero');
-            if (heroSection) {
-              console.log('🔍 useContent updateContent: Section hero trouvée:', heroSection);
-              console.log('🔍 useContent updateContent: Contenu hero:', heroSection.content);
-              console.log('🔍 useContent updateContent: Image hero:', heroSection.content.image);
-            }
 
             return { success: true };
           } catch (err) {
-            console.error('🔍 useContent updateContent: Erreur:', err);
+            console.error('Erreur lors de la sauvegarde:', err);
             return { success: false, error: 'Erreur lors de la sauvegarde' };
           }
         };

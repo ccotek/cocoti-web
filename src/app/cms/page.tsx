@@ -9,14 +9,9 @@ export default function CmsPage() {
   const { isAuthenticated, loading, user } = useAdminAuthContext();
   const router = useRouter();
 
-  console.log('🔍 CmsPage: isAuthenticated:', isAuthenticated);
-  console.log('🔍 CmsPage: loading:', loading);
-  console.log('🔍 CmsPage: user:', user);
 
   useEffect(() => {
-    console.log('🔍 CmsPage useEffect: isAuthenticated:', isAuthenticated, 'loading:', loading);
     if (!loading && !isAuthenticated) {
-      console.log('🔍 CmsPage: Redirection vers /cms/login');
       router.push("/cms/login");
     }
   }, [isAuthenticated, loading, router]);

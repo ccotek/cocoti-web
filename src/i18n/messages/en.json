@@ -262,7 +262,6 @@
   },
   "footer": {
     "company": "Developed between Dakar and Paris to digitize human solidarity.",
-    "copyright": "All rights reserved.",
     "legalLinks": [
       {
         "label": "Privacy Policy",
@@ -280,7 +279,7 @@
     "socialLinks": [
       {
         "label": "",
-        "href": "https://x.com/cocoti",
+        "href": "https://x.com/cocotiapp",
         "icon": "x"
       },
       {

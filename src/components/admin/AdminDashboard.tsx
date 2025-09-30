@@ -118,7 +118,6 @@ export default function AdminDashboard() {
   const { user, logout } = useAdminAuthContext();
   const { content, updateContent } = useContent(locale);
 
-  console.log('🔍 AdminDashboard: Re-render, notification:', notification);
 
   // Gérer la notification avec un useEffect
   useEffect(() => {
@@ -139,9 +138,6 @@ export default function AdminDashboard() {
   };
 
   const handleSaveContent = async (section: string, data: any) => {
-    console.log('🔍 AdminDashboard handleSaveContent: Début');
-    console.log('🔍 AdminDashboard handleSaveContent: Section:', section);
-    console.log('🔍 AdminDashboard handleSaveContent: Data:', data);
     
     try {
       const result = await updateContent(section, data);

@@ -18,19 +18,13 @@ export default function CmsLoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('🔍 Login: Début de la connexion');
     const result = await login(credentials.email, credentials.password);
-    console.log('🔍 Login: Résultat:', result);
-
     if (result.success) {
-      console.log('🔍 Login: Connexion réussie, redirection...');
       // Attendre un peu pour que le token soit stocké
       setTimeout(() => {
-        console.log('🔍 Login: Redirection vers /cms');
         router.push("/cms");
       }, 100);
     } else {
-      console.log('🔍 Login: Échec de la connexion:', result.error);
     }
   };
 

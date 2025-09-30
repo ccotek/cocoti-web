@@ -23,17 +23,6 @@ export async function GET(request: NextRequest) {
     
     const content = await readJsonFile(locale);
     
-    console.log(`📖 Contenu récupéré pour ${locale}:`, content.legal ? 'Section legal présente' : 'Section legal manquante');
-    if (content.legal) {
-      console.log(`📝 Titre legal:`, content.legal.title);
-      if (content.legal.sections) {
-        const editeurSection = content.legal.sections.find(s => s.title.includes('Éditeur'));
-        if (editeurSection && editeurSection.company) {
-          console.log(`🏢 Nom entreprise:`, editeurSection.company.name);
-          console.log(`📧 Email entreprise:`, editeurSection.company.email);
-        }
-      }
-    }
     
     return NextResponse.json({ success: true, content });
   } catch (error) {

@@ -48,7 +48,6 @@ class AdminAuthService {
 
       const data: AdminLoginResponse = await response.json();
       
-      console.log('🔍 adminAuthService login: Données reçues:', data);
       
       // Calculer l'expiration nous-mêmes (24h à partir de maintenant)
       const now = new Date();
@@ -59,8 +58,6 @@ class AdminAuthService {
       localStorage.setItem('admin_refresh_token', data.refresh_token);
       localStorage.setItem('admin_expires_at', expiration.toISOString());
       
-      console.log('🔍 adminAuthService login: Token stocké:', data.access_token ? 'Oui' : 'Non');
-      console.log('🔍 adminAuthService login: Expiration calculée:', expiration.toISOString());
       
       return data;
     } catch (error) {
@@ -138,11 +135,7 @@ class AdminAuthService {
     const token = localStorage.getItem('admin_token');
     const expiresAt = localStorage.getItem('admin_expires_at');
     
-    console.log('🔍 adminAuthService isAuthenticated: Token:', token ? 'Présent' : 'Absent');
-    console.log('🔍 adminAuthService isAuthenticated: ExpiresAt:', expiresAt);
-    
     if (!token || !expiresAt) {
-      console.log('🔍 adminAuthService isAuthenticated: Token ou expiration manquant');
       return false;
     }
     
@@ -160,15 +153,10 @@ class AdminAuthService {
       const expiration = new Date(cleanExpiresAt);
       const isValid = now < expiration;
       
-      console.log('🔍 adminAuthService isAuthenticated: Maintenant:', now.toISOString());
-      console.log('🔍 adminAuthService isAuthenticated: Expiration brute:', expiresAt);
-      console.log('🔍 adminAuthService isAuthenticated: Expiration nettoyée:', cleanExpiresAt);
-      console.log('🔍 adminAuthService isAuthenticated: Expiration parsée:', expiration.toISOString());
-      console.log('🔍 adminAuthService isAuthenticated: Valide:', isValid);
       
       return isValid;
     } catch (error) {
-      console.error('🔍 adminAuthService isAuthenticated: Erreur de parsing de date:', error);
+      console.error('Erreur de parsing de date:', error);
       return false;
     }
   }

@@ -34,8 +34,6 @@ class ContentService {
         url.searchParams.append('locale', locale);
       }
 
-      console.log('🔍 ContentService: Appel API vers', url.toString());
-
           const response = await fetch(url.toString(), {
             method: 'GET',
             headers: {
@@ -43,24 +41,18 @@ class ContentService {
             },
           });
 
-          console.log('🔍 ContentService: Réponse API reçue, status:', response.status);
-
           if (!response.ok) {
             throw new Error(`Erreur ${response.status}: ${response.statusText}`);
           }
 
           const result = await response.json();
-          console.log('🔍 ContentService: Résultat API:', result.success ? 'Succès' : 'Échec');
-          console.log('🔍 ContentService: Données complètes reçues:', result);
       
       if (!result.success) {
-        console.error('🔍 ContentService: Erreur API:', result.error);
         throw new Error(result.error || 'Erreur lors de la récupération du contenu');
       }
 
       // Transformer les données JSON en format ContentData
       const data = result.content;
-      console.log('🔍 ContentService: Données brutes reçues:', data.legal ? 'Section legal présente' : 'Section legal manquante');
       
       const contentData: ContentData[] = [
         {
@@ -161,14 +153,9 @@ class ContentService {
         }
       ];
 
-      console.log('🔍 ContentService: Sections finales:', contentData.map(item => item.section));
-      console.log('🔍 ContentService: Section legal incluse:', contentData.some(item => item.section === 'legal'));
-
           return contentData;
     } catch (error) {
-      console.error('🔍 ContentService: Erreur lors de la récupération du contenu:', error);
-      console.error('🔍 ContentService: Type d\'erreur:', typeof error);
-      console.error('🔍 ContentService: Message d\'erreur:', error.message);
+      console.error('Erreur lors de la récupération du contenu:', error);
       throw error;
     }
   }
