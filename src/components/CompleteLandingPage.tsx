@@ -10,6 +10,7 @@ import { translate } from "@/utils/translations";
 // Import des sections
 import HeaderSection from "./sections/HeaderSection";
 import HeroSection from "./sections/HeroSection";
+import CausesSection from "./sections/CausesSection";
 import SolutionsSection from "./sections/SolutionsSection";
 import HowSection from "./sections/HowSection";
 import WhySection from "./sections/WhySection";
@@ -168,6 +169,7 @@ export default function CompleteLandingPage() {
 
       <main>
         <HeroSection hero={hero} />
+        <CausesSection locale={locale} />
         <SolutionsSection solutions={solutions} />
         <HowSection how={how} />
         <WhySection why={why} />

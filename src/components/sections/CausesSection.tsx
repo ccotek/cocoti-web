@@ -1,0 +1,230 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { HeartIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { usePublicProjects, PublicProject } from "@/hooks/usePublicProjects";
+
+// Utiliser le type PublicProject du hook
+type Cause = PublicProject;
+
+type CausesSectionProps = {
+  locale: 'fr' | 'en';
+};
+
+export default function CausesSection({ locale }: CausesSectionProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const { projects, loading, error, hasApiUrl } = usePublicProjects(locale);
+
+
+  // Auto-rotation des causes
+  useEffect(() => {
+    if (projects.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % projects.length);
+      }, 5000);
+
+      return () => clearInterval(interval);
+    }
+  }, [projects.length]);
+
+  const nextSlide = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % projects.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + projects.length) % projects.length);
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index);
+  };
+
+  // Ne pas afficher la section si pas de données
+  if (!loading && projects.length === 0) {
+    return null;
+  }
+
+  // État de chargement
+  if (loading) {
+    return (
+      <section className="section-padding bg-white">
+        <div className="container">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-magenta mx-auto mb-4"></div>
+            <p className="text-ink-muted font-inter">
+              {locale === 'fr' ? 'Chargement des projets...' : 'Loading projects...'}
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Debug: Afficher les informations de l'API en développement
+  if (process.env.NODE_ENV === 'development') {
+    console.log('CausesSection Debug:', {
+      hasApiUrl,
+      loading,
+      error,
+      projectsCount: projects.length,
+      projects: projects
+    });
+  }
+
+  // Message d'erreur (optionnel - on peut choisir de ne pas afficher la section en cas d'erreur)
+  if (error) {
+    console.warn('CausesSection error:', error);
+    // On utilise les données de fallback, donc on continue l'affichage
+  }
+
+  return (
+    <section className="section-padding bg-white">
+      <div className="container">
+        <motion.div 
+          className="mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <h2 className="text-3xl font-bold text-night mb-4 sm:text-4xl font-inter">
+            {locale === 'fr' ? 'Des projets qui changent tout' : 'Projects that change everything'}
+          </h2>
+          <p className="text-lg text-ink-muted max-w-2xl font-inter">
+            {locale === 'fr' 
+              ? 'Rejoignez des milliers de personnes qui transforment leurs communautés grâce à la solidarité collective.'
+              : 'Join thousands of people transforming their communities through collective solidarity.'
+            }
+          </p>
+        </motion.div>
+
+        <div className="relative">
+          {/* Carousel Container */}
+          <div className="overflow-hidden rounded-3xl">
+            <motion.div
+              className="flex transition-transform duration-500 ease-in-out"
+              animate={{ x: `-${currentIndex * 100}%` }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+            >
+              {projects.map((cause, index) => (
+                <div key={cause.id} className="w-full flex-shrink-0 px-4">
+                  <motion.div
+                    className="bg-white rounded-2xl border border-cloud shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <div className="flex h-48">
+                      {/* Image Section - Left */}
+                      <div className="relative w-1/3 flex-shrink-0">
+                        <img
+                          src={cause.image}
+                          alt={cause.title}
+                          className="w-full h-full object-cover"
+                        />
+                        {cause.urgent && (
+                          <div className="absolute top-3 left-3">
+                            <span className="bg-coral text-white px-2 py-1 rounded-full text-xs font-semibold font-inter">
+                              {locale === 'fr' ? 'Urgent' : 'Urgent'}
+                            </span>
+                          </div>
+                        )}
+                        <div className="absolute top-3 right-3">
+                          <span className="bg-white/90 text-night px-2 py-1 rounded-full text-xs font-semibold font-inter">
+                            {cause.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Content Section - Right */}
+                      <div className="flex-1 p-6 flex flex-col justify-between">
+                        <div>
+                          <h3 className="text-lg font-bold text-night mb-2 font-inter">
+                            {cause.title}
+                          </h3>
+                          <p className="text-sm text-ink-muted mb-4 line-clamp-2 font-inter">
+                            {cause.description}
+                          </p>
+                        </div>
+
+                        {/* Progress Section */}
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center text-xs font-inter">
+                            <span className="text-ink-muted">
+                              {locale === 'fr' ? 'Collecté' : 'Raised'}
+                            </span>
+                            <span className="font-semibold text-night">
+                              {cause.raised} / {cause.target}
+                            </span>
+                          </div>
+                          
+                          <div className="w-full bg-cloud rounded-full h-1.5">
+                            <motion.div
+                              className="bg-gradient-to-r from-sunset to-magenta h-1.5 rounded-full"
+                              initial={{ width: 0 }}
+                              whileInView={{ width: `${cause.progress}%` }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 1, delay: 0.5 }}
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between font-inter">
+                            <span className="text-xs text-ink-muted">
+                              {cause.progress}% {locale === 'fr' ? 'atteint' : 'reached'}
+                            </span>
+                            <a 
+                              href={`${process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://app.cocoti.sn'}/${locale}`}
+                              className="flex items-center gap-1 bg-gradient-to-r from-sunset to-magenta text-white px-3 py-1.5 rounded-full text-xs font-semibold hover:shadow-lg transition-all"
+                            >
+                              <HeartIcon className="h-3 w-3" />
+                              {locale === 'fr' ? 'Soutenir' : 'Support'}
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* Navigation Arrows */}
+          <button
+            onClick={prevSlide}
+            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all z-10"
+            aria-label={locale === 'fr' ? 'Précédent' : 'Previous'}
+          >
+            <ChevronLeftIcon className="h-6 w-6 text-night" />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all z-10"
+            aria-label={locale === 'fr' ? 'Suivant' : 'Next'}
+          >
+            <ChevronRightIcon className="h-6 w-6 text-night" />
+          </button>
+
+          {/* Dots Indicator */}
+          <div className="flex justify-center mt-8 gap-2">
+            {projects.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`w-3 h-3 rounded-full transition-all ${
+                  index === currentIndex
+                    ? 'bg-magenta scale-110'
+                    : 'bg-cloud hover:bg-magenta/50'
+                }`}
+                aria-label={`${locale === 'fr' ? 'Aller à la slide' : 'Go to slide'} ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </section>
+  );
+}
