@@ -17,14 +17,12 @@ import PricingSection from "./sections/PricingSection";
 import TestimonialsSection from "./sections/TestimonialsSection";
 import FaqSection from "./sections/FaqSection";
 import FooterSection from "./sections/FooterSection";
-import AuthModal from "./modals/AuthModal";
 import WhatsAppButtonSimple from "./WhatsAppButtonSimple";
 
 export default function CompleteLandingPage() {
   const pathname = usePathname();
   const [locale, setLocale] = useState<'fr' | 'en'>('fr');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Utiliser le hook useContent pour charger depuis l'API
   let content, loading, error;
@@ -65,13 +63,6 @@ export default function CompleteLandingPage() {
     setIsModalOpen(false);
   };
 
-  const handleLoginClick = () => {
-    setIsAuthModalOpen(true);
-  };
-
-  const handleCloseAuthModal = () => {
-    setIsAuthModalOpen(false);
-  };
 
   // Extraire les données des traductions
   const navItemsRaw = t("navigation.items");
@@ -91,8 +82,8 @@ export default function CompleteLandingPage() {
     download: content?.hero?.download || t("hero.download"),
     viewDashboard: content?.hero?.viewDashboard || t("hero.viewDashboard"),
     viewDashboardLink: content?.hero?.viewDashboardLink || t("hero.viewDashboardLink"),
-    apps: content?.hero?.apps || t("hero.apps") as Array<{ store: string; label: string; href: string }>,
-    stats: content?.hero?.stats || t("hero.stats") as Array<{ value: string; label: string }>,
+    apps: content?.hero?.apps || (Array.isArray(t("hero.apps")) ? t("hero.apps") : []) as Array<{ store: string; label: string; href: string }>,
+    stats: content?.hero?.stats || (Array.isArray(t("hero.stats")) ? t("hero.stats") : []) as Array<{ value: string; label: string }>,
     mockupAlt: content?.hero?.mockupAlt || t("hero.mockupAlt"),
     image: content?.hero?.image || t("hero.image")
   };
@@ -100,23 +91,23 @@ export default function CompleteLandingPage() {
   const solutions = {
     title: t("solutions.title"),
     subtitle: t("solutions.subtitle"),
-    items: t("solutions.items") as Array<{ id: string; title: string; description: string }>
+    items: (Array.isArray(t("solutions.items")) ? t("solutions.items") : []) as Array<{ id: string; title: string; description: string }>
   };
 
   const how = {
     title: t("how.title"),
-    steps: t("how.steps") as Array<{ title: string; description: string }>
+    steps: (Array.isArray(t("how.steps")) ? t("how.steps") : []) as Array<{ title: string; description: string }>
   };
 
   const why = {
     title: t("why.title"),
     subtitle: t("why.subtitle"),
-    values: t("why.values") as Array<{ title: string; description: string }>
+    values: (Array.isArray(t("why.values")) ? t("why.values") : []) as Array<{ title: string; description: string }>
   };
 
   const pricing = {
     title: t("pricing.title"),
-    plans: t("pricing.plans") as Array<{
+    plans: (Array.isArray(t("pricing.plans")) ? t("pricing.plans") : []) as Array<{
       name: string;
       price: string;
       period: string;
@@ -130,17 +121,17 @@ export default function CompleteLandingPage() {
   const testimonials = {
     title: t("testimonials.title"),
     subtitle: t("testimonials.subtitle"),
-    items: Array.isArray(t("testimonials.items")) ? t("testimonials.items") as Array<{
+    items: Array.isArray(t("testimonials.items")) ? (t("testimonials.items") as unknown as Array<{
       name: string;
       role: string;
       quote: string;
       avatar: string;
-    }> : []
+    }>) : []
   };
 
   const faq = {
     title: t("faq.title"),
-    items: t("faq.items") as Array<{ question: string; answer: string }>,
+    items: (Array.isArray(t("faq.items")) ? t("faq.items") : []) as Array<{ question: string; answer: string }>,
     cta: {
       title: t("faq.cta.title"),
       description: t("faq.cta.description"),
@@ -154,14 +145,13 @@ export default function CompleteLandingPage() {
   // Données stables pour éviter le flash
   const footer = {
     company: content?.footer?.company || t("footer.company"),
-    copyright: content?.footer?.copyright || t("footer.copyright"),
-    legalLinks: content?.footer?.legalLinks || t("footer.legalLinks") as Array<{ label: string; href: string }>,
+    legalLinks: content?.footer?.legalLinks || (Array.isArray(t("footer.legalLinks")) ? t("footer.legalLinks") : []) as Array<{ label: string; href: string }>,
     socialLinks: (() => {
-      const jsonSocialLinks = t("footer.socialLinks") as Array<{ label: string; href: string; icon?: string }>;
+      const jsonSocialLinks = t("footer.socialLinks");
       // S'assurer que les données sont stables et valides
-      return jsonSocialLinks && Array.isArray(jsonSocialLinks) ? jsonSocialLinks : [];
+      return Array.isArray(jsonSocialLinks) ? jsonSocialLinks as Array<{ label: string; href: string; icon?: string }> : [];
     })(),
-    quickLinks: content?.footer?.quickLinks || t("footer.quickLinks") as Array<{ label: string; href: string }>
+    quickLinks: content?.footer?.quickLinks || (Array.isArray(t("footer.quickLinks")) ? t("footer.quickLinks") : []) as Array<{ label: string; href: string }>
   };
 
 
@@ -173,7 +163,7 @@ export default function CompleteLandingPage() {
         navCta={navCta}
         locale={locale}
         onLocaleChange={handleLocaleChange}
-        onLoginClick={handleLoginClick}
+        onLoginClick={() => window.open(`${process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://app.cocoti.sn'}/${locale}`, '_blank')}
       />
 
       <main>
@@ -188,12 +178,6 @@ export default function CompleteLandingPage() {
 
       <FooterSection footer={footer} />
 
-      {/* Modal d'authentification */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={handleCloseAuthModal}
-        locale={locale}
-      />
 
       {/* Modal de contact - version simplifiée pour l'instant */}
       {isModalOpen && (

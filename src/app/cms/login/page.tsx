@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 import { motion } from "framer-motion";
 import { EyeIcon, EyeSlashIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { useAdminAuthContext } from "@/contexts/AdminAuthContext";
+import { ADMIN_CONFIG } from "@/config/admin";
 
 export default function CmsLoginPage() {
   const [credentials, setCredentials] = useState({
@@ -14,6 +16,11 @@ export default function CmsLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { login, loading, error } = useAdminAuthContext();
   const router = useRouter();
+
+  // Vérifier si l'admin est activé - retourner 404 si désactivé
+  if (!ADMIN_CONFIG.ENABLED) {
+    notFound();
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

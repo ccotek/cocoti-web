@@ -2,13 +2,19 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import { useAdminAuthContext } from "@/contexts/AdminAuthContext";
+import { ADMIN_CONFIG } from "@/config/admin";
 
 export default function CmsPage() {
   const { isAuthenticated, loading, user } = useAdminAuthContext();
   const router = useRouter();
 
+  // Vérifier si l'admin est activé - retourner 404 si désactivé
+  if (!ADMIN_CONFIG.ENABLED) {
+    notFound();
+  }
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {

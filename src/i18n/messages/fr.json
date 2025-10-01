@@ -46,7 +46,7 @@
     "subtitle": "Avec Cocoti, gérez vos tontines, cagnottes et projets en toute simplicité. Invitez votre communauté, automatisez les contributions et suivez vos progrès en temps réel.",
     "download": "Télécharger l'app",
     "viewDashboard": "Commencer maintenant",
-    "viewDashboardLink": "https://app.cocoti.com",
+    "viewDashboardLink": "${NEXT_PUBLIC_DASHBOARD_URL || 'https://app.cocoti.sn'}/fr",
     "apps": [
       {
         "store": "App Store",

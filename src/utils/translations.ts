@@ -438,6 +438,28 @@ export const getTranslations = (locale: 'fr' | 'en') => {
   return locale === 'fr' ? frMessages : enMessages;
 };
 
+// Fonction pour interpréter les variables d'environnement dans les chaînes
+const interpolateEnvVars = (str: string): string => {
+  if (typeof str !== 'string') return str;
+  
+  return str.replace(/\$\{([^}]+)\}/g, (match, expression) => {
+    // Gérer les expressions comme "NEXT_PUBLIC_DASHBOARD_URL || 'default'"
+    const parts = expression.split('||').map((part: string) => part.trim());
+    
+    for (const part of parts) {
+      if (part.startsWith('NEXT_PUBLIC_')) {
+        const envVar = part.replace(/['"]/g, '');
+        const value = process.env[envVar];
+        if (value) return value;
+      } else if (part.startsWith("'") && part.endsWith("'")) {
+        return part.slice(1, -1); // Retourner la valeur par défaut sans les quotes
+      }
+    }
+    
+    return match; // Retourner la chaîne originale si aucune substitution n'est possible
+  });
+};
+
 export const translate = (key: string, locale: 'fr' | 'en', content?: any) => {
   const fallbackMessages = getTranslations(locale);
   const messages = content || fallbackMessages;
@@ -454,8 +476,9 @@ export const translate = (key: string, locale: 'fr' | 'en', content?: any) => {
     for (const k of keys) {
       fallbackValue = fallbackValue?.[k];
     }
-    return fallbackValue || key;
+    value = fallbackValue;
   }
   
-  return value || key;
+  // Interpréter les variables d'environnement dans la valeur finale
+  return interpolateEnvVars(value || key);
 };

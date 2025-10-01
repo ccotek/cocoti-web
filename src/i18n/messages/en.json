@@ -46,7 +46,7 @@
     "subtitle": "With Cocoti, manage your tontines, group savings, and community projects effortlessly. Invite your crew, automate contributions, and track progress in real time.",
     "download": "Download the app",
     "viewDashboard": "Start now",
-    "viewDashboardLink": "https://app.cocoti.com",
+    "viewDashboardLink": "${NEXT_PUBLIC_DASHBOARD_URL || 'https://app.cocoti.sn'}/en",
     "apps": [
       {
         "store": "App Store",

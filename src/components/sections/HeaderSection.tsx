@@ -58,13 +58,12 @@ export default function HeaderSection({ navItems, navCta, locale, onLocaleChange
                 {locale === 'fr' ? 'English' : 'Français'}
               </button>
             </div>
-            <button
-              type="button"
-              onClick={onLoginClick}
+            <a
+              href={`${process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://app.cocoti.sn'}/${locale}`}
               className="rounded-full bg-gradient-to-r from-sunset to-magenta px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-magenta/20 transition hover:shadow-xl"
             >
               {locale === 'fr' ? 'Se connecter' : 'Login'}
-            </button>
+            </a>
           </div>
 
           <button
@@ -122,16 +121,13 @@ export default function HeaderSection({ navItems, navCta, locale, onLocaleChange
                   {locale === 'fr' ? 'English' : 'Français'}
                 </button>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowMobileMenu(false);
-                  onLoginClick();
-                }}
+              <a
+                href={`${process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://app.cocoti.sn'}/${locale}`}
+                onClick={() => setShowMobileMenu(false)}
                 className="rounded-full bg-gradient-to-r from-sunset to-magenta px-5 py-3 text-center text-sm font-semibold text-white shadow-lg"
               >
                 {locale === 'fr' ? 'Se connecter' : 'Login'}
-              </button>
+              </a>
             </div>
           </motion.div>
         )}
