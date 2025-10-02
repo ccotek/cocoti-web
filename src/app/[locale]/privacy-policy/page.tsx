@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { InformationCircleIcon, ShieldCheckIcon, MegaphoneIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { readPrivacyPolicyMarkdown } from "@/utils/markdownReader";
 
-export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const data = readPrivacyPolicyMarkdown(locale as 'fr' | 'en');
   

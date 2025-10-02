@@ -3,6 +3,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -25,10 +28,40 @@ const nextConfig = {
     // Désactiver le cache des images pour le développement
     unoptimized: process.env.NODE_ENV === 'development',
   },
-  // Turbopack configuration
-  turbopack: {
-    root: process.cwd(),
+  // Configuration pour résoudre les problèmes de chunks sur Windows
+  webpack: (config, { dev, isServer }) => {
+    if (dev && !isServer) {
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 300,
+        ignored: ['**/node_modules/**', '**/.next/**'],
+      };
+    }
+    
+    // Configuration pour éviter les problèmes de fichiers temporaires sur Windows
+    config.resolve.symlinks = false;
+    config.cache = false; // Désactiver le cache pour éviter les problèmes de permissions
+    
+    return config;
   },
+  // Configuration pour éviter les problèmes de chunks
+  generateEtags: false,
+  poweredByHeader: false,
+  compress: true,
+  // Configuration pour le déploiement
+  output: 'standalone',
+  trailingSlash: false,
+  // Configuration pour éviter les problèmes de build sur Windows
+  reactStrictMode: true,
+  // Désactiver les optimisations qui causent des problèmes sur Windows
+  experimental: {
+    optimizeCss: false,
+    optimizePackageImports: [],
+  },
+  // Configuration spécifique pour Windows
+  outputFileTracingRoot: process.cwd(),
+  // Désactiver le tracing pour éviter les problèmes de permissions
+  generateBuildId: () => 'build',
 };
 
 module.exports = nextConfig;

@@ -3,7 +3,19 @@ import { BuildingOfficeIcon, UserIcon, GlobeAltIcon, EnvelopeIcon, PhoneIcon, Do
 import { promises as fs } from 'fs';
 import path from 'path';
 
-export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
+// Définir le type pour les sections légales
+interface LegalSection {
+  title: string;
+  content: string;
+  company?: {
+    name: string;
+    address: string;
+    phone: string;
+    email: string;
+  };
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   
   // Lire le titre directement depuis le fichier JSON
@@ -107,7 +119,7 @@ export default async function LegalNoticePage({ params }: { params: Promise<{ lo
         </div>
 
         <div className="bg-white rounded-3xl shadow-lg p-8 space-y-8">
-          {legalData.sections.map((section, index) => (
+          {legalData.sections.map((section: LegalSection, index: number) => (
             <section key={index}>
               <h2 className="text-2xl font-semibold text-night mb-4 flex items-center gap-3">
                 {(section.title.includes("Éditeur") || section.title.includes("Site publisher")) && <BuildingOfficeIcon className="w-6 h-6 text-magenta" />}

@@ -49,14 +49,14 @@ export default function ContactEditor({ contact, onUpdate, locale }: ContactEdit
   };
 
   const updateField = (field: string, value: any) => {
-    setLocalContact(prev => ({
+    setLocalContact((prev: any) => ({
       ...prev,
       [field]: value
     }));
   };
 
   const updateNestedField = (parent: string, field: string, value: any) => {
-    setLocalContact(prev => ({
+    setLocalContact((prev: any) => ({
       ...prev,
       [parent]: {
         ...prev[parent],
@@ -72,21 +72,21 @@ export default function ContactEditor({ contact, onUpdate, locale }: ContactEdit
       icon: '📘'
     };
     
-    setLocalContact(prev => ({
+    setLocalContact((prev: any) => ({
       ...prev,
       socialLinks: [...(prev.socialLinks || []), newLink]
     }));
   };
 
   const removeSocialLink = (index: number) => {
-    setLocalContact(prev => ({
+    setLocalContact((prev: any) => ({
       ...prev,
       socialLinks: prev.socialLinks.filter((_: any, i: number) => i !== index)
     }));
   };
 
   const updateSocialLink = (index: number, field: string, value: any) => {
-    setLocalContact(prev => ({
+    setLocalContact((prev: any) => ({
       ...prev,
       socialLinks: prev.socialLinks.map((link: any, i: number) => 
         i === index ? { ...link, [field]: value } : link

@@ -20,7 +20,7 @@ import FooterEditor from "./FooterEditor";
 import WhatsAppEditor from "./WhatsAppEditor";
 import LegalEditor from "./LegalEditor";
 import { useAdminAuthContext } from "@/contexts/AdminAuthContext";
-import { useContent } from "@/hooks/useContent";
+import { useContent, ContentData } from "@/hooks/useContent";
 import Notification from "../Notification";
 
 type AdminSection = {
@@ -137,7 +137,7 @@ export default function AdminDashboard() {
     setSelectedSection(null);
   };
 
-  const handleSaveContent = async (section: string, data: any) => {
+  const handleSaveContent = async (section: keyof ContentData, data: any) => {
     
     try {
       const result = await updateContent(section, data);
@@ -388,7 +388,7 @@ export default function AdminDashboard() {
             section={selectedSection}
             sectionTitle={adminSections.find(s => s.id === selectedSection)?.title || ''}
             sectionDescription={adminSections.find(s => s.id === selectedSection)?.description || ''}
-            onSave={(data) => handleSaveContent(selectedSection!, data)}
+            onSave={(data) => handleSaveContent(selectedSection! as keyof ContentData, data)}
             onCancel={handleBackToDashboard}
             locale={locale}
           />

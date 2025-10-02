@@ -43,39 +43,39 @@ export default function HeroForm({ content, onSave, onCancel }: HeroFormProps) {
   };
 
   const removeApp = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
-      apps: prev.apps.filter((_, i) => i !== index)
+      apps: prev.apps.filter((_: any, i: number) => i !== index)
     }));
   };
 
   const updateApp = (index: number, field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
-      apps: prev.apps.map((app, i) => 
+      apps: prev.apps.map((app: any, i: number) => 
         i === index ? { ...app, [field]: value } : app
       )
     }));
   };
 
   const addStat = () => {
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       stats: [...prev.stats, { value: '', label: '' }]
     }));
   };
 
   const removeStat = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
-      stats: prev.stats.filter((_, i) => i !== index)
+      stats: prev.stats.filter((_: any, i: number) => i !== index)
     }));
   };
 
   const updateStat = (index: number, field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
-      stats: prev.stats.map((stat, i) => 
+      stats: prev.stats.map((stat: any, i: number) => 
         i === index ? { ...stat, [field]: value } : stat
       )
     }));
@@ -183,7 +183,7 @@ export default function HeroForm({ content, onSave, onCancel }: HeroFormProps) {
           </button>
         </div>
         <div className="space-y-4">
-          {formData.apps.map((app, index) => (
+          {formData.apps.map((app: any, index: number) => (
             <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-gray-200 rounded-md">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -243,7 +243,7 @@ export default function HeroForm({ content, onSave, onCancel }: HeroFormProps) {
           </button>
         </div>
         <div className="space-y-4">
-          {formData.stats.map((stat, index) => (
+          {formData.stats.map((stat: any, index: number) => (
             <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border border-gray-200 rounded-md">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

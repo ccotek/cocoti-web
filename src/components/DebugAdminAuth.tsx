@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { adminAuthService } from "@/services/adminAuthService";
-import { ADMIN_ADMIN_API_CONFIG } from "@/config/adminApi";
+import { ADMIN_API_CONFIG, ADMIN_API_ENDPOINTS as API_ENDPOINTS } from "@/config/adminApi";
 
 export default function DebugAdminAuth() {
   const [debugInfo, setDebugInfo] = useState<string[]>([]);

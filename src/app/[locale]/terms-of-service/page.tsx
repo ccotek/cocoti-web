@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import { readTermsOfServiceMarkdown } from "@/utils/markdownReader";
 
-export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const data = readTermsOfServiceMarkdown(locale as 'fr' | 'en');
   
@@ -66,7 +66,7 @@ export default async function TermsOfServicePage({ params }: { params: Promise<{
                   <div className="p-4 bg-green-50 rounded-2xl border border-green-200">
                     <h4 className="font-semibold text-green-800 mb-2">✅ Autorisé</h4>
                     <ul className="text-green-700 text-sm space-y-1">
-                      {section.allowed.map((item, itemIndex) => (
+                      {section.allowed?.map((item, itemIndex) => (
                         <li key={itemIndex}>• {item}</li>
                       ))}
                     </ul>
@@ -74,7 +74,7 @@ export default async function TermsOfServicePage({ params }: { params: Promise<{
                   <div className="p-4 bg-red-50 rounded-2xl border border-red-200">
                     <h4 className="font-semibold text-red-800 mb-2">❌ Interdit</h4>
                     <ul className="text-red-700 text-sm space-y-1">
-                      {section.forbidden.map((item, itemIndex) => (
+                      {section.forbidden?.map((item, itemIndex) => (
                         <li key={itemIndex}>• {item}</li>
                       ))}
                     </ul>

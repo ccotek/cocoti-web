@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useContent } from "@/hooks/useContent";
+import { useContent, ContentData } from "@/hooks/useContent";
 
 type GenericSectionFormProps = {
   section: string;
@@ -27,8 +27,8 @@ export default function GenericSectionForm({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (content && content[section]) {
-      const sectionData = content[section];
+    if (content && content[section as keyof typeof content]) {
+      const sectionData = content[section as keyof typeof content] as any;
       // Pour la section hero, s'assurer que le champ image existe
       if (section === 'hero') {
         if (!sectionData.image) {
@@ -46,7 +46,7 @@ export default function GenericSectionForm({
     
     try {
       
-      const result = await updateContent(section, formData);
+      const result = await updateContent(section as keyof ContentData, formData);
       if (result.success) {
         onSave(formData);
       } else {
