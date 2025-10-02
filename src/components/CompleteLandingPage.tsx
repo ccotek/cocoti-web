@@ -19,6 +19,7 @@ import TestimonialsSection from "./sections/TestimonialsSection";
 import FaqSection from "./sections/FaqSection";
 import FooterSection from "./sections/FooterSection";
 import WhatsAppButtonSimple from "./WhatsAppButtonSimple";
+import SimpleFloatingButton from "./SimpleFloatingButton";
 
 export default function CompleteLandingPage() {
   const pathname = usePathname();
@@ -180,6 +181,8 @@ export default function CompleteLandingPage() {
 
       <FooterSection footer={footer} />
 
+      {/* Bouton flottant pour créer une cagnotte */}
+      <SimpleFloatingButton locale={locale} />
 
       {/* Modal de contact - version simplifiée pour l'instant */}
       {isModalOpen && (
