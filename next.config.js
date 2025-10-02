@@ -49,7 +49,7 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   // Configuration pour le déploiement
-  output: 'standalone',
+  output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
   trailingSlash: false,
   // Configuration pour éviter les problèmes de build sur Windows
   reactStrictMode: true,
