@@ -41,42 +41,17 @@ export default function CausesSection({ locale }: CausesSectionProps) {
   };
 
   // Ne pas afficher la section si pas de données
-  if (!loading && projects.length === 0) {
+  // Si en erreur ou vide, simplement ne rien afficher
+  if ((!loading && projects.length === 0) || error) {
     return null;
   }
-
-  // État de chargement
-  if (loading) {
-    return (
-      <section className="section-padding bg-white">
-        <div className="container">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-magenta mx-auto mb-4"></div>
-            <p className="text-ink-muted font-inter">
-              {locale === 'fr' ? 'Chargement des projets...' : 'Loading projects...'}
-            </p>
-          </div>
-        </div>
-      </section>
-    );
+  
+  // Si en train de charger et qu'il y aura des données, afficher un loader
+  // Sinon ne rien afficher
+  if (loading && projects.length === 0) {
+    return null; // Pas de loader si on ne sait pas encore s'il y aura des données
   }
 
-  // Debug: Afficher les informations de l'API en développement
-  if (process.env.NODE_ENV === 'development') {
-    console.log('CausesSection Debug:', {
-      hasApiUrl,
-      loading,
-      error,
-      projectsCount: projects.length,
-      projects: projects
-    });
-  }
-
-  // Message d'erreur (optionnel - on peut choisir de ne pas afficher la section en cas d'erreur)
-  if (error) {
-    console.warn('CausesSection error:', error);
-    // On utilise les données de fallback, donc on continue l'affichage
-  }
 
   return (
     <section className="section-padding bg-white">

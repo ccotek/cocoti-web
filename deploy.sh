@@ -25,5 +25,5 @@ else
     echo "❌ Erreur lors du build"
     exit 1
 fi
-
 echo "🎉 Déploiement terminé avec succès!"
+
