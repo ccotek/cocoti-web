@@ -24,10 +24,8 @@ export default function EnglishLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} bg-sand text-night antialiased`}>
-        {children}
-      </body>
-    </html>
+    <div lang="en">
+      {children}
+    </div>
   );
 }

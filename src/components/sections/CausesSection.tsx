@@ -150,7 +150,7 @@ export default function CausesSection({ locale }: CausesSectionProps) {
                               {cause.progress}% {locale === 'fr' ? 'atteint' : 'reached'}
                             </span>
                             <a 
-                              href={`${process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://app.cocoti.sn'}/${locale}`}
+                              href={`/${locale}/money-pool/${cause.id}`}
                               className="flex items-center gap-1 bg-gradient-to-r from-sunset to-magenta text-white px-3 py-1.5 rounded-full text-xs font-semibold hover:shadow-lg transition-all"
                             >
                               <HeartIcon className="h-3 w-3" />

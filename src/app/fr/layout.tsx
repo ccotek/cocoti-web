@@ -24,10 +24,8 @@ export default function FrenchLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr" suppressHydrationWarning>
-      <body className={`${inter.variable} bg-sand text-night antialiased`}>
-        {children}
-      </body>
-    </html>
+    <div lang="fr">
+      {children}
+    </div>
   );
 }

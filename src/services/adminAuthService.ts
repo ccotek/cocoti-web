@@ -32,7 +32,9 @@ class AdminAuthService {
 
   async login(credentials: AdminLoginRequest): Promise<AdminLoginResponse> {
     try {
-      const response = await fetch(`${ADMIN_API_CONFIG.BASE_URL}${ADMIN_API_ENDPOINTS.AUTH.LOGIN}`, {
+      const url = `${ADMIN_API_CONFIG.BASE_URL}${ADMIN_API_ENDPOINTS.AUTH.LOGIN}`;
+      console.log('Admin login URL:', url);
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

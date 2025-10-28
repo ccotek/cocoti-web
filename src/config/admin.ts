@@ -29,7 +29,8 @@ export const ADMIN_CONFIG = {
   
   // Routes publiques (non protégées)
   PUBLIC_ROUTES: [
-    '/admin/login'
+    '/admin/login',
+    '/login'
   ]
 };
 

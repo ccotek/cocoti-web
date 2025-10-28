@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html suppressHydrationWarning>
       <body className={`${inter.variable} bg-sand text-night antialiased`}>
         {children}
         <CookieBanner />
