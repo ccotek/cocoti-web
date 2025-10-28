@@ -12,7 +12,3 @@ export const ADMIN_API_ENDPOINTS = {
     LOGOUT: '/auth/logout',
   }
 };
-
-// Debug: log the configuration
-console.log('ADMIN_API_CONFIG:', ADMIN_API_CONFIG);
-console.log('ADMIN_API_ENDPOINTS:', ADMIN_API_ENDPOINTS);

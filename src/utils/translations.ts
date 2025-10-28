@@ -164,6 +164,10 @@ const frMessages = {
         "legal": {
           "title": "Mentions Légales",
           "description": "Gérer les informations légales et mentions obligatoires"
+        },
+        "causes": {
+          "title": "Carousel des Cagnottes",
+          "description": "Gérer l'affichage et la sélection des projets en vedette"
         }
       },
       "whatsapp": {
@@ -215,6 +219,34 @@ const frMessages = {
       "description": "Mémorisent vos choix pour personnaliser votre expérience."
     },
     "saveChoices": "Sauvegarder mes choix"
+  },
+  "causes": {
+    "title": "Configuration du Carousel des Cagnottes",
+    "subtitle": "Gérez l'affichage des projets en vedette sur la page d'accueil",
+    "settings": {
+      "enabled": "Activer le carousel",
+      "enabledDescription": "Afficher ou masquer la section carousel des cagnottes",
+      "autoRotate": "Rotation automatique",
+      "autoRotateDescription": "Faire défiler automatiquement les projets",
+      "rotationSpeed": "Vitesse de rotation (secondes)",
+      "maxProjects": "Nombre maximum de projets",
+      "maxProjectsDescription": "Nombre de projets à afficher dans le carousel"
+    },
+    "projects": {
+      "title": "Projets sélectionnés",
+      "subtitle": "Choisissez les projets à mettre en vedette",
+      "availableProjects": "Projets disponibles",
+      "selectedProjects": "Projets sélectionnés",
+      "dragToReorder": "Glissez pour réorganiser",
+      "noProjects": "Aucun projet disponible",
+      "loadingProjects": "Chargement des projets...",
+      "addProject": "Ajouter un projet",
+      "removeProject": "Retirer le projet"
+    },
+    "preview": {
+      "title": "Aperçu",
+      "subtitle": "Prévisualisation du carousel"
+    }
   }
 };
 
@@ -380,6 +412,10 @@ const enMessages = {
         "legal": {
           "title": "Legal Notice",
           "description": "Manage legal information and mandatory notices"
+        },
+        "causes": {
+          "title": "Money Pool Carousel",
+          "description": "Manage the display and selection of featured projects"
         }
       },
       "whatsapp": {
@@ -431,6 +467,34 @@ const enMessages = {
       "description": "Remember your choices to personalize your experience."
     },
     "saveChoices": "Save my choices"
+  },
+  "causes": {
+    "title": "Money Pool Carousel Configuration",
+    "subtitle": "Manage the display of featured projects on the homepage",
+    "settings": {
+      "enabled": "Enable carousel",
+      "enabledDescription": "Show or hide the money pool carousel section",
+      "autoRotate": "Auto rotation",
+      "autoRotateDescription": "Automatically scroll through projects",
+      "rotationSpeed": "Rotation speed (seconds)",
+      "maxProjects": "Maximum number of projects",
+      "maxProjectsDescription": "Number of projects to display in the carousel"
+    },
+    "projects": {
+      "title": "Selected projects",
+      "subtitle": "Choose projects to feature",
+      "availableProjects": "Available projects",
+      "selectedProjects": "Selected projects",
+      "dragToReorder": "Drag to reorder",
+      "noProjects": "No projects available",
+      "loadingProjects": "Loading projects...",
+      "addProject": "Add project",
+      "removeProject": "Remove project"
+    },
+    "preview": {
+      "title": "Preview",
+      "subtitle": "Carousel preview"
+    }
   }
 };
 

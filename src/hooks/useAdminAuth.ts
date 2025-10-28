@@ -109,12 +109,12 @@ export function useAdminAuth() {
     setUser(null);
     setIsAuthenticated(false);
     setError(null);
-    router.push("/admin/login");
+    router.push("/cms/login");
   };
 
   const requireAuth = () => {
     if (!loading && !isAuthenticated) {
-      router.push("/admin/login");
+      router.push("/cms/login");
     }
   };
 

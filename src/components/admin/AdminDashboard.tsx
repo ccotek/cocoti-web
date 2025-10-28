@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Cog6ToothIcon,
   DocumentTextIcon,
@@ -13,12 +14,14 @@ import {
   Bars3Icon,
   XMarkIcon,
   ArrowRightOnRectangleIcon,
-  ScaleIcon
+  ScaleIcon,
+  HeartIcon
 } from "@heroicons/react/24/outline";
 import GenericSectionForm from "./forms/GenericSectionForm";
 import FooterEditor from "./FooterEditor";
 import WhatsAppEditor from "./WhatsAppEditor";
 import LegalEditor from "./LegalEditor";
+import CausesCarouselEditor from "./forms/CausesCarouselEditor";
 import { useAdminAuthContext } from "@/contexts/AdminAuthContext";
 import { useContent, ContentData } from "@/hooks/useContent";
 import Notification from "../Notification";
@@ -103,13 +106,24 @@ const getAdminSections = (locale: 'fr' | 'en'): AdminSection[] => [
     description: translate("admin.sections.legal.description", locale),
     icon: ScaleIcon,
     color: "bg-indigo-500"
+  },
+  {
+    id: "causes",
+    title: translate("admin.sections.causes.title", locale),
+    description: translate("admin.sections.causes.description", locale),
+    icon: HeartIcon,
+    color: "bg-pink-500"
   }
 ];
 
 export default function AdminDashboard() {
-  const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [locale, setLocale] = useState<'fr' | 'en'>('fr');
+  
+  // Obtenir la section sélectionnée depuis l'URL
+  const selectedSection = searchParams.get('section');
   
   // Obtenir les sections traduites
   const adminSections = getAdminSections(locale);
@@ -117,6 +131,30 @@ export default function AdminDashboard() {
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const { user, logout } = useAdminAuthContext();
   const { content, updateContent } = useContent(locale);
+
+  // Configuration par défaut pour le carousel des cagnottes
+  const defaultCausesConfig = {
+    enabled: true,
+    autoRotate: true,
+    rotationSpeed: 5,
+    maxProjects: 6,
+    selectedProjects: [] as string[],
+    title: locale === 'fr' ? 'Des projets qui changent tout' : 'Projects that change everything',
+    subtitle: locale === 'fr' 
+      ? 'Rejoignez des milliers de personnes qui transforment leurs communautés grâce à la solidarité collective.'
+      : 'Join thousands of people transforming their communities through collective solidarity.'
+  };
+
+  // Utiliser les données du CMS si disponibles
+  const causesCarouselConfig = content?.causes ? {
+    enabled: content.causes.enabled ?? defaultCausesConfig.enabled,
+    autoRotate: content.causes.autoRotate ?? defaultCausesConfig.autoRotate,
+    rotationSpeed: content.causes.rotationSpeed ?? defaultCausesConfig.rotationSpeed,
+    maxProjects: content.causes.maxProjects ?? defaultCausesConfig.maxProjects,
+    selectedProjects: content.causes.selectedProjects ?? defaultCausesConfig.selectedProjects,
+    title: content.causes.title || defaultCausesConfig.title,
+    subtitle: content.causes.subtitle || defaultCausesConfig.subtitle
+  } : defaultCausesConfig;
 
 
   // Gérer la notification avec un useEffect
@@ -130,11 +168,17 @@ export default function AdminDashboard() {
   }, [notification]);
 
   const handleSectionClick = (sectionId: string) => {
-    setSelectedSection(sectionId);
+    // Mettre à jour l'URL avec le paramètre section
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('section', sectionId);
+    router.push(`/cms?${params.toString()}`);
   };
 
   const handleBackToDashboard = () => {
-    setSelectedSection(null);
+    // Supprimer le paramètre section de l'URL
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('section');
+    router.push(`/cms?${params.toString()}`);
   };
 
   const handleSaveContent = async (section: keyof ContentData, data: any) => {
@@ -217,7 +261,16 @@ export default function AdminDashboard() {
                 <span className="text-sm text-ink-muted">{t("language.label")}:</span>
                 <select
                   value={locale}
-                  onChange={(e) => setLocale(e.target.value as 'fr' | 'en')}
+                  onChange={(e) => {
+                    const newLocale = e.target.value as 'fr' | 'en';
+                    setLocale(newLocale);
+                    // Préserver la section sélectionnée lors du changement de langue
+                    const params = new URLSearchParams(searchParams.toString());
+                    if (selectedSection) {
+                      params.set('section', selectedSection);
+                    }
+                    router.push(`/cms?${params.toString()}`);
+                  }}
                   className="px-3 py-1 border border-cloud rounded-2xl text-sm bg-ivory focus:ring-2 focus:ring-magenta focus:border-magenta"
                 >
                   <option value="fr">Français</option>
@@ -261,7 +314,15 @@ export default function AdminDashboard() {
                   {/* Sélecteur de langue */}
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setLocale('fr')}
+                      onClick={() => {
+                        setLocale('fr');
+                        // Préserver la section sélectionnée lors du changement de langue
+                        const params = new URLSearchParams(searchParams.toString());
+                        if (selectedSection) {
+                          params.set('section', selectedSection);
+                        }
+                        router.push(`/cms?${params.toString()}`);
+                      }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         locale === 'fr'
                           ? 'bg-magenta text-white'
@@ -271,7 +332,15 @@ export default function AdminDashboard() {
                       🇫🇷 FR
                     </button>
                     <button
-                      onClick={() => setLocale('en')}
+                      onClick={() => {
+                        setLocale('en');
+                        // Préserver la section sélectionnée lors du changement de langue
+                        const params = new URLSearchParams(searchParams.toString());
+                        if (selectedSection) {
+                          params.set('section', selectedSection);
+                        }
+                        router.push(`/cms?${params.toString()}`);
+                      }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         locale === 'en'
                           ? 'bg-magenta text-white'
@@ -380,6 +449,24 @@ export default function AdminDashboard() {
               ]
             }}
             onUpdate={(data) => handleSaveContent('legal', data)}
+            locale={locale}
+          />
+        ) : selectedSection === 'causes' ? (
+          <CausesCarouselEditor
+            config={causesCarouselConfig}
+            onUpdate={async (config) => {
+              try {
+                console.log('Saving causes carousel config:', config);
+                
+                // Utiliser handleSaveContent comme les autres sections
+                const result = await handleSaveContent('causes', config);
+                
+                return result;
+              } catch (error) {
+                console.error('Error saving carousel config:', error);
+                return { success: false, error: 'Erreur lors de la sauvegarde' };
+              }
+            }}
             locale={locale}
           />
         ) : (

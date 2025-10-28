@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { HeartIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { usePublicProjects, PublicProject } from "@/hooks/usePublicProjects";
+import { useCausesCarouselConfig } from "@/hooks/useCausesCarouselConfig";
 
 // Utiliser le type PublicProject du hook
 type Cause = PublicProject;
@@ -15,18 +16,19 @@ type CausesSectionProps = {
 export default function CausesSection({ locale }: CausesSectionProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { projects, loading, error, hasApiUrl } = usePublicProjects(locale);
+  const { config: carouselConfig } = useCausesCarouselConfig(locale);
 
 
   // Auto-rotation des causes
   useEffect(() => {
-    if (projects.length > 0) {
+    if (projects.length > 0 && carouselConfig.autoRotate) {
       const interval = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % projects.length);
-      }, 5000);
+      }, carouselConfig.rotationSpeed * 1000);
 
       return () => clearInterval(interval);
     }
-  }, [projects.length]);
+  }, [projects.length, carouselConfig.autoRotate, carouselConfig.rotationSpeed]);
 
   const nextSlide = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % projects.length);
@@ -39,6 +41,11 @@ export default function CausesSection({ locale }: CausesSectionProps) {
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
   };
+
+  // Ne pas afficher la section si désactivée dans le CMS
+  if (!carouselConfig.enabled) {
+    return null;
+  }
 
   // Ne pas afficher la section si pas de données
   // Si en erreur ou vide, simplement ne rien afficher
@@ -64,13 +71,10 @@ export default function CausesSection({ locale }: CausesSectionProps) {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-3xl font-bold text-night mb-4 sm:text-4xl font-inter">
-            {locale === 'fr' ? 'Des projets qui changent tout' : 'Projects that change everything'}
+            {carouselConfig.title}
           </h2>
           <p className="text-lg text-ink-muted max-w-2xl font-inter">
-            {locale === 'fr' 
-              ? 'Rejoignez des milliers de personnes qui transforment leurs communautés grâce à la solidarité collective.'
-              : 'Join thousands of people transforming their communities through collective solidarity.'
-            }
+            {carouselConfig.subtitle}
           </p>
         </motion.div>
 

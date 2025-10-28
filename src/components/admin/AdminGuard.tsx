@@ -45,7 +45,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
             Vous devez être connecté pour accéder à cette page.
           </p>
           <a
-            href="/admin/login"
+            href="/cms/login"
             className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-sunset to-magenta text-white rounded-2xl hover:shadow-glow transition-all"
           >
             Se connecter

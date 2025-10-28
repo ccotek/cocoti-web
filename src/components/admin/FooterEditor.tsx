@@ -125,11 +125,6 @@ export default function FooterEditor({ footer, onUpdate, locale }: FooterEditorP
 
   return (
     <div className="bg-white rounded-2xl border border-cloud p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <GlobeAltIcon className="w-6 h-6 text-magenta" />
-        <h3 className="text-xl font-semibold text-night">{t.title}</h3>
-      </div>
-
       {/* Onglets */}
       <div className="flex flex-wrap gap-2 mb-6">
         {tabs.map((tab) => (

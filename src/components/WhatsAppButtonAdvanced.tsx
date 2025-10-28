@@ -18,8 +18,8 @@ export default function WhatsAppButtonAdvanced({ contact }: WhatsAppButtonAdvanc
   const [isVisible, setIsVisible] = useState(false);
   const pathname = usePathname();
   
-  // Ne pas afficher sur les pages admin
-  const isAdminPage = pathname.includes('/admin') || pathname.includes('/cms');
+  // Ne pas afficher sur les pages CMS
+  const isAdminPage = pathname.includes('/cms');
   
   // Récupérer le numéro de téléphone depuis les props ou les données de contact
   const phoneNumber = contact?.phone || contact?.whatsappLink?.replace('https://wa.me/', '') || '+221771234567';

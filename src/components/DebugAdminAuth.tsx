@@ -37,8 +37,8 @@ export default function DebugAdminAuth() {
         const data = await response.json();
         addDebugInfo(`✅ Connexion réussie ! Token: ${data.access_token.substring(0, 20)}...`);
         
-        // Test /admin/me
-        const meResponse = await fetch(`${ADMIN_API_CONFIG.BASE_URL}/admin/me`, {
+        // Test /auth/me
+        const meResponse = await fetch(`${ADMIN_API_CONFIG.BASE_URL}/auth/me`, {
           headers: {
             'Authorization': `Bearer ${data.access_token}`,
           },

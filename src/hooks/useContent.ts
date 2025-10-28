@@ -103,6 +103,15 @@ export type ContentData = {
       href: string;
     }>;
   };
+  causes: {
+    title: string;
+    subtitle: string;
+    enabled: boolean;
+    autoRotate: boolean;
+    rotationSpeed: number;
+    maxProjects: number;
+    selectedProjects: string[];
+  };
   whatsapp: {
     number: string;
     message: string;
@@ -138,20 +147,34 @@ export function useContent(locale: 'fr' | 'en') {
               let data;
 
               try {
-                // Essayer de charger depuis l'API
-                const apiContent = await contentService.getAllContent(locale);
-                if (apiContent && apiContent.length > 0) {
-                  // Transformer les données API en format ContentData
-                  data = transformApiContentToContentData(apiContent);
-                } else {
-                  throw new Error('No content from API');
+                // Utiliser directement l'API /api/cms/content
+                const url = new URL('/api/cms/content', window.location.origin);
+                url.searchParams.append('locale', locale);
+                
+                const response = await fetch(url.toString(), {
+                  method: 'GET',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                });
+
+                if (!response.ok) {
+                  throw new Error(`Erreur ${response.status}: ${response.statusText}`);
                 }
-                  } catch (apiError) {
-                    console.warn('API non disponible, utilisation des fichiers JSON:', apiError);
-                    // Fallback vers les fichiers JSON existants
-                    const messages = await import(`@/i18n/messages/${locale}.json`);
-                    data = messages.default;
-                  }
+
+                const result = await response.json();
+                
+                if (!result.success) {
+                  throw new Error(result.error || 'Erreur lors de la récupération du contenu');
+                }
+
+                data = result.content;
+              } catch (apiError) {
+                console.warn('API non disponible, utilisation des fichiers JSON:', apiError);
+                // Fallback vers les fichiers JSON existants
+                const messages = await import(`@/i18n/messages/${locale}.json`);
+                data = messages.default;
+              }
         
 
         // Transformer les données JSON en format ContentData
@@ -213,6 +236,17 @@ export function useContent(locale: 'fr' | 'en') {
             socialLinks: data.footer?.socialLinks || [],
             quickLinks: data.footer?.quickLinks || []
           },
+          causes: {
+            title: data.causes?.title || (locale === 'fr' ? 'Des projets qui changent tout' : 'Projects that change everything'),
+            subtitle: data.causes?.subtitle || (locale === 'fr' 
+              ? 'Rejoignez des milliers de personnes qui transforment leurs communautés grâce à la solidarité collective.'
+              : 'Join thousands of people transforming their communities through collective solidarity.'),
+            enabled: data.causes?.enabled ?? true,
+            autoRotate: data.causes?.autoRotate ?? true,
+            rotationSpeed: data.causes?.rotationSpeed ?? 5,
+            maxProjects: data.causes?.maxProjects ?? 6,
+            selectedProjects: data.causes?.selectedProjects || []
+          },
           whatsapp: {
             number: data.whatsapp?.number || '',
             message: data.whatsapp?.message || ''
@@ -269,9 +303,29 @@ export function useContent(locale: 'fr' | 'en') {
 
         const updateContent = async (section: keyof ContentData, data: any) => {
           try {
+            // Utiliser directement l'API /api/cms/content
+            const url = new URL('/api/cms/content', window.location.origin);
+            url.searchParams.append('locale', locale);
+            url.searchParams.append('section', section);
             
-            // Envoyer les données à l'API
-            const result = await contentService.updateContentSection(section, data, locale);
+            const response = await fetch(url.toString(), {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ content: data }),
+            });
+
+            if (!response.ok) {
+              throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+              throw new Error(result.error || 'Erreur lors de la sauvegarde');
+            }
+            
             // Mettre à jour le state local
             setContent(prev => prev ? { ...prev, [section]: data } : null);
 

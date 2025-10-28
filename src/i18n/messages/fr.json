@@ -41,7 +41,7 @@
     "closeModal": "Fermer"
   },
   "hero": {
-    "badge": "L'app qui digitalise la solidarité humaine",
+    "badge": "L'app qui digitalise la solidarité humaine.",
     "title": "La finance collective, simple et transparente.",
     "subtitle": "Avec Cocoti, gérez vos tontines, cagnottes et projets en toute simplicité. Invitez votre communauté, automatisez les contributions et suivez vos progrès en temps réel.",
     "download": "Télécharger l'app",
@@ -69,7 +69,7 @@
         "label": "Collectés avec Cocoti"
       },
       {
-        "value": "4",
+        "value": "6",
         "label": "Pays connectés"
       }
     ],
@@ -107,7 +107,7 @@
     "steps": [
       {
         "title": "Créez ou rejoignez",
-        "description": "Invitez vos proches ou découvrez des tontines publiques adaptées à vos objectifs."
+        "description": "Invitez vos proches ou découvrez des tontines ou projets publics adaptées à vos objectifs."
       },
       {
         "title": "Contribuez facilement",
@@ -146,7 +146,7 @@
     "plans": [
       {
         "name": "Gratuit",
-        "price": "0€",
+        "price": "0 FCFA",
         "period": "pour commencer",
         "description": "Idéal pour lancer vos premières tontines privées.",
         "features": [
@@ -159,7 +159,7 @@
       },
       {
         "name": "Premium",
-        "price": "14€",
+        "price": "14 FCFA",
         "period": "par mois",
         "description": "Débloquez des outils avancés pour croître et rayonner.",
         "features": [
@@ -331,6 +331,15 @@
     },
     "saveChoices": "Sauvegarder mes choix"
   },
+  "causes": {
+    "enabled": true,
+    "autoRotate": true,
+    "rotationSpeed": 5,
+    "maxProjects": 6,
+    "selectedProjects": [],
+    "title": "Des projets qui changent tout",
+    "subtitle": "Rejoignez des milliers de personnes qui transforment leurs communautés grâce à la solidarité collective."
+  },
   "admin": {
     "title": "Administration Cocoti",
     "subtitle": "Gérez le contenu de votre site",
@@ -374,6 +383,10 @@
       "legal": {
         "title": "Mentions Légales",
         "description": "Gérer les informations légales et mentions obligatoires"
+      },
+      "causes": {
+        "title": "Carousel des Cagnottes",
+        "description": "Gérer l'affichage et la sélection des projets en vedette"
       }
     },
     "whatsapp": {

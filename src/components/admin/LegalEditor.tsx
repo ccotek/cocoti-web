@@ -121,17 +121,6 @@ export default function LegalEditor({ legal, onUpdate, locale }: LegalEditorProp
 
       {/* Header avec boutons d'action */}
       <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold text-night">
-            {locale === 'fr' ? 'Mentions Légales' : 'Legal Notice'}
-          </h3>
-          <p className="text-ink-muted text-sm">
-            {locale === 'fr' 
-              ? 'Gérez les informations légales et les mentions obligatoires'
-              : 'Manage legal information and mandatory notices'
-            }
-          </p>
-        </div>
         <div className="flex gap-2">
           {isEditing ? (
             <>

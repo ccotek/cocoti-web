@@ -9,9 +9,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/fr', request.url));
   }
   
-  // Rediriger /admin vers l'accueil
+  // Rediriger /admin vers /cms (unification des interfaces admin)
   if (pathname.startsWith('/admin')) {
-    return NextResponse.redirect(new URL('/fr', request.url));
+    return NextResponse.redirect(new URL('/cms', request.url));
   }
   
   // Rediriger les routes inconnues vers l'accueil

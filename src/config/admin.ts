@@ -23,14 +23,13 @@ export const ADMIN_CONFIG = {
   
   // Routes protégées
   PROTECTED_ROUTES: [
-    '/admin',
-    '/admin/*'
+    '/cms',
+    '/cms/*'
   ],
   
   // Routes publiques (non protégées)
   PUBLIC_ROUTES: [
-    '/admin/login',
-    '/login'
+    '/cms/login'
   ]
 };
 

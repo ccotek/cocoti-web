@@ -48,10 +48,6 @@ export default function WhatsAppEditor({ whatsapp, onUpdate, locale }: WhatsAppE
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-2xl border border-cloud p-6">
-        <h3 className="text-lg font-semibold text-night mb-4">
-          {t("admin.whatsapp.title")}
-        </h3>
-        
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Numéro WhatsApp */}
           <div>

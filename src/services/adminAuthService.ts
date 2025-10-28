@@ -7,10 +7,26 @@ export interface AdminLoginRequest {
 }
 
 export interface AdminLoginResponse {
-  access_token: string;
-  refresh_token: string;
-  expires_at: string;
-  must_change_password: boolean;
+  success: boolean;
+  message: string;
+  tokens: {
+    access_token: string;
+    refresh_token: string;
+    token_type: string;
+    expires_in: number;
+  };
+  user?: {
+    user_id: string;
+    email: string;
+    phone: string;
+    first_name: string;
+    last_name: string;
+    status: string;
+    roles: string[];
+    permissions: string[];
+    created_at: string;
+    last_login?: string;
+  };
 }
 
 export interface AdminUser {
@@ -24,6 +40,14 @@ export interface AdminUser {
 class AdminAuthService {
   private async getAuthHeaders(): Promise<HeadersInit> {
     const token = localStorage.getItem('admin_token');
+    
+    if (!token) {
+      console.error('Aucun token admin trouvé dans localStorage');
+      throw new Error('Token d\'authentification manquant');
+    }
+    
+    console.log('Token admin trouvé:', token.substring(0, 20) + '...');
+    
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
@@ -32,9 +56,7 @@ class AdminAuthService {
 
   async login(credentials: AdminLoginRequest): Promise<AdminLoginResponse> {
     try {
-      const url = `${ADMIN_API_CONFIG.BASE_URL}${ADMIN_API_ENDPOINTS.AUTH.LOGIN}`;
-      console.log('Admin login URL:', url);
-      const response = await fetch(url, {
+      const response = await fetch(`${ADMIN_API_CONFIG.BASE_URL}${ADMIN_API_ENDPOINTS.AUTH.LOGIN}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,17 +70,25 @@ class AdminAuthService {
         throw new Error(errorData.detail || `Erreur ${response.status}: ${response.statusText}`);
       }
 
-      const data: AdminLoginResponse = await response.json();
+      const data = await response.json();
+      console.log('Réponse API complète:', data);
       
+      // Vérifier la structure de la réponse
+      if (!data.tokens || !data.tokens.access_token) {
+        throw new Error('Structure de réponse API invalide: tokens.access_token manquant');
+      }
       
-      // Calculer l'expiration nous-mêmes (24h à partir de maintenant)
+      // Calculer l'expiration à partir de expires_in (en secondes)
       const now = new Date();
-      const expiration = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 heures
+      const expiration = new Date(now.getTime() + data.tokens.expires_in * 1000);
       
       // Stocker le token
-      localStorage.setItem('admin_token', data.access_token);
-      localStorage.setItem('admin_refresh_token', data.refresh_token);
+      localStorage.setItem('admin_token', data.tokens.access_token);
+      localStorage.setItem('admin_refresh_token', data.tokens.refresh_token);
       localStorage.setItem('admin_expires_at', expiration.toISOString());
+      
+      console.log('Token stocké:', data.tokens.access_token.substring(0, 20) + '...');
+      console.log('Expiration:', expiration.toISOString());
       
       
       return data;
@@ -70,7 +100,7 @@ class AdminAuthService {
 
   async getCurrentAdmin(): Promise<AdminUser> {
     try {
-      const response = await fetch(`${ADMIN_API_CONFIG.BASE_URL}/admin/me`, {
+      const response = await fetch(`${ADMIN_API_CONFIG.BASE_URL}/auth/me`, {
         method: 'GET',
         headers: await this.getAuthHeaders(),
       });
@@ -113,10 +143,19 @@ class AdminAuthService {
 
       const data: AdminLoginResponse = await response.json();
       
+      // Vérifier la structure de la réponse
+      if (!data.tokens || !data.tokens.access_token) {
+        throw new Error('Structure de réponse API invalide lors du refresh');
+      }
+      
+      // Calculer l'expiration à partir de expires_in (en secondes)
+      const now = new Date();
+      const expiration = new Date(now.getTime() + data.tokens.expires_in * 1000);
+      
       // Mettre à jour les tokens
-      localStorage.setItem('admin_token', data.access_token);
-      localStorage.setItem('admin_refresh_token', data.refresh_token);
-      localStorage.setItem('admin_expires_at', data.expires_at);
+      localStorage.setItem('admin_token', data.tokens.access_token);
+      localStorage.setItem('admin_refresh_token', data.tokens.refresh_token);
+      localStorage.setItem('admin_expires_at', expiration.toISOString());
       
       return data;
     } catch (error) {

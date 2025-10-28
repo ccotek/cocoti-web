@@ -69,7 +69,7 @@
         "label": "Collected through Cocoti"
       },
       {
-        "value": "4",
+        "value": "6",
         "label": "Countries connected"
       }
     ],
@@ -107,7 +107,7 @@
     "steps": [
       {
         "title": "Create or join",
-        "description": "Invite your people or explore public tontines tailored to your goals."
+        "description": "Invite your people or explore public tontines or projects tailored to your goals."
       },
       {
         "title": "Contribute easily",
@@ -146,7 +146,7 @@
     "plans": [
       {
         "name": "Free",
-        "price": "$0",
+        "price": "0 FCFA",
         "period": "to get started",
         "description": "Perfect to launch your first private tontines.",
         "features": [
@@ -159,7 +159,7 @@
       },
       {
         "name": "Premium",
-        "price": "$15",
+        "price": "15 FCFA",
         "period": "per month",
         "description": "Unlock advanced tools to scale and shine.",
         "features": [
@@ -354,6 +354,15 @@
     },
     "saveChoices": "Save my choices"
   },
+  "causes": {
+    "enabled": true,
+    "autoRotate": true,
+    "rotationSpeed": 5,
+    "maxProjects": 6,
+    "selectedProjects": [],
+    "title": "Projects that change everything...",
+    "subtitle": "Join thousands of people transforming their communities through collective solidarity."
+  },
   "admin": {
     "title": "Cocoti Administration",
     "subtitle": "Manage your website content",
@@ -394,10 +403,14 @@
         "title": "WhatsApp",
         "description": "Configure WhatsApp number and message"
       },
-      "legal": {
-        "title": "Legal Notice",
-        "description": "Manage legal information and mandatory notices"
-      }
+        "legal": {
+          "title": "Legal Notice",
+          "description": "Manage legal information and mandatory notices"
+        },
+        "causes": {
+          "title": "Money Pool Carousel",
+          "description": "Manage the display and selection of featured projects"
+        }
     },
     "whatsapp": {
       "title": "WhatsApp Configuration",
