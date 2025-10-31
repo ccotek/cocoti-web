@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { HeartIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { usePublicProjects, PublicProject } from "@/hooks/usePublicProjects";
 import { useCausesCarouselConfig } from "@/hooks/useCausesCarouselConfig";
+import MoneyPoolGallery from "@/components/MoneyPoolGallery";
 
 // Utiliser le type PublicProject du hook
 type Cause = PublicProject;
@@ -19,7 +20,7 @@ export default function CausesSection({ locale }: CausesSectionProps) {
   const { config: carouselConfig } = useCausesCarouselConfig(locale);
 
 
-  // Auto-rotation des causes
+  // Auto-rotation des causes - optimisé pour éviter les re-renders
   useEffect(() => {
     if (projects.length > 0 && carouselConfig.autoRotate) {
       const interval = setInterval(() => {
@@ -29,6 +30,13 @@ export default function CausesSection({ locale }: CausesSectionProps) {
       return () => clearInterval(interval);
     }
   }, [projects.length, carouselConfig.autoRotate, carouselConfig.rotationSpeed]);
+
+  // Reset currentIndex quand les projets changent
+  useEffect(() => {
+    if (projects.length > 0) {
+      setCurrentIndex(0);
+    }
+  }, [projects.length]);
 
   const nextSlide = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % projects.length);
@@ -87,21 +95,22 @@ export default function CausesSection({ locale }: CausesSectionProps) {
               transition={{ duration: 0.5, ease: "easeInOut" }}
             >
               {projects.map((cause, index) => (
-                <div key={cause.id} className="w-full flex-shrink-0 px-4">
-                  <motion.div
-                    className="bg-white rounded-2xl border border-cloud shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <div className="flex h-48">
+                        <div key={cause.id} className="w-full flex-shrink-0 px-4">
+                          <motion.div
+                            className="bg-white rounded-2xl border border-cloud shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                          >
+                            <div className="flex h-56">
                       {/* Image Section - Left */}
                       <div className="relative w-1/3 flex-shrink-0">
-                        <img
-                          src={cause.image}
+                        <MoneyPoolGallery
+                          images={[cause.image]}
+                          videos={[]}
                           alt={cause.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full"
                         />
                         {cause.urgent && (
                           <div className="absolute top-3 left-3">
@@ -118,48 +127,51 @@ export default function CausesSection({ locale }: CausesSectionProps) {
                       </div>
 
                       {/* Content Section - Right */}
-                      <div className="flex-1 p-6 flex flex-col justify-between">
-                        <div>
-                          <h3 className="text-lg font-bold text-night mb-2 font-inter">
-                            {cause.title}
-                          </h3>
-                          <p className="text-sm text-ink-muted mb-4 line-clamp-2 font-inter">
-                            {cause.description}
-                          </p>
-                        </div>
-
-                        {/* Progress Section */}
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center text-xs font-inter">
-                            <span className="text-ink-muted">
-                              {locale === 'fr' ? 'Collecté' : 'Raised'}
-                            </span>
-                            <span className="font-semibold text-night">
-                              {cause.raised} / {cause.target}
-                            </span>
-                          </div>
-                          
-                          <div className="w-full bg-cloud rounded-full h-1.5">
-                            <motion.div
-                              className="bg-gradient-to-r from-sunset to-magenta h-1.5 rounded-full"
-                              initial={{ width: 0 }}
-                              whileInView={{ width: `${cause.progress}%` }}
-                              viewport={{ once: true }}
-                              transition={{ duration: 1, delay: 0.5 }}
-                            />
+                      <div className="flex-1 p-6 flex flex-col">
+                        {/* Content Section with fixed height */}
+                        <div className="flex-1 flex flex-col">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-bold text-night mb-2 font-inter line-clamp-1">
+                              {cause.title}
+                            </h3>
+                            <p className="text-sm text-ink-muted mb-4 line-clamp-2 font-inter">
+                              {cause.description}
+                            </p>
                           </div>
 
-                          <div className="flex items-center justify-between font-inter">
-                            <span className="text-xs text-ink-muted">
-                              {cause.progress}% {locale === 'fr' ? 'atteint' : 'reached'}
-                            </span>
-                            <a 
-                              href={`/${locale}/money-pool/${cause.id}`}
-                              className="flex items-center gap-1 bg-gradient-to-r from-sunset to-magenta text-white px-3 py-1.5 rounded-full text-xs font-semibold hover:shadow-lg transition-all"
-                            >
-                              <HeartIcon className="h-3 w-3" />
-                              {locale === 'fr' ? 'Soutenir' : 'Support'}
-                            </a>
+                          {/* Progress Section - Fixed at bottom */}
+                          <div className="space-y-3 mt-auto">
+                            <div className="flex justify-between items-center text-xs font-inter">
+                              <span className="text-ink-muted">
+                                {locale === 'fr' ? 'Collecté' : 'Raised'}
+                              </span>
+                              <span className="font-semibold text-night">
+                                {cause.raised} / {cause.target}
+                              </span>
+                            </div>
+                            
+                            <div className="w-full bg-cloud rounded-full h-1.5">
+                              <motion.div
+                                className="bg-gradient-to-r from-sunset to-magenta h-1.5 rounded-full"
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${cause.progress}%` }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 1, delay: 0.5 }}
+                              />
+                            </div>
+
+                            <div className="flex items-center justify-between font-inter">
+                              <span className="text-xs text-ink-muted">
+                                {cause.progress}% {locale === 'fr' ? 'atteint' : 'reached'}
+                              </span>
+                              <a 
+                                href={`/${locale}/money-pool/${cause.id}`}
+                                className="flex items-center gap-1 bg-gradient-to-r from-sunset to-magenta text-white px-4 py-2 rounded-full text-xs font-semibold hover:shadow-lg transition-all"
+                              >
+                                <HeartIcon className="h-3 w-3" />
+                                {locale === 'fr' ? 'Soutenir' : 'Support'}
+                              </a>
+                            </div>
                           </div>
                         </div>
                       </div>

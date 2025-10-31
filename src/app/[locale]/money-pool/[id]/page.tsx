@@ -17,12 +17,14 @@ import {
 import { 
   HeartIcon as HeartIconSolid
 } from '@heroicons/react/24/solid';
+import MoneyPoolGallery from '@/components/MoneyPoolGallery';
 
 interface MoneyPool {
   id: string;
   name: string;
   description: string;
   images: string[];
+  videos?: string[];  // Liste des URLs de vidéos (max 2, 30s chacune)
   status: string;
   visibility: string;
   settings: {
@@ -46,7 +48,8 @@ interface MoneyPool {
 }
 
 interface Contributor {
-  user_id: string;
+  user_id: string | null;
+  full_name?: string | null;
   amount: number;
   message?: string;
   anonymous: boolean;
@@ -74,12 +77,15 @@ export default function MoneyPoolDetailsPage() {
   const [isContributing, setIsContributing] = useState(false);
   const [message, setMessage] = useState('');
   const [anonymous, setAnonymous] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Vérifier si l'utilisateur est connecté
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
       useEffect(() => {
         const fetchMoneyPool = async () => {
           try {
             setLoading(true);
+            setError(null);
             console.log('Fetching money pool with ID:', moneyPoolId);
             
             // Fetch money pool details
@@ -87,38 +93,54 @@ export default function MoneyPoolDetailsPage() {
             console.log('Fetch response status:', response.status);
             
             if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}));
-              console.error('Error response:', errorData);
-              throw new Error(errorData.detail || `HTTP ${response.status}: Failed to fetch money pool`);
+              let errorMessage = '';
+              
+              // Gérer les différents cas d'erreur
+              if (response.status === 404) {
+                errorMessage = locale === 'fr' 
+                  ? 'Cette cagnotte n\'existe pas ou a été supprimée.' 
+                  : 'This money pool does not exist or has been removed.';
+              } else {
+                // Essayer de parser la réponse JSON
+                try {
+                  const errorData = await response.json();
+                  errorMessage = errorData.detail || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+                } catch (jsonError) {
+                  // Si le parsing JSON échoue, utiliser le statut HTTP
+                  errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                }
+              }
+              
+              throw new Error(errorMessage);
             }
+            
+            const data = await response.json();
+            setMoneyPool(data);
         
-        const data = await response.json();
-        setMoneyPool(data);
-        
-        // Fetch contributions
-        try {
-          const contribResponse = await fetch(`http://localhost:8000/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
-          if (contribResponse.ok) {
-            const contribData = await contribResponse.json();
-            setContributors(contribData.contributions || []);
+            // Fetch contributions
+            try {
+              const contribResponse = await fetch(`http://localhost:8000/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
+              if (contribResponse.ok) {
+                const contribData = await contribResponse.json();
+                setContributors(contribData.contributions || []);
+              }
+            } catch (contribErr) {
+              console.error('Error fetching contributions:', contribErr);
+              setContributors([]);
+            }
+            
+            setLoading(false);
+          } catch (err) {
+            console.error('Error fetching money pool:', err);
+            setError(err instanceof Error ? err.message : String(err));
+            setLoading(false);
           }
-        } catch (contribErr) {
-          console.error('Error fetching contributions:', contribErr);
-          setContributors([]);
-        }
-        
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching money pool:', err);
-        setError(err instanceof Error ? err.message : String(err));
-        setLoading(false);
-      }
-    };
+        };
 
-    if (moneyPoolId) {
-      fetchMoneyPool();
-    }
-  }, [moneyPoolId]);
+        if (moneyPoolId) {
+          fetchMoneyPool();
+        }
+      }, [moneyPoolId, locale]);
 
   const handleContribute = async () => {
     if (contributionAmount <= 0) {
@@ -151,18 +173,37 @@ export default function MoneyPoolDetailsPage() {
     }
 
     try {
+      // Validation : si utilisateur non connecté et pas anonyme, full_name est requis
+      if (!isLoggedIn && !anonymous && !fullName.trim()) {
+        setNotification({
+          type: 'error',
+          message: locale === 'fr' 
+            ? 'Veuillez saisir votre nom complet' 
+            : 'Please enter your full name'
+        });
+        return;
+      }
+
       setIsContributing(true);
+      
+      const requestBody: any = {
+        amount: contributionAmount,
+        currency: moneyPool?.currency || 'XOF',
+        message: message.trim() || undefined,
+        anonymous: anonymous
+      };
+      
+      // Ajouter full_name seulement si utilisateur non connecté et pas anonyme
+      if (!isLoggedIn && !anonymous) {
+        requestBody.full_name = fullName.trim();
+      }
+      
       const response = await fetch(`http://localhost:8000/api/v1/money-pools/${moneyPoolId}/participate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          amount: contributionAmount,
-          currency: moneyPool?.currency || 'XOF',
-          message: message.trim() || undefined,
-          anonymous: anonymous
-        })
+        body: JSON.stringify(requestBody)
       });
 
       const data = await response.json();
@@ -193,6 +234,7 @@ export default function MoneyPoolDetailsPage() {
       setContributionAmount(0);
       setMessage('');
       setAnonymous(false);
+      setFullName('');
       setShowContributeModal(false);
       
       // Show success message
@@ -232,16 +274,24 @@ export default function MoneyPoolDetailsPage() {
 
   if (error || !moneyPool) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-500 mb-4">
-            {locale === 'fr' ? 'Erreur lors du chargement de la cagnotte' : 'Error loading money pool'}
-          </p>
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <div className="mb-6">
+            <ExclamationCircleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              {locale === 'fr' ? 'Cagnotte introuvable' : 'Money Pool Not Found'}
+            </h1>
+            <p className="text-gray-600 mb-4">
+              {error ? error : (locale === 'fr' 
+                ? 'Cette cagnotte n\'existe pas ou a été supprimée.' 
+                : 'This money pool does not exist or has been removed.')}
+            </p>
+          </div>
           <button
             onClick={() => router.push(`/${locale}`)}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
           >
-            {locale === 'fr' ? 'Retour' : 'Back'}
+            {locale === 'fr' ? 'Retour à l\'accueil' : 'Back to Home'}
           </button>
         </div>
       </div>
@@ -301,10 +351,23 @@ export default function MoneyPoolDetailsPage() {
         {/* Stats Section - Mobile First (visible on mobile, hidden on desktop - will be in sidebar on desktop) */}
         <div className="lg:hidden mb-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            {/* Montant collecté - Mise en évidence */}
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 mb-4 border border-orange-200">
+              <div className="text-center">
+                <p className="text-xs font-medium text-gray-600 mb-1">{locale === 'fr' ? 'Montant collecté' : 'Amount Raised'}</p>
+                <p className="text-3xl font-bold text-orange-600 mb-1">
+                  {moneyPool.current_amount.toLocaleString('fr-FR')} {formatCurrency(moneyPool.currency)}
+                </p>
+                <p className="text-sm text-gray-500">
+                  sur {moneyPool.settings.target_amount.toLocaleString('fr-FR')} {formatCurrency(moneyPool.currency)}
+                </p>
+              </div>
+            </div>
+
             {/* Progress */}
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600 text-sm font-medium">{locale === 'fr' ? 'Collecté' : 'Raised'}</span>
+                <span className="text-gray-600 text-sm font-medium">{locale === 'fr' ? 'Progression' : 'Progress'}</span>
                 <span className="text-xl font-bold text-orange-600">{progress}%</span>
               </div>
               
@@ -315,11 +378,6 @@ export default function MoneyPoolDetailsPage() {
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
                 />
-              </div>
-              
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>{moneyPool.current_amount.toLocaleString('fr-FR')} {formatCurrency(moneyPool.currency)}</span>
-                <span>{moneyPool.settings.target_amount.toLocaleString('fr-FR')} {formatCurrency(moneyPool.currency)}</span>
               </div>
             </div>
 
@@ -358,24 +416,14 @@ export default function MoneyPoolDetailsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6 lg:space-y-8">
-            {/* Images */}
+            {/* Images Gallery */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-2">
-                {moneyPool.images && moneyPool.images.length > 0 ? (
-                  moneyPool.images.map((image, index) => (
-                    <img
-                      key={index}
-                      src={image}
-                      alt={`${moneyPool.name} - ${index + 1}`}
-                      className="w-full h-32 sm:h-40 lg:h-48 object-cover rounded-lg"
-                    />
-                  ))
-                ) : (
-                  <div className="col-span-3 bg-gray-100 rounded-lg h-64 flex items-center justify-center">
-                    <PhotoIcon className="h-16 w-16 text-gray-400" />
-                  </div>
-                )}
-              </div>
+              <MoneyPoolGallery
+                images={moneyPool.images}
+                videos={moneyPool.videos || []}
+                alt={moneyPool.name}
+                className="w-full h-64 sm:h-80 lg:h-96"
+              />
             </div>
 
             {/* Description */}
@@ -403,12 +451,23 @@ export default function MoneyPoolDetailsPage() {
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm sm:text-base font-semibold text-gray-900 truncate">
-                            {contributor.anonymous 
-                              ? (locale === 'fr' ? 'Anonyme' : 'Anonymous')
-                              : (contributor.user_id === 'current_user' 
-                                  ? (locale === 'fr' ? 'Vous' : 'You')
-                                  : contributor.user_id)
-                            }
+                            {(() => {
+                              if (contributor.anonymous) {
+                                return locale === 'fr' ? 'Anonyme a participé' : 'Anonymous contributed';
+                              }
+                              // Priorité au nom complet s'il est fourni par l'API ou la saisie
+                              if (contributor.full_name && contributor.full_name.trim().length > 0) {
+                                return locale === 'fr'
+                                  ? `${contributor.full_name} a participé`
+                                  : `${contributor.full_name} contributed`;
+                              }
+                              // Affichage spécifique pour l'utilisateur courant
+                              if (contributor.user_id === 'current_user') {
+                                return locale === 'fr' ? 'Vous avez participé' : 'You contributed';
+                              }
+                              // Fallback générique si aucun nom exploitable
+                              return locale === 'fr' ? 'Contributeur a participé' : 'Contributor';
+                            })()}
                           </p>
                           <p className="text-xs sm:text-sm text-gray-500">
                             {contributor.amount.toLocaleString('fr-FR')} {formatCurrency(moneyPool.currency)}
@@ -419,7 +478,9 @@ export default function MoneyPoolDetailsPage() {
                         </span>
                       </div>
                       {contributor.message && (
-                        <p className="text-xs sm:text-sm text-gray-700 mt-2 italic break-words">"{contributor.message}"</p>
+                        <p className="text-xs sm:text-sm text-gray-700 mt-2 italic break-words">
+                          "{contributor.message}"
+                        </p>
                       )}
                     </div>
                   ))
@@ -441,8 +502,21 @@ export default function MoneyPoolDetailsPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-6">
               {/* Progress */}
               <div className="mb-6">
+                {/* Montant collecté - Mise en évidence */}
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 mb-4 border border-orange-200">
+                  <div className="text-center">
+                    <p className="text-xs font-medium text-gray-600 mb-1">{locale === 'fr' ? 'Montant collecté' : 'Amount Raised'}</p>
+                    <p className="text-3xl font-bold text-orange-600 mb-1">
+                      {moneyPool.current_amount.toLocaleString('fr-FR')} {formatCurrency(moneyPool.currency)}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      sur {moneyPool.settings.target_amount.toLocaleString('fr-FR')} {formatCurrency(moneyPool.currency)}
+                    </p>
+                  </div>
+                </div>
+
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-gray-600 text-sm font-medium">{locale === 'fr' ? 'Collecté' : 'Raised'}</span>
+                  <span className="text-gray-600 text-sm font-medium">{locale === 'fr' ? 'Progression' : 'Progress'}</span>
                   <span className="text-2xl font-bold text-orange-600">{progress}%</span>
                 </div>
                 
@@ -453,11 +527,6 @@ export default function MoneyPoolDetailsPage() {
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 1, ease: "easeOut" }}
                   />
-                </div>
-                
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>{moneyPool.current_amount.toLocaleString('fr-FR')} {formatCurrency(moneyPool.currency)}</span>
-                  <span>{moneyPool.settings.target_amount.toLocaleString('fr-FR')} {formatCurrency(moneyPool.currency)}</span>
                 </div>
               </div>
 
@@ -541,14 +610,17 @@ export default function MoneyPoolDetailsPage() {
                   value={contributionAmount || ''}
                   onChange={(e) => setContributionAmount(parseFloat(e.target.value) || 0)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder={moneyPool.settings.min_contribution 
-                    ? `${moneyPool.settings.min_contribution}${moneyPool.settings.max_contribution ? ` - ${moneyPool.settings.max_contribution}` : '+'} ${formatCurrency(moneyPool.currency)}`
-                    : '0'
+                  placeholder={
+                    moneyPool.settings.min_contribution && moneyPool.settings.max_contribution
+                      ? `${moneyPool.settings.min_contribution} - ${moneyPool.settings.max_contribution} ${formatCurrency(moneyPool.currency)}`
+                      : moneyPool.settings.min_contribution
+                      ? `${moneyPool.settings.min_contribution}+ ${formatCurrency(moneyPool.currency)}`
+                      : '0'
                   }
                 />
                 {(moneyPool.settings.min_contribution || moneyPool.settings.max_contribution) && (
                   <p className="text-xs text-gray-500 mt-1">
-                    {locale === 'fr' ? 'Limite: ' : 'Limit: '}
+                    {locale === 'fr' ? 'Limites: ' : 'Limits: '}
                     {moneyPool.settings.min_contribution && (
                       <span>Min: {moneyPool.settings.min_contribution.toLocaleString('fr-FR')} {formatCurrency(moneyPool.currency)}</span>
                     )}
@@ -559,6 +631,24 @@ export default function MoneyPoolDetailsPage() {
                   </p>
                 )}
               </div>
+
+              {/* Nom complet pour utilisateurs non connectés */}
+              {!isLoggedIn && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {locale === 'fr' ? 'Nom complet' : 'Full Name'}
+                    {!anonymous && <span className="text-red-500 ml-1">*</span>}
+                  </label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    disabled={anonymous}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
+                    placeholder={locale === 'fr' ? 'Votre nom complet' : 'Your full name'}
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -578,7 +668,13 @@ export default function MoneyPoolDetailsPage() {
                   type="checkbox"
                   id="anonymous"
                   checked={anonymous}
-                  onChange={(e) => setAnonymous(e.target.checked)}
+                  onChange={(e) => {
+                    setAnonymous(e.target.checked);
+                    if (e.target.checked) {
+                      // Réinitialiser le nom si on coche anonyme
+                      setFullName('');
+                    }
+                  }}
                   className="mr-2 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                 />
                 <label htmlFor="anonymous" className="text-sm text-gray-700">
@@ -592,6 +688,8 @@ export default function MoneyPoolDetailsPage() {
                     setShowContributeModal(false);
                     setMessage('');
                     setContributionAmount(0);
+                    setAnonymous(false);
+                    setFullName('');
                   }}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 export interface PublicProject {
   id: string;
@@ -24,12 +24,21 @@ export function usePublicProjects(locale: 'fr' | 'en' = 'fr'): UsePublicProjects
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Mémoriser l'URL de l'API pour éviter les re-créations
+  const API_URL = useMemo(() => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    // S'assurer qu'on n'ajoute pas /api/v1 deux fois
+    return baseUrl.endsWith('/api/v1') ? baseUrl.replace('/api/v1', '') : baseUrl;
+  }, []);
+  const hasApiUrl = useMemo(() => !!process.env.NEXT_PUBLIC_API_URL, []);
+
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
         // URL directe vers le backend - pas de proxy Next.js
-        const API_URL = 'http://localhost:8000';
         const url = `${API_URL}/api/v1/money-pools/public?limit=6&page=1`;
         
         const response = await fetch(url, {
@@ -37,10 +46,15 @@ export function usePublicProjects(locale: 'fr' | 'en' = 'fr'): UsePublicProjects
           headers: {
             'Content-Type': 'application/json',
           },
+          // Ajouter les options pour éviter les problèmes CORS
+          mode: 'cors',
+          credentials: 'omit',
         });
         
         if (!response.ok) {
-          throw new Error('Failed to fetch money pools');
+          const errorText = await response.text();
+          console.error('API Error Response:', errorText);
+          throw new Error(`Failed to fetch money pools: ${response.status} ${response.statusText}`);
         }
         
         const data = await response.json();
@@ -54,11 +68,41 @@ export function usePublicProjects(locale: 'fr' | 'en' = 'fr'): UsePublicProjects
         }
         
         // Convert API data to PublicProject format
-        const publicProjects: PublicProject[] = data.map((pool: any) => ({
+        // Filtrer et valider les cagnottes avant de les mapper
+        const validPools = data.filter((pool: any) => {
+          // Valider que la cagnotte a toutes les données essentielles
+          // Et que l'ID est valide (ObjectId MongoDB = 24 caractères hexadécimaux)
+          const isValidId = pool.id && 
+                           typeof pool.id === 'string' && 
+                           pool.id.length === 24 && 
+                           /^[0-9a-fA-F]{24}$/.test(pool.id);
+          
+          return pool && 
+                 isValidId &&
+                 pool.name && 
+                 pool.name.trim() !== '' &&
+                 pool.settings && 
+                 typeof pool.settings.target_amount === 'number' &&
+                 pool.settings.target_amount > 0 &&
+                 typeof pool.current_amount === 'number' &&
+                 pool.current_amount >= 0 &&
+                 pool.currency &&
+                 pool.status === 'active' && // S'assurer que seules les cagnottes actives sont affichées
+                 pool.visibility === 'public'; // S'assurer que seules les cagnottes publiques sont affichées
+        });
+        
+        // Logger pour debug si des cagnottes ont été filtrées
+        if (data.length > validPools.length) {
+          console.warn(`Filtered out ${data.length - validPools.length} invalid money pools from carousel`);
+        }
+        
+        // Le backend filtre maintenant les documents invalides
+        // On fait confiance aux données retournées après validation stricte
+        const publicProjects: PublicProject[] = validPools.map((pool: any) => ({
           id: pool.id,
           title: pool.name,
-          description: pool.description,
-          image: pool.images && pool.images.length > 0 ? pool.images[0] : "https://images.unsplash.com/photo-1554224154-8ec4e497d64f?auto=format&fit=crop&w=800&q=80",
+          description: pool.description || '',
+          image: pool.images && pool.images.length > 0 ? pool.images[0] : "https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=800&q=80",
           progress: pool.settings.target_amount > 0 
             ? Math.round((pool.current_amount / pool.settings.target_amount) * 100) 
             : 0,
@@ -81,10 +125,7 @@ export function usePublicProjects(locale: 'fr' | 'en' = 'fr'): UsePublicProjects
     };
 
     fetchProjects();
-  }, [locale]);
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-  const hasApiUrl = !!process.env.NEXT_PUBLIC_API_URL;
+  }, [locale, API_URL]);
 
   return {
     projects,

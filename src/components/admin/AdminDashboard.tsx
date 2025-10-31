@@ -22,6 +22,7 @@ import FooterEditor from "./FooterEditor";
 import WhatsAppEditor from "./WhatsAppEditor";
 import LegalEditor from "./LegalEditor";
 import CausesCarouselEditor from "./forms/CausesCarouselEditor";
+import PricingEditor from "./forms/PricingEditor";
 import { useAdminAuthContext } from "@/contexts/AdminAuthContext";
 import { useContent, ContentData } from "@/hooks/useContent";
 import Notification from "../Notification";
@@ -467,6 +468,12 @@ export default function AdminDashboard() {
                 return { success: false, error: 'Erreur lors de la sauvegarde' };
               }
             }}
+            locale={locale}
+          />
+        ) : selectedSection === 'pricing' ? (
+          <PricingEditor
+            pricing={content?.pricing || { title: '', plans: [] }}
+            onUpdate={(data) => handleSaveContent('pricing', data)}
             locale={locale}
           />
         ) : (

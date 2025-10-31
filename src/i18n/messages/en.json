@@ -152,24 +152,34 @@
         "features": [
           "Unlimited private groups",
           "Secure payments",
-          "Automated reminders",
-          "Community support"
+          "Automated reminders"
         ],
         "cta": "Create a free account"
       },
       {
         "name": "Premium",
-        "price": "15 FCFA",
-        "period": "per month",
+        "price": "16 900 FCFA",
+        "period": "per year",
         "description": "Unlock advanced tools to scale and shine.",
         "features": [
           "Full analytics dashboard",
-          "Public tontines & showcases",
           "Advanced automation",
-          "Priority support + Success manager"
+          "Priority support"
         ],
-        "cta": "Start 14-day trial",
+        "cta": "Choose Premium",
         "highlight": true
+      },
+      {
+        "name": "Community",
+        "price": "149 000 FCFA",
+        "period": "per year",
+        "description": "Perfect for small communities and associations.",
+        "features": [
+          "Up to 50 members per group",
+          "Public tontines",
+          "Basic analytics"
+        ],
+        "cta": "Choose Community"
       }
     ]
   },
@@ -403,14 +413,14 @@
         "title": "WhatsApp",
         "description": "Configure WhatsApp number and message"
       },
-        "legal": {
-          "title": "Legal Notice",
-          "description": "Manage legal information and mandatory notices"
-        },
-        "causes": {
-          "title": "Money Pool Carousel",
-          "description": "Manage the display and selection of featured projects"
-        }
+      "legal": {
+        "title": "Legal Notice",
+        "description": "Manage legal information and mandatory notices"
+      },
+      "causes": {
+        "title": "Money Pool Carousel",
+        "description": "Manage the display and selection of featured projects"
+      }
     },
     "whatsapp": {
       "title": "WhatsApp Configuration",

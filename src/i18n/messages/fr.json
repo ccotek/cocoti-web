@@ -152,24 +152,34 @@
         "features": [
           "Groupes privés illimités",
           "Paiements sécurisés",
-          "Rappels automatiques",
-          "Support communautaire"
+          "Rappels automatiques"
         ],
         "cta": "Créer un compte gratuit"
       },
       {
         "name": "Premium",
-        "price": "14 FCFA",
-        "period": "par mois",
+        "price": "16 900 FCFA",
+        "period": "par an",
         "description": "Débloquez des outils avancés pour croître et rayonner.",
         "features": [
           "Dashboard analytique complet",
-          "Tontines publiques et vitrines",
           "Automatisation avancée",
-          "Support prioritaire + Success manager"
+          "Support prioritaire"
         ],
-        "cta": "Essai gratuit 14 jours",
+        "cta": "Choisir Premium",
         "highlight": true
+      },
+      {
+        "name": "Community",
+        "price": "149 000 FCFA",
+        "period": "par an",
+        "description": "Parfait pour les petites communautés et associations.",
+        "features": [
+          "Jusqu'à 50 membres par groupe",
+          "Tontines publiques",
+          "Analytics de base"
+        ],
+        "cta": "Choisir Community"
       }
     ]
   },

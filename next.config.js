@@ -32,15 +32,16 @@ const nextConfig = {
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
       config.watchOptions = {
-        poll: 1000,
-        aggregateTimeout: 300,
-        ignored: ['**/node_modules/**', '**/.next/**'],
+        poll: 2000, // Réduire la fréquence de polling
+        aggregateTimeout: 500, // Augmenter le délai d'agrégation
+        ignored: ['**/node_modules/**', '**/.next/**', '**/src/i18n/messages/**'], // Ignorer les fichiers JSON
       };
     }
     
     // Configuration pour éviter les problèmes de fichiers temporaires sur Windows
     config.resolve.symlinks = false;
-    config.cache = false; // Désactiver le cache pour éviter les problèmes de permissions
+    // Garder le cache activé pour de meilleures performances
+    // config.cache = false; // Commenté pour éviter les rechargements
     
     return config;
   },
@@ -52,7 +53,7 @@ const nextConfig = {
   output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
   trailingSlash: false,
   // Configuration pour éviter les problèmes de build sur Windows
-  reactStrictMode: true,
+  reactStrictMode: process.env.NODE_ENV === 'production', // Désactiver en développement pour éviter les double-renders
   // Désactiver les optimisations qui causent des problèmes sur Windows
   experimental: {
     optimizeCss: false,
