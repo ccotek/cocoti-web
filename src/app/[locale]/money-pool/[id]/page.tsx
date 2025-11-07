@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
@@ -14,7 +14,8 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   ArrowLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 import { 
   HeartIcon as HeartIconSolid
@@ -79,12 +80,20 @@ export default function MoneyPoolDetailsPage() {
   const moneyPoolId = params.id as string;
   const locale = params.locale as string;
   
+  // API URL configuration (same as money-pools list page)
+  const API_URL = useMemo(() => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    return baseUrl.endsWith('/api/v1') ? baseUrl.replace('/api/v1', '') : baseUrl;
+  }, []);
+  
   // Helper function for translations using JSON files
   const t = (key: string): string => {
     // Import translations from JSON files
     const frTranslations = {
       active: 'Cagnotte active',
+      archived: 'Cagnotte archivée',
       verified: 'Cagnotte vérifiée',
+      notVerified: 'Non vérifiée',
       anonymousAllowed: 'Anonyme autorisé',
       contribute: 'Contribuer maintenant',
       view: 'Voir',
@@ -137,7 +146,9 @@ export default function MoneyPoolDetailsPage() {
     
     const enTranslations = {
       active: 'Active pool',
+      archived: 'Archived pool',
       verified: 'Verified pool',
+      notVerified: 'Not verified',
       anonymousAllowed: 'Anonymous allowed',
       contribute: 'Contribute Now',
       view: 'View',
@@ -210,11 +221,8 @@ export default function MoneyPoolDetailsPage() {
           try {
             setLoading(true);
             setError(null);
-            console.log('Fetching money pool with ID:', moneyPoolId);
-            
             // Fetch money pool details
-            const response = await fetch(`http://localhost:8000/api/v1/money-pools/${moneyPoolId}`);
-            console.log('Fetch response status:', response.status);
+            const response = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}`);
             
             if (!response.ok) {
               let errorMessage = '';
@@ -233,19 +241,15 @@ export default function MoneyPoolDetailsPage() {
                 // D'abord, lire le texte brut pour voir ce que le serveur retourne
                 try {
                   rawText = await clonedResponse.text();
-                  console.error('[MONEY POOL FETCH ERROR] Raw response text:', rawText);
-                  console.error('[MONEY POOL FETCH ERROR] Raw response length:', rawText.length);
                 } catch (textError) {
-                  console.error('[MONEY POOL FETCH ERROR] Failed to read response text:', textError);
+                  // Ignore text read errors
                 }
                 
                 // Essayer de parser la réponse JSON
                 try {
                   if (rawText && rawText.trim()) {
                     errorData = JSON.parse(rawText);
-                    console.error('[MONEY POOL FETCH ERROR] Parsed JSON successfully');
                   } else {
-                    console.error('[MONEY POOL FETCH ERROR] Response body is empty');
                     errorData = {};
                   }
                   
@@ -274,44 +278,36 @@ export default function MoneyPoolDetailsPage() {
                     }
                   }
                   
-                  console.error('[MONEY POOL FETCH ERROR] Full error details:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    rawText: rawText.substring(0, 500), // Limiter à 500 caractères pour les logs
-                    errorData,
-                    detail: errorData?.detail,
-                    message: errorData?.message,
-                    error: errorData?.error,
-                    extractedMessage: errorMessage
-                  });
                 } catch (jsonError) {
                   // Si le parsing JSON échoue, utiliser le texte brut
-                  console.error('[MONEY POOL FETCH ERROR] JSON parse failed:', jsonError);
                   errorMessage = rawText || `HTTP ${response.status}: ${response.statusText}`;
                 }
               }
               
-              console.error('[MONEY POOL FETCH] Final error message:', errorMessage);
-              console.error('[MONEY POOL FETCH] Full error context:', {
-                moneyPoolId,
-                url: `http://localhost:8000/api/v1/money-pools/${moneyPoolId}`,
-                status: response.status,
-                statusText: response.statusText,
-                errorMessage,
-                errorData,
-                rawText: rawText.substring(0, 200) // Limiter pour les logs
-              });
               throw new Error(errorMessage || `Erreur serveur (${response.status})`);
             }
             
             const data = await response.json();
-            console.log('[MONEY POOL DATA] Full response:', data);
-            console.log('[MONEY POOL DATA] Verified field:', data.verified);
+            
+            // Ensure verified is a boolean - normalize it properly
+            // Handle all possible types: boolean, string, number, null, undefined
+            const verifiedValue = data.verified;
+            let normalizedVerified = false;
+            if (verifiedValue === true || verifiedValue === 'true' || verifiedValue === 1 || verifiedValue === '1') {
+              normalizedVerified = true;
+            } else if (verifiedValue === false || verifiedValue === 'false' || verifiedValue === 0 || verifiedValue === '0' || verifiedValue === null || verifiedValue === undefined) {
+              normalizedVerified = false;
+            } else {
+              // Default to false for any other value
+              normalizedVerified = false;
+            }
+            
+            data.verified = normalizedVerified;
             setMoneyPool(data);
         
             // Fetch contributions
             try {
-              const contribResponse = await fetch(`http://localhost:8000/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
+              const contribResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
               if (contribResponse.ok) {
                 const contribData = await contribResponse.json();
                 setContributors(contribData.contributions || []);
@@ -415,34 +411,21 @@ export default function MoneyPoolDetailsPage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      console.log('[CONTRIBUTION] Sending request:', {
-        url: `http://localhost:8000/api/v1/money-pools/${moneyPoolId}/participate`,
-        method: 'POST',
-        hasToken: !!token,
-        body: requestBody
-      });
-      
-      const response = await fetch(`http://localhost:8000/api/v1/money-pools/${moneyPoolId}/participate`, {
+      const response = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/participate`, {
         method: 'POST',
         headers,
         body: JSON.stringify(requestBody)
       });
-      
-      console.log('[CONTRIBUTION] Response status:', response.status, response.statusText);
 
       const data = await response.json();
-      console.log('[CONTRIBUTION] Response data:', data);
 
       if (!response.ok) {
-        console.error('[CONTRIBUTION] Error response:', data);
         throw new Error(data.detail || 'Failed to contribute');
       }
       
-      console.log('[CONTRIBUTION] Success!', data);
-      
       // Reload contributions from API
       try {
-        const contribResponse = await fetch(`http://localhost:8000/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
+        const contribResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
         if (contribResponse.ok) {
           const contribData = await contribResponse.json();
           setContributors(contribData.contributions || []);
@@ -452,7 +435,7 @@ export default function MoneyPoolDetailsPage() {
       }
       
       // Reload money pool data to get updated amount
-      const poolResponse = await fetch(`http://localhost:8000/api/v1/money-pools/${moneyPoolId}`);
+      const poolResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}`);
       if (poolResponse.ok) {
         const poolData = await poolResponse.json();
         setMoneyPool(poolData);
@@ -869,20 +852,35 @@ export default function MoneyPoolDetailsPage() {
 
               {/* Info */}
               <div className="mt-6 space-y-3 text-sm">
+                {/* Status: Active or Archived */}
                 <div className="flex items-center text-ink-muted font-inter">
-                  <div className="p-1.5 bg-gradient-to-br from-green-400/20 to-green-500/20 rounded-lg mr-2">
-                    <CheckBadgeIcon className="h-4 w-4 text-green-500" />
+                  <div className={`p-1.5 rounded-lg mr-2 ${
+                    moneyPool.status === 'active' 
+                      ? 'bg-gradient-to-br from-green-400/20 to-green-500/20' 
+                      : 'bg-gradient-to-br from-gray-400/20 to-gray-500/20'
+                  }`}>
+                    <CheckBadgeIcon className={`h-4 w-4 ${
+                      moneyPool.status === 'active' ? 'text-green-500' : 'text-gray-500'
+                    }`} />
                   </div>
-                  <span>{t('active')}</span>
+                  <span>{moneyPool.status === 'active' ? t('active') : t('archived')}</span>
                 </div>
-                {moneyPool.verified === true && (
-                  <div className="flex items-center text-ink-muted font-inter">
-                    <div className="p-1.5 bg-green-500/20 rounded-lg mr-2">
-                      <CheckBadgeIcon className="h-4 w-4 text-green-500" />
-                    </div>
-                    <span>{t('verified')}</span>
+                
+                {/* Verified Status - Always show */}
+                <div className="flex items-center text-ink-muted font-inter">
+                  <div className={`p-1.5 rounded-lg mr-2 ${
+                    moneyPool.verified === true 
+                      ? 'bg-green-500/20' 
+                      : 'bg-gray-300/20'
+                  }`}>
+                    <ShieldCheckIcon className={`h-4 w-4 ${
+                      moneyPool.verified === true ? 'text-green-500' : 'text-gray-400'
+                    }`} />
                   </div>
-                )}
+                  <span>{moneyPool.verified === true ? t('verified') : t('notVerified')}</span>
+                </div>
+                
+                {/* Anonymous Allowed */}
                 <div className="flex items-center text-ink-muted font-inter">
                   <div className="p-1.5 bg-cloud/50 rounded-lg mr-2">
                     <EyeSlashIcon className="h-4 w-4 text-ink-muted" />

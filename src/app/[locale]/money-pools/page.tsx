@@ -11,7 +11,7 @@ import {
   HomeIcon,
   ChevronRightIcon,
   PlusIcon,
-  CheckBadgeIcon
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 import MoneyPoolGallery from '@/components/MoneyPoolGallery';
 import Link from 'next/link';
@@ -74,7 +74,6 @@ export default function MoneyPoolsListPage() {
         });
         
         const url = `${API_URL}/api/v1/money-pools/public?${params.toString()}`;
-        console.log('[FETCH] Requesting URL:', url);
         
         const response = await fetch(url, {
           method: 'GET',
@@ -104,7 +103,6 @@ export default function MoneyPoolsListPage() {
         // Map and validate pools data from API
         const mappedPools: PublicMoneyPool[] = pools.map((pool: any) => {
           const status = pool.status || 'active';
-          console.log(`[POOL MAPPING] Pool ${pool.id || pool._id}: status="${status}"`);
           return {
             id: pool.id || pool._id,
             name: pool.name || '',
@@ -127,10 +125,6 @@ export default function MoneyPoolsListPage() {
           };
         }).filter(pool => pool.id && pool.name); // Filter out invalid pools
         
-        console.log('[POOL MAPPING] Total mapped pools:', mappedPools.length);
-        console.log('[POOL MAPPING] Active pools:', mappedPools.filter(p => p.status === 'active').length);
-        console.log('[POOL MAPPING] Archived pools:', mappedPools.filter(p => p.status === 'archived').length);
-        console.log('[POOL MAPPING] All statuses:', mappedPools.map(p => ({ id: p.id, name: p.name, status: p.status })));
         setMoneyPools(mappedPools);
         setLoading(false);
       } catch (err) {
@@ -168,7 +162,6 @@ export default function MoneyPoolsListPage() {
       return status === 'archived';
     });
     
-    console.log(`[FILTER] After separation - Active: ${active.length}, Archived: ${archived.length}`);
     
     // Paginate active pools (always show first page of active)
     const activeStart = 0;
@@ -312,7 +305,7 @@ export default function MoneyPoolsListPage() {
                             {/* Badge vérifié - Coin supérieur droit de la carte */}
                             {pool.verified && (
                               <div className="absolute top-3 right-3 bg-green-500 rounded-full p-2 shadow-lg z-30 border-2 border-white" title={locale === 'fr' ? 'Cagnotte vérifiée' : 'Verified money pool'}>
-                                <CheckBadgeIcon className="h-5 w-5 text-white" />
+                                <ShieldCheckIcon className="h-5 w-5 text-white" />
                               </div>
                             )}
                             {/* Image */}
@@ -422,7 +415,7 @@ export default function MoneyPoolsListPage() {
                             {/* Badge vérifié - Coin supérieur droit de la carte */}
                             {pool.verified && (
                               <div className="absolute top-3 right-3 bg-green-500 rounded-full p-2 shadow-lg z-30 border-2 border-white" title={locale === 'fr' ? 'Cagnotte vérifiée' : 'Verified money pool'}>
-                                <CheckBadgeIcon className="h-5 w-5 text-white" />
+                                <ShieldCheckIcon className="h-5 w-5 text-white" />
                               </div>
                             )}
                             {/* Image */}
