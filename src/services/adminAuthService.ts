@@ -1,5 +1,6 @@
 // Service d'authentification admin avec l'API réelle
 import { ADMIN_API_CONFIG, ADMIN_API_ENDPOINTS } from '@/config/adminApi';
+import { setAuthToken, getAuthToken, clearAuthToken } from '@/utils/tokenStorage';
 
 export interface AdminLoginRequest {
   email: string;
@@ -39,10 +40,10 @@ export interface AdminUser {
 
 class AdminAuthService {
   private async getAuthHeaders(): Promise<HeadersInit> {
-    const token = localStorage.getItem('admin_token');
+    const token = getAuthToken();
     
     if (!token) {
-      console.error('Aucun token admin trouvé dans localStorage');
+      console.error('Aucun token admin trouvé');
       throw new Error('Token d\'authentification manquant');
     }
     
@@ -82,10 +83,10 @@ class AdminAuthService {
       const now = new Date();
       const expiration = new Date(now.getTime() + data.tokens.expires_in * 1000);
       
-      // Stocker le token
-      localStorage.setItem('admin_token', data.tokens.access_token);
-      localStorage.setItem('admin_refresh_token', data.tokens.refresh_token);
-      localStorage.setItem('admin_expires_at', expiration.toISOString());
+      // Stocker le token avec la clé unifiée
+      setAuthToken(data.tokens.access_token);
+      localStorage.setItem('cocoti_refresh_token', data.tokens.refresh_token);
+      localStorage.setItem('cocoti_token_expires_at', expiration.toISOString());
       
       console.log('Token stocké:', data.tokens.access_token.substring(0, 20) + '...');
       console.log('Expiration:', expiration.toISOString());
@@ -124,7 +125,7 @@ class AdminAuthService {
 
   async refreshToken(): Promise<AdminLoginResponse> {
     try {
-      const refreshToken = localStorage.getItem('admin_refresh_token');
+      const refreshToken = localStorage.getItem('cocoti_refresh_token');
       if (!refreshToken) {
         throw new Error('Aucun refresh token disponible');
       }
@@ -152,10 +153,10 @@ class AdminAuthService {
       const now = new Date();
       const expiration = new Date(now.getTime() + data.tokens.expires_in * 1000);
       
-      // Mettre à jour les tokens
-      localStorage.setItem('admin_token', data.tokens.access_token);
-      localStorage.setItem('admin_refresh_token', data.tokens.refresh_token);
-      localStorage.setItem('admin_expires_at', expiration.toISOString());
+      // Mettre à jour les tokens avec la clé unifiée
+      setAuthToken(data.tokens.access_token);
+      localStorage.setItem('cocoti_refresh_token', data.tokens.refresh_token);
+      localStorage.setItem('cocoti_token_expires_at', expiration.toISOString());
       
       return data;
     } catch (error) {
@@ -166,15 +167,15 @@ class AdminAuthService {
   }
 
   logout(): void {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_refresh_token');
-    localStorage.removeItem('admin_expires_at');
+    clearAuthToken();
+    localStorage.removeItem('cocoti_refresh_token');
+    localStorage.removeItem('cocoti_token_expires_at');
     localStorage.removeItem('admin_user');
   }
 
   isAuthenticated(): boolean {
-    const token = localStorage.getItem('admin_token');
-    const expiresAt = localStorage.getItem('admin_expires_at');
+    const token = getAuthToken();
+    const expiresAt = localStorage.getItem('cocoti_token_expires_at');
     
     if (!token || !expiresAt) {
       return false;
@@ -203,7 +204,7 @@ class AdminAuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem('admin_token');
+    return getAuthToken();
   }
 
   async checkAdminPermissions(): Promise<boolean> {

@@ -2,6 +2,8 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 import { PlusIcon, XMarkIcon, HeartIcon } from "@heroicons/react/24/outline";
 import CreateMoneyPoolModal from "./CreateMoneyPoolModal";
 
@@ -10,12 +12,14 @@ type SimpleFloatingButtonProps = {
 };
 
 export default function SimpleFloatingButton({ locale }: SimpleFloatingButtonProps) {
+  const params = useParams();
+  const localeParam = (params?.locale as string) || locale;
   const [isExpanded, setIsExpanded] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCreateCagnotte = () => {
-    setIsModalOpen(true);
-    setIsExpanded(false);
+    // Redirect to create page instead of opening modal
+    window.location.href = `/${localeParam}/money-pool/create`;
   };
 
   return (

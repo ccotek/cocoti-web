@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { HeartIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { usePublicProjects, PublicProject } from "@/hooks/usePublicProjects";
 import { useCausesCarouselConfig } from "@/hooks/useCausesCarouselConfig";
@@ -199,7 +200,7 @@ export default function CausesSection({ locale }: CausesSectionProps) {
           </button>
 
           {/* Dots Indicator */}
-          <div className="flex justify-center mt-8 gap-2">
+          <div className="flex justify-center mt-8 gap-2 mb-6">
             {projects.map((_, index) => (
               <button
                 key={index}
@@ -212,6 +213,17 @@ export default function CausesSection({ locale }: CausesSectionProps) {
                 aria-label={`${locale === 'fr' ? 'Aller à la slide' : 'Go to slide'} ${index + 1}`}
               />
             ))}
+          </div>
+
+          {/* View All Button */}
+          <div className="flex justify-center mt-6">
+            <Link 
+              href={`/${locale}/money-pools`}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-magenta to-sunset text-white rounded-2xl font-semibold hover:shadow-glow transition-all font-inter"
+            >
+              {locale === 'fr' ? 'Voir toutes les cagnottes' : 'View all money pools'}
+              <ChevronRightIcon className="h-5 w-5" />
+            </Link>
           </div>
         </div>
 
