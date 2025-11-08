@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { contentService, ContentData as ApiContentData } from "@/services/contentService";
 
 // Fonction pour transformer les données API en format ContentData
@@ -136,6 +136,7 @@ export function useContent(locale: 'fr' | 'en') {
   const [content, setContent] = useState<ContentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const previousContentRef = useRef<string | null>(null);
 
         // Charger le contenu depuis l'API ou les fichiers JSON de fallback
         useEffect(() => {
@@ -289,10 +290,15 @@ export function useContent(locale: 'fr' | 'en') {
           }
         };
         
-        setContent(contentData);
+        // Comparer avec le contenu précédent pour éviter les re-renders inutiles
+        const contentString = JSON.stringify(contentData);
+        if (previousContentRef.current !== contentString) {
+          previousContentRef.current = contentString;
+          setContent(contentData);
+        }
       } catch (err) {
-        setError('Erreur lors du chargement du contenu');
         console.error('Error loading content:', err);
+        setError('Erreur lors du chargement du contenu');
       } finally {
         setLoading(false);
       }

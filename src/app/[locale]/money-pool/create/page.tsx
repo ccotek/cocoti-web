@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeftIcon,
   PhotoIcon,
@@ -14,7 +14,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { getAuthToken, isAuthenticated } from '@/utils/tokenStorage';
+import { getAuthToken, isAuthenticated, clearAuthToken, setAuthToken } from '@/utils/tokenStorage';
 
 type Step = 'info' | 'verification' | 'activation' | 'success';
 
@@ -39,6 +39,23 @@ export default function CreateMoneyPoolPage() {
   const router = useRouter();
   const locale = params.locale as 'fr' | 'en';
 
+  // Helper function for translations
+  const t = (key: string): string => {
+    const translations: Record<string, Record<string, string>> = {
+      fr: require('@/i18n/messages/fr.json').moneyPool.create || {},
+      en: require('@/i18n/messages/en.json').moneyPool.create || {}
+    };
+    const keys = key.split('.');
+    let value: any = translations[locale];
+    for (const k of keys) {
+      value = value?.[k];
+    }
+    return value || key;
+  };
+
+  // Toast notification state
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
   const [currentStep, setCurrentStep] = useState<Step>('info');
   const [charterAccepted, setCharterAccepted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,12 +63,29 @@ export default function CreateMoneyPoolPage() {
   const [otpSessionId, setOtpSessionId] = useState<string | null>(null);
   const [otpCode, setOtpCode] = useState('');
   const [phone, setPhone] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState(''); // Phone number without country code
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string>(''); // Selected country code (e.g., 'SN')
+  const [selectedCallingCode, setSelectedCallingCode] = useState<string>(''); // Selected calling code (e.g., '+221')
+  const [countries, setCountries] = useState<Array<{
+    code: string;
+    name: string;
+    name_fr: string;
+    name_en: string;
+    calling_code: string;
+    calling_codes: string[];
+    flag_emoji: string; 
+    currency_codes: string[];
+  }>>([]);
   const [fullName, setFullName] = useState('');
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [createdMoneyPoolId, setCreatedMoneyPoolId] = useState<string | null>(null);
+  const [createdMoneyPoolVisibility, setCreatedMoneyPoolVisibility] = useState<'public' | 'community' | 'private'>('public');
+  const [createdMoneyPoolStatus, setCreatedMoneyPoolStatus] = useState<'draft' | 'active'>('draft');
   const [otpVerified, setOtpVerified] = useState(false);
   const [needsRegistration, setNeedsRegistration] = useState(false);
   const [activateImmediately, setActivateImmediately] = useState(false);
+  const [receivedToken, setReceivedToken] = useState<string | null>(null); // Token received from OTP authentication
+  const [allowAnonymous, setAllowAnonymous] = useState(true); // Allow anonymous contributions by default
 
   const [formData, setFormData] = useState<MoneyPoolFormData>({
     name: '',
@@ -95,23 +129,13 @@ export default function CreateMoneyPoolPage() {
           }
         }
         
-        // Fallback: Try to detect from IP (geolocation)
-        try {
-          const response = await fetch('https://ipapi.co/json/');
-          if (response.ok) {
-            const data = await response.json();
-            const countryCode = data.country_code;
-            if (countryCode) {
-              const currency = getCurrencyFromCountry(countryCode);
-              setFormData(prev => ({
-                ...prev,
-                country: countryCode,
-                currency: currency
-              }));
-            }
-          }
-        } catch (ipError) {
-          console.log('IP detection failed, using default');
+        // Fallback: Use default country (Senegal) if no phone number
+        if (!formData.country) {
+          setFormData(prev => ({
+            ...prev,
+            country: 'SN',
+            currency: 'XOF'
+          }));
         }
       } catch (error) {
         console.error('Error detecting country:', error);
@@ -236,6 +260,30 @@ export default function CreateMoneyPoolPage() {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     return baseUrl.endsWith('/api/v1') ? baseUrl.replace('/api/v1', '') : baseUrl;
   }, []);
+
+  // Fetch active countries with calling codes
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/v1/geography/countries/public?language=${locale}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.countries) {
+            setCountries(data.countries);
+            // Set default country (Senegal) if available
+            const defaultCountry = data.countries.find((c: any) => c.code === 'SN');
+            if (defaultCountry) {
+              setSelectedCountryCode(defaultCountry.code);
+              setSelectedCallingCode(defaultCountry.calling_code);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching countries:', error);
+      }
+    };
+    fetchCountries();
+  }, [API_URL, locale]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -399,11 +447,22 @@ export default function CreateMoneyPoolPage() {
     }
   };
 
+  // Update phone when country code or phone number changes
+  useEffect(() => {
+    if (selectedCallingCode && phoneNumber) {
+      setPhone(`${selectedCallingCode}${phoneNumber}`);
+    } else if (phoneNumber) {
+      setPhone(phoneNumber);
+    }
+  }, [selectedCallingCode, phoneNumber]);
+
   const sendOTP = async (): Promise<boolean> => {
-    if (!phone.trim()) {
-      setError(locale === 'fr' ? 'Veuillez saisir votre numéro de téléphone' : 'Please enter your phone number');
+    if (!selectedCallingCode || !phoneNumber.trim()) {
+      setError(t('errors.selectCountryPhone'));
       return false;
     }
+    
+    const fullPhone = `${selectedCallingCode}${phoneNumber.trim()}`;
 
     setIsSendingOtp(true);
     setError('');
@@ -417,7 +476,7 @@ export default function CreateMoneyPoolPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          phone: phone.trim(),
+          phone: fullPhone,
           purpose: 'registration'
         })
       });
@@ -443,19 +502,19 @@ export default function CreateMoneyPoolPage() {
   const validateForm = (): boolean => {
     // Validation
     if (!formData.name.trim()) {
-      setError(locale === 'fr' ? 'Le nom de la cagnotte est requis' : 'Money pool name is required');
+      setError(t('errors.nameRequired'));
       return false;
     }
     if (!formData.description.trim()) {
-      setError(locale === 'fr' ? 'La description est requise' : 'Description is required');
+      setError(t('errors.descriptionRequired'));
       return false;
     }
     if (formData.description.trim().length < 500) {
-      setError(locale === 'fr' ? 'La description doit contenir au moins 500 caractères' : 'Description must contain at least 500 characters');
+      setError(t('errors.descriptionMinLength'));
       return false;
     }
     if (!formData.target_amount || parseFloat(formData.target_amount) <= 0) {
-      setError(locale === 'fr' ? 'Le montant cible doit être supérieur à 0' : 'Target amount must be greater than 0');
+      setError(t('errors.targetAmountRequired'));
       return false;
     }
     return true;
@@ -472,7 +531,7 @@ export default function CreateMoneyPoolPage() {
 
     // Check charter acceptance
     if (!charterAccepted) {
-      setError(locale === 'fr' ? 'Vous devez accepter la charte pour continuer' : 'You must accept the charter to continue');
+      setError(t('errors.charterRequired'));
       return;
     }
 
@@ -480,17 +539,11 @@ export default function CreateMoneyPoolPage() {
     // Use centralized token utility
     const token = getAuthToken();
     
-    console.log('[CREATE MONEY POOL] Token check:', {
-      hasToken: !!token,
-    });
-    
     if (token) {
       // User is already authenticated, create money pool directly
-      console.log('[CREATE MONEY POOL] User authenticated, creating directly...');
       await submitForm(token);
     } else {
       // User not authenticated, move to verification step
-      console.log('[CREATE MONEY POOL] User not authenticated, moving to verification step...');
       setCurrentStep('verification');
     }
   };
@@ -499,7 +552,7 @@ export default function CreateMoneyPoolPage() {
     setError('');
 
     if (!otpCode || otpCode.length !== 6) {
-      setError(locale === 'fr' ? 'Veuillez saisir un code OTP valide (6 chiffres)' : 'Please enter a valid OTP code (6 digits)');
+      setError(t('errors.otpInvalid'));
       return;
     }
 
@@ -549,14 +602,13 @@ export default function CreateMoneyPoolPage() {
     
     if (token) {
       // User is already authenticated, proceed directly with creation (no phone/OTP needed)
-      console.log('[CREATE MONEY POOL] User authenticated in verification step, creating directly...');
       await submitForm(token);
       return;
     }
     
     // User not authenticated - need OTP flow
     if (!phone.trim()) {
-      setError(locale === 'fr' ? 'Veuillez saisir votre numéro de téléphone' : 'Please enter your phone number');
+      setError(t('errors.phoneRequired'));
       return;
     }
     
@@ -581,7 +633,7 @@ export default function CreateMoneyPoolPage() {
     if (needsRegistration) {
       // Need full name for registration
       if (!fullName.trim()) {
-        setError(locale === 'fr' ? 'Veuillez saisir votre nom complet pour créer votre compte' : 'Please enter your full name to create your account');
+        setError(t('errors.fullNameRequired'));
         return;
       }
     }
@@ -597,14 +649,37 @@ export default function CreateMoneyPoolPage() {
     setError('');
 
     try {
-      const token = getAuthToken();
+      // Get token (should be available after OTP authentication or from existing session)
+      // First try the token received from OTP (stored in local state)
+      let token = receivedToken || getAuthToken();
+      
+      console.log('[ACTIVATION] Token check:', {
+        hasReceivedToken: !!receivedToken,
+        hasStoredToken: !!getAuthToken(),
+        hasToken: !!token
+      });
+      
+      // If still no token, wait a bit and try again (might have been saved just now)
+      if (!token) {
+        console.log('[ACTIVATION] No token found, waiting 200ms...');
+        await new Promise(resolve => setTimeout(resolve, 200));
+        token = getAuthToken();
+        console.log('[ACTIVATION] Token after wait:', !!token);
+      }
+      
+      if (!token) {
+        console.error('[ACTIVATION] No token available for activation');
+        throw new Error(locale === 'fr' 
+          ? 'Session expirée. Veuillez vous reconnecter.' 
+          : 'Session expired. Please log in again.');
+      }
+      
+      console.log('[ACTIVATION] Using token for publish request');
+
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
 
       // Si on veut activer, publier la cagnotte
       if (activateImmediately) {
@@ -614,6 +689,14 @@ export default function CreateMoneyPoolPage() {
         });
 
         if (!response.ok) {
+          // If 401 or 403, token might be invalid
+          if (response.status === 401 || response.status === 403) {
+            clearAuthToken();
+            throw new Error(locale === 'fr' 
+              ? 'Session expirée. Veuillez vous reconnecter.' 
+              : 'Session expired. Please log in again.');
+          }
+          
           const data = await response.json();
           throw new Error(data.detail || data.message || 'Failed to activate money pool');
         }
@@ -622,7 +705,7 @@ export default function CreateMoneyPoolPage() {
       // Passer à l'étape success
       setCurrentStep('success');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+      setError(err instanceof Error ? err.message : t('errors.genericError'));
     } finally {
       setIsLoading(false);
     }
@@ -648,7 +731,8 @@ export default function CreateMoneyPoolPage() {
           allow_recurring_contributions: true,
           auto_approve_contributors: true,
           cross_country: false,
-          require_kyc_for_contributors: false
+          require_kyc_for_contributors: false,
+          allow_anonymous: allowAnonymous
         },
         currency: formData.currency,
         country: formData.country,
@@ -664,7 +748,7 @@ export default function CreateMoneyPoolPage() {
       // If no token, add OTP fields (should have been validated before)
       if (!token) {
         if (!otpSessionId || !otpCode || otpCode.length !== 6) {
-          throw new Error(locale === 'fr' ? 'Code OTP requis' : 'OTP code required');
+          throw new Error(t('errors.otpRequired'));
         }
         requestBody.phone = phone.trim();
         requestBody.otp_session_id = otpSessionId;
@@ -694,14 +778,36 @@ export default function CreateMoneyPoolPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        // If token expired (401), clear it and ask for OTP
+        if (response.status === 401 && token) {
+          // Token expired or invalid, clear it and move to verification step
+          clearAuthToken();
+          setError(locale === 'fr' 
+            ? 'Votre session a expiré. Veuillez vérifier votre identité.' 
+            : 'Your session has expired. Please verify your identity.');
+          setCurrentStep('verification');
+          return;
+        }
         throw new Error(data.detail || data.message || 'Failed to create money pool');
       }
 
+      // If OTP authentication was used, save the token returned by the API
+      if (data.access_token && !token) {
+        console.log('[CREATE] Received access_token from API, saving...');
+        setAuthToken(data.access_token);
+        setReceivedToken(data.access_token); // Store in local state for immediate use
+        console.log('[CREATE] Token saved to state and localStorage');
+      } else if (!data.access_token && !token) {
+        console.warn('[CREATE] No access_token in response and no token provided');
+      }
+
       setCreatedMoneyPoolId(data.id);
+      setCreatedMoneyPoolVisibility(data.visibility || formData.visibility);
+      setCreatedMoneyPoolStatus(data.status === 'active' ? 'active' : 'draft');
       // Toujours passer à l'étape d'activation pour demander si on veut activer
       setCurrentStep('activation');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+      setError(err instanceof Error ? err.message : t('errors.genericError'));
     } finally {
       setIsLoading(false);
     }
@@ -709,8 +815,44 @@ export default function CreateMoneyPoolPage() {
 
 
 
+  // Auto-hide toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   return (
     <div className="min-h-screen bg-sand">
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className={`fixed top-4 right-4 z-50 max-w-md ${
+              toast.type === 'success' 
+                ? 'bg-green-500 text-white' 
+                : 'bg-red-500 text-white'
+            } px-6 py-4 rounded-lg shadow-lg flex items-center gap-3`}
+          >
+            {toast.type === 'success' ? (
+              <CheckCircleIcon className="h-6 w-6" />
+            ) : (
+              <XMarkIcon className="h-6 w-6" />
+            )}
+            <span className="flex-1">{toast.message}</span>
+            <button
+              onClick={() => setToast(null)}
+              className="ml-auto text-white hover:text-gray-200"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Breadcrumb Navigation */}
       <div className="bg-white border-b border-cloud">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -719,18 +861,18 @@ export default function CreateMoneyPoolPage() {
               href={`/${locale}`}
               className="text-ink-muted hover:text-magenta transition-colors flex items-center gap-1 font-inter"
             >
-              <span>{locale === 'fr' ? 'Accueil' : 'Home'}</span>
+              <span>{t('breadcrumbHome')}</span>
             </Link>
             <span className="text-cloud">/</span>
             <Link 
               href={`/${locale}/money-pools`}
               className="text-ink-muted hover:text-magenta transition-colors font-inter"
             >
-              {locale === 'fr' ? 'Cagnottes' : 'Money Pools'}
+              {t('breadcrumbMoneyPools')}
             </Link>
             <span className="text-cloud">/</span>
             <span className="text-night font-semibold font-inter">
-              {locale === 'fr' ? 'Créer' : 'Create'}
+              {t('breadcrumbCreate')}
             </span>
           </nav>
         </div>
@@ -745,12 +887,10 @@ export default function CreateMoneyPoolPage() {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-4xl sm:text-5xl font-bold text-night font-inter mb-4">
-              {locale === 'fr' ? 'Créer une cagnotte' : 'Create a Money Pool'}
+              {t('formTitle')}
             </h1>
             <p className="text-lg text-ink-muted font-inter">
-              {locale === 'fr' 
-                ? 'Lancez votre projet solidaire en quelques minutes' 
-                : 'Launch your solidarity project in minutes'}
+              {t('formSubtitle')}
             </p>
           </motion.div>
         </div>
@@ -758,8 +898,8 @@ export default function CreateMoneyPoolPage() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Step 1: Information & Charter */}
-        {currentStep === 'info' && (
+        {/* Step 1: Information & Charter - Always visible, modals overlay when needed */}
+        {(currentStep === 'info' || currentStep === 'verification' || currentStep === 'activation') && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -770,7 +910,7 @@ export default function CreateMoneyPoolPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-night mb-2 font-inter">
-                    {locale === 'fr' ? 'Nom de la cagnotte *' : 'Money Pool Name *'}
+                    {t('name')}
                   </label>
                   <input
                     type="text"
@@ -779,13 +919,13 @@ export default function CreateMoneyPoolPage() {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter"
-                    placeholder={locale === 'fr' ? 'Ex: Aide pour mariage de Marie' : 'Ex: Help for Marie\'s wedding'}
+                    placeholder={t('namePlaceholder')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-night mb-2 font-inter">
-                    {locale === 'fr' ? 'Montant cible *' : 'Target Amount *'}
+                    {t('targetAmount')}
                   </label>
                   <input
                     type="number"
@@ -796,7 +936,7 @@ export default function CreateMoneyPoolPage() {
                     min="0"
                     step="0.01"
                     className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter"
-                    placeholder={locale === 'fr' ? '100000' : '100000'}
+                    placeholder={t('targetAmountPlaceholder')}
                   />
                 </div>
               </div>
@@ -804,9 +944,9 @@ export default function CreateMoneyPoolPage() {
               {/* Row 2: Description (full width) */}
               <div>
                 <label className="block text-sm font-semibold text-night mb-2 font-inter">
-                  {locale === 'fr' ? 'Description *' : 'Description *'}
+                  {t('description')}
                   <span className={`text-xs ml-2 font-normal ${formData.description.length < 500 ? 'text-red-500' : 'text-ink-muted'}`}>
-                    ({formData.description.length}/500 minimum)
+                    ({formData.description.length}/500 {t('descriptionMinChars')})
                   </span>
                 </label>
                 <textarea
@@ -817,13 +957,11 @@ export default function CreateMoneyPoolPage() {
                   rows={6}
                   minLength={500}
                   className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter"
-                  placeholder={locale === 'fr' ? 'Décrivez votre projet en détail (minimum 500 caractères)...' : 'Describe your project in detail (minimum 500 characters)...'}
+                  placeholder={t('descriptionPlaceholder')}
                 />
                 {formData.description.length > 0 && formData.description.length < 500 && (
                   <p className="mt-1 text-xs text-red-500 font-inter">
-                    {locale === 'fr' 
-                      ? `${500 - formData.description.length} caractères manquants (minimum 500 requis)` 
-                      : `${500 - formData.description.length} characters missing (minimum 500 required)`}
+                    {`${500 - formData.description.length} ${t('descriptionMissing')}`}
                   </p>
                 )}
               </div>
@@ -832,7 +970,7 @@ export default function CreateMoneyPoolPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-night mb-2 font-inter">
-                    {locale === 'fr' ? 'Visibilité *' : 'Visibility *'}
+                    {t('visibility')}
                   </label>
                   <select
                     name="visibility"
@@ -841,15 +979,15 @@ export default function CreateMoneyPoolPage() {
                     required
                     className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter"
                   >
-                    <option value="public">{locale === 'fr' ? 'Publique' : 'Public'}</option>
-                    <option value="community">{locale === 'fr' ? 'Communauté' : 'Community'}</option>
-                    <option value="private">{locale === 'fr' ? 'Privée' : 'Private'}</option>
+                    <option value="public">{t('visibilityPublic')}</option>
+                    {/* <option value="community">{t('visibilityCommunity')}</option> */}
+                    <option value="private">{t('visibilityPrivate')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-night mb-2 font-inter">
-                    {locale === 'fr' ? 'Date de fin (optionnel)' : 'End Date (optional)'}
+                    {t('endDate')}
                   </label>
                   <input
                     type="date"
@@ -871,7 +1009,7 @@ export default function CreateMoneyPoolPage() {
                   <svg className="h-5 w-5 transform transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                  {locale === 'fr' ? 'Paramètres supplémentaires' : 'Additional Settings'}
+                  {t('additionalSettings')}
                 </summary>
                 <div className="mt-4 space-y-4 pl-7 border-l-2 border-cloud">
                   {/* Start Date and Max Participants - 2 columns */}
@@ -879,9 +1017,9 @@ export default function CreateMoneyPoolPage() {
                     {/* Start Date */}
                     <div>
                       <label className="block text-sm font-semibold text-night mb-2 font-inter">
-                        {locale === 'fr' ? 'Date de début' : 'Start Date'}
+                        {t('startDate')}
                         <span className="text-xs text-ink-muted ml-2 font-normal">
-                          ({locale === 'fr' ? 'Par défaut: date de publication' : 'Default: publication date'})
+                          ({t('startDateDefault')})
                         </span>
                       </label>
                       <input
@@ -896,9 +1034,9 @@ export default function CreateMoneyPoolPage() {
                     {/* Max Participants */}
                     <div>
                       <label className="block text-sm font-semibold text-night mb-2 font-inter">
-                        {locale === 'fr' ? 'Nombre maximum de participants' : 'Max Participants'}
+                        {t('maxParticipants')}
                         <span className="text-xs text-ink-muted ml-2 font-normal">
-                          ({locale === 'fr' ? 'Par défaut: illimité' : 'Default: unlimited'})
+                          ({t('maxParticipantsDefault')})
                         </span>
                       </label>
                       <input
@@ -908,7 +1046,7 @@ export default function CreateMoneyPoolPage() {
                         onChange={handleInputChange}
                         min="1"
                         className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter"
-                        placeholder={locale === 'fr' ? 'Illimité si vide' : 'Unlimited if empty'}
+                        placeholder={t('maxParticipantsPlaceholder')}
                       />
                     </div>
                   </div>
@@ -917,9 +1055,9 @@ export default function CreateMoneyPoolPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-night mb-2 font-inter">
-                        {locale === 'fr' ? 'Contribution minimale' : 'Min Contribution'}
+                        {t('minContribution')}
                         <span className="text-xs text-ink-muted ml-2 font-normal">
-                          ({locale === 'fr' ? 'Par défaut: aucune' : 'Default: none'})
+                          ({t('minContributionDefault')})
                         </span>
                       </label>
                       <input
@@ -930,15 +1068,15 @@ export default function CreateMoneyPoolPage() {
                         min="0"
                         step="0.01"
                         className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter"
-                        placeholder={locale === 'fr' ? 'Aucune limite si vide' : 'No limit if empty'}
+                        placeholder={t('minContributionPlaceholder')}
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-semibold text-night mb-2 font-inter">
-                        {locale === 'fr' ? 'Contribution maximale' : 'Max Contribution'}
+                        {t('maxContribution')}
                         <span className="text-xs text-ink-muted ml-2 font-normal">
-                          ({locale === 'fr' ? 'Par défaut: aucune' : 'Default: none'})
+                          ({t('maxContributionDefault')})
                         </span>
                       </label>
                       <input
@@ -949,9 +1087,28 @@ export default function CreateMoneyPoolPage() {
                         min="0"
                         step="0.01"
                         className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter"
-                        placeholder={locale === 'fr' ? 'Aucune limite si vide' : 'No limit if empty'}
+                        placeholder={t('maxContributionPlaceholder')}
                       />
                     </div>
+                  </div>
+
+                  {/* Allow Anonymous Contributions */}
+                  <div className="flex items-start gap-3 p-4 border-2 border-cloud rounded-2xl">
+                    <input
+                      type="checkbox"
+                      id="allow-anonymous"
+                      checked={allowAnonymous}
+                      onChange={(e) => setAllowAnonymous(e.target.checked)}
+                      className="mt-1 w-5 h-5 text-magenta focus:ring-magenta rounded"
+                    />
+                    <label htmlFor="allow-anonymous" className="flex-1 text-sm text-night font-inter cursor-pointer">
+                      <div className="font-semibold mb-1">
+                        {t('allowAnonymous')}
+                      </div>
+                      <div className="text-xs text-ink-muted">
+                        {t('allowAnonymousDescription')}
+                      </div>
+                    </label>
                   </div>
                 </div>
               </details>
@@ -960,7 +1117,7 @@ export default function CreateMoneyPoolPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-night mb-2 font-inter">
-                    {locale === 'fr' ? 'Illustrations (max 5 au total : 3 images et 2 vidéos)' : 'Illustrations (max 5 total: 3 images and 2 videos)'}
+                    {t('illustrations')}
                   </label>
                   <input
                     type="file"
@@ -976,12 +1133,10 @@ export default function CreateMoneyPoolPage() {
                   >
                     <PhotoIcon className="h-8 w-8" />
                     <span className="font-semibold">
-                      {locale === 'fr' ? 'Cliquez pour ajouter des illustrations' : 'Click to add illustrations'}
+                      {t('clickToAddIllustrations')}
                     </span>
                     <span className="text-xs text-center">
-                      {locale === 'fr' 
-                        ? 'Images (JPG, PNG, WEBP - max 5MB) ou Vidéos (MP4, WEBM - max 50MB)' 
-                        : 'Images (JPG, PNG, WEBP - max 5MB) or Videos (MP4, WEBM - max 50MB)'}
+                      {t('illustrationsFormat')}
                     </span>
                   </label>
 
@@ -1032,19 +1187,65 @@ export default function CreateMoneyPoolPage() {
 
               {/* Charter Acceptance */}
               <div className="bg-gradient-to-br from-magenta/5 to-sunset/5 rounded-2xl p-6 border-2 border-cloud">
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    id="charter-accept"
-                    checked={charterAccepted}
-                    onChange={(e) => setCharterAccepted(e.target.checked)}
-                    className="mt-1 w-5 h-5 text-magenta border-cloud rounded focus:ring-magenta"
-                    required
-                  />
-                  <label htmlFor="charter-accept" className="text-sm text-night font-inter cursor-pointer">
-                    {locale === 'fr' 
-                      ? 'J\'accepte la charte de bonne conduite et les conditions d\'utilisation de Cocoti. Je m\'engage à utiliser la plateforme de manière responsable et respectueuse.'
-                      : 'I accept Cocoti\'s code of conduct and terms of use. I commit to using the platform responsibly and respectfully.'}
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-shrink-0">
+                    <input
+                      type="checkbox"
+                      id="charter-accept"
+                      checked={charterAccepted}
+                      onChange={(e) => setCharterAccepted(e.target.checked)}
+                      className="sr-only"
+                      required
+                    />
+                    <label
+                      htmlFor="charter-accept"
+                      className={`flex items-center justify-center w-4 h-4 border-2 rounded cursor-pointer transition-all duration-200 hover:border-magenta focus-within:ring-2 focus-within:ring-magenta focus-within:ring-offset-1 ${
+                        charterAccepted
+                          ? 'bg-gradient-to-br from-magenta to-sunset border-transparent shadow-md shadow-magenta/30'
+                          : 'border-cloud'
+                      }`}
+                    >
+                      {charterAccepted && (
+                        <motion.svg
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                          className="w-2.5 h-2.5 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={3}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </motion.svg>
+                      )}
+                    </label>
+                  </div>
+                  <label htmlFor="charter-accept" className="text-sm text-night font-inter cursor-pointer flex-1 leading-relaxed">
+                    {t('charterAccept')}{' '}
+                    <a 
+                      href="https://cocoti.com/terms-of-service" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-magenta hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {t('charterTerms')}
+                    </a>
+                    {' '}{t('charterAnd')}{' '}
+                    <a 
+                      href="https://cocoti.com/privacy-policy" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-magenta hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {t('charterPrivacy')}
+                    </a>
                   </label>
                 </div>
               </div>
@@ -1062,99 +1263,199 @@ export default function CreateMoneyPoolPage() {
                   href={`/${locale}/money-pools`}
                   className="flex-1 px-6 py-3 bg-white border-2 border-cloud rounded-2xl text-night font-semibold hover:border-magenta hover:bg-magenta/5 transition-all text-center font-inter"
                 >
-                  {locale === 'fr' ? 'Annuler' : 'Cancel'}
+                  {t('cancel')}
                 </Link>
                 <button
                   type="submit"
                   disabled={isLoading || !charterAccepted}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-magenta via-sunset to-coral text-white rounded-2xl font-semibold hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed font-inter"
                 >
-                  {locale === 'fr' ? 'Continuer' : 'Continue'}
+                  {t('step1Button')}
                 </button>
               </div>
             </form>
           </motion.div>
         )}
 
-        {/* Step 2: Verification */}
+        {/* OTP Verification Modal */}
         {currentStep === 'verification' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-3xl shadow-sm border border-cloud p-6 sm:p-8"
-          >
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold text-night mb-2 font-inter">
-                  {locale === 'fr' ? 'Vérification de l\'identité' : 'Identity Verification'}
-                </h2>
-                <p className="text-ink-muted font-inter">
-                  {locale === 'fr' 
-                    ? 'Pour créer votre cagnotte, nous devons vérifier votre identité.' 
-                    : 'To create your money pool, we need to verify your identity.'}
-                </p>
-              </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl shadow-2xl border border-cloud p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="space-y-6">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-night mb-2 font-inter">
+                      {t('step2Title')}
+                    </h2>
+                    <p className="text-ink-muted font-inter text-sm">
+                      {t('step2Subtitle')}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentStep('info');
+                      setError('');
+                      setOtpCode('');
+                      setOtpSessionId(null);
+                      setOtpVerified(false);
+                      setNeedsRegistration(false);
+                      setFullName('');
+                      setPhone('');
+                      setPhoneNumber('');
+                      // Reset country to default
+                      const defaultCountry = countries.find(c => c.code === 'SN');
+                      if (defaultCountry) {
+                        setSelectedCountryCode(defaultCountry.code);
+                        setSelectedCallingCode(defaultCountry.calling_code);
+                      }
+                    }}
+                    className="p-2 hover:bg-cloud rounded-full transition-colors"
+                  >
+                    <XMarkIcon className="h-6 w-6 text-ink-muted" />
+                  </button>
+                </div>
 
               {/* Authentication fields (if not logged in) */}
               {!isAuthenticated() && (
                 <div className="space-y-4">
-                  {/* Step 1: Phone Number */}
+                  {/* Step 1: Phone Number with Country Selector */}
                   <div>
                     <label className="block text-sm font-semibold text-night mb-2 font-inter">
-                      {locale === 'fr' ? 'Numéro de téléphone *' : 'Phone Number *'}
+                      {t('phoneLabel')}
                     </label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
-                      disabled={!!otpSessionId}
-                      className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter disabled:opacity-50 disabled:cursor-not-allowed"
-                      placeholder="+221771234567"
-                    />
+                    <div className="flex gap-2 items-stretch">
+                      {/* Country Code Selector */}
+                      <div className="relative flex-shrink-0 w-auto">
+                        <select
+                          value={selectedCountryCode}
+                          onChange={(e) => {
+                            const country = countries.find(c => c.code === e.target.value);
+                            if (country) {
+                              setSelectedCountryCode(country.code);
+                              setSelectedCallingCode(country.calling_code);
+                            }
+                          }}
+                          required
+                          disabled={!!otpSessionId}
+                          className="appearance-none px-3 py-3 pr-8 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter disabled:opacity-50 disabled:cursor-not-allowed bg-white cursor-pointer text-sm h-full"
+                          style={{ minWidth: '100px', maxWidth: '120px' }}
+                        >
+                          {countries.map((country) => (
+                            <option key={country.code} value={country.code}>
+                              {country.flag_emoji} {country.calling_code}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                          <svg className="w-4 h-4 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                      {/* Phone Number Input */}
+                      <input
+                        type="tel"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                        required
+                        disabled={!!otpSessionId}
+                        className="flex-1 min-w-0 px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter disabled:opacity-50 disabled:cursor-not-allowed"
+                        placeholder={t('phonePlaceholder')}
+                      />
+                    </div>
                     {!otpSessionId && (
                       <button
                         type="button"
                         onClick={sendOTP}
-                        disabled={isSendingOtp || !phone.trim()}
+                        disabled={isSendingOtp || !selectedCallingCode || !phoneNumber.trim()}
                         className="mt-2 px-4 py-2 bg-gradient-to-r from-magenta to-sunset text-white rounded-xl font-semibold hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed font-inter"
                       >
                         {isSendingOtp 
-                          ? (locale === 'fr' ? 'Envoi...' : 'Sending...')
-                          : (locale === 'fr' ? 'Envoyer le code OTP' : 'Send OTP Code')
+                          ? t('sending')
+                          : t('sendOtp')
                         }
                       </button>
                     )}
                   </div>
 
-                  {/* Step 2: OTP Code */}
+                  {/* Step 2: OTP Code with Individual Boxes */}
                   {otpSessionId && !otpVerified && (
                     <div>
                       <label className="block text-sm font-semibold text-night mb-2 font-inter">
-                        {locale === 'fr' ? 'Code OTP *' : 'OTP Code *'}
+                        {t('otpLabel')}
                       </label>
-                      <input
-                        type="text"
-                        value={otpCode}
-                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        required
-                        maxLength={6}
-                        className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter text-center text-2xl tracking-widest"
-                        placeholder="000000"
-                        autoFocus
-                      />
-                      <p className="mt-2 text-sm text-ink-muted font-inter">
-                        {locale === 'fr' ? 'Entrez le code à 6 chiffres reçu par SMS' : 'Enter the 6-digit code received by SMS'}
+                      <div className="flex gap-2 justify-center mb-3">
+                        {[0, 1, 2, 3, 4, 5].map((index) => (
+                          <input
+                            key={index}
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={1}
+                            value={otpCode[index] || ''}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, '');
+                              if (value) {
+                                const newOtpCode = otpCode.split('');
+                                newOtpCode[index] = value;
+                                const updatedCode = newOtpCode.join('').slice(0, 6);
+                                setOtpCode(updatedCode);
+                                
+                                // Auto-focus next input
+                                if (index < 5 && value) {
+                                  const nextInput = document.getElementById(`otp-input-${index + 1}`);
+                                  nextInput?.focus();
+                                }
+                              } else {
+                                // Handle backspace
+                                const newOtpCode = otpCode.split('');
+                                newOtpCode[index] = '';
+                                setOtpCode(newOtpCode.join(''));
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              // Handle backspace
+                              if (e.key === 'Backspace' && !otpCode[index] && index > 0) {
+                                const prevInput = document.getElementById(`otp-input-${index - 1}`);
+                                prevInput?.focus();
+                              }
+                            }}
+                            onPaste={(e) => {
+                              e.preventDefault();
+                              const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+                              if (pastedData) {
+                                setOtpCode(pastedData);
+                                // Focus last filled input or last input
+                                const lastIndex = Math.min(pastedData.length - 1, 5);
+                                const lastInput = document.getElementById(`otp-input-${lastIndex}`);
+                                lastInput?.focus();
+                              }
+                            }}
+                            id={`otp-input-${index}`}
+                            className="w-12 h-14 text-center text-2xl font-bold border-2 border-cloud rounded-xl focus:ring-2 focus:ring-magenta focus:border-magenta transition-all font-inter"
+                            autoFocus={index === 0}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-sm text-ink-muted font-inter text-center mb-3">
+                        {t('otpDescription')}
                       </p>
                       <button
                         type="button"
                         onClick={handleOTPVerification}
                         disabled={otpCode.length !== 6 || isLoading}
-                        className="mt-3 px-4 py-2 bg-gradient-to-r from-magenta to-sunset text-white rounded-xl font-semibold hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed font-inter"
+                        className="w-full px-4 py-2 bg-gradient-to-r from-magenta to-sunset text-white rounded-xl font-semibold hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed font-inter"
                       >
                         {isLoading 
-                          ? (locale === 'fr' ? 'Vérification...' : 'Verifying...')
-                          : (locale === 'fr' ? 'Vérifier le code' : 'Verify Code')
+                          ? t('otpVerifying')
+                          : t('otpVerify')
                         }
                       </button>
                     </div>
@@ -1164,9 +1465,9 @@ export default function CreateMoneyPoolPage() {
                   {otpVerified && needsRegistration && (
                     <div>
                       <label className="block text-sm font-semibold text-night mb-2 font-inter">
-                        {locale === 'fr' ? 'Nom complet *' : 'Full Name *'}
+                        {t('fullNameLabel')}
                         <span className="text-xs text-ink-muted ml-2 font-normal">
-                          ({locale === 'fr' ? 'Pour créer votre compte' : 'To create your account'})
+                          ({t('fullNameDescription')})
                         </span>
                       </label>
                       <input
@@ -1175,7 +1476,7 @@ export default function CreateMoneyPoolPage() {
                         onChange={(e) => setFullName(e.target.value)}
                         required
                         className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter"
-                        placeholder={locale === 'fr' ? 'Jean Dupont' : 'John Doe'}
+                        placeholder={t('fullNamePlaceholder')}
                         autoFocus
                       />
                     </div>
@@ -1189,9 +1490,7 @@ export default function CreateMoneyPoolPage() {
                   <div className="flex items-center gap-3">
                     <CheckCircleIcon className="h-6 w-6 text-green-600" />
                     <p className="text-green-800 font-inter">
-                      {locale === 'fr' 
-                        ? 'Vous êtes déjà connecté. Votre identité est vérifiée.' 
-                        : 'You are already logged in. Your identity is verified.'}
+                      {t('alreadyAuthenticated')}
                     </p>
                   </div>
                 </div>
@@ -1204,127 +1503,131 @@ export default function CreateMoneyPoolPage() {
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCurrentStep('info');
-                    setError('');
-                    setOtpCode('');
-                    setOtpSessionId(null);
-                    setOtpVerified(false);
-                    setNeedsRegistration(false);
-                    setFullName('');
-                    setPhone('');
-                  }}
-                  className="flex-1 px-6 py-3 bg-white border-2 border-cloud rounded-2xl text-night font-semibold hover:border-magenta hover:bg-magenta/5 transition-all font-inter"
-                >
-                  {locale === 'fr' ? 'Retour' : 'Back'}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleVerificationStep}
-                      disabled={
-                        isLoading || 
-                        isSendingOtp || 
-                        (!isAuthenticated() && (!otpVerified || (needsRegistration && !fullName.trim())))
+                {/* Action Buttons */}
+                <div className="flex gap-4 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentStep('info');
+                      setError('');
+                      setOtpCode('');
+                      setOtpSessionId(null);
+                      setOtpVerified(false);
+                      setNeedsRegistration(false);
+                      setFullName('');
+                      setPhone('');
+                      setPhoneNumber('');
+                      // Reset country to default
+                      const defaultCountry = countries.find(c => c.code === 'SN');
+                      if (defaultCountry) {
+                        setSelectedCountryCode(defaultCountry.code);
+                        setSelectedCallingCode(defaultCountry.calling_code);
                       }
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-magenta via-sunset to-coral text-white rounded-2xl font-semibold hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed font-inter"
-                >
-                  {isLoading || isSendingOtp
-                    ? (locale === 'fr' ? 'Création...' : 'Creating...')
-                    : (locale === 'fr' ? 'Créer la cagnotte' : 'Create Money Pool')
-                  }
-                </button>
+                    }}
+                    className="flex-1 px-6 py-3 bg-white border-2 border-cloud rounded-2xl text-night font-semibold hover:border-magenta hover:bg-magenta/5 transition-all font-inter"
+                  >
+                    {t('cancel')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleVerificationStep}
+                    disabled={
+                      isLoading || 
+                      isSendingOtp || 
+                      (!isAuthenticated() && (!otpVerified || (needsRegistration && !fullName.trim())))
+                    }
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-magenta via-sunset to-coral text-white rounded-2xl font-semibold hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed font-inter"
+                  >
+                    {isLoading || isSendingOtp
+                      ? t('creating')
+                      : t('createButton')
+                    }
+                  </button>
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         )}
 
-        {/* Activation Step */}
+        {/* Activation Modal */}
         {currentStep === 'activation' && createdMoneyPoolId && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl shadow-sm border border-cloud p-6 sm:p-8"
-          >
-            <div className="mb-6 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-magenta to-sunset rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircleIcon className="h-8 w-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-night mb-2 font-inter">
-                {locale === 'fr' ? 'Cagnotte créée !' : 'Money Pool Created!'}
-              </h2>
-              <p className="text-ink-muted font-inter">
-                {locale === 'fr' 
-                  ? 'Votre cagnotte a été créée en mode brouillon. Souhaitez-vous l\'activer maintenant ?' 
-                  : 'Your money pool has been created as a draft. Would you like to activate it now?'}
-              </p>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <label className="flex items-start gap-3 p-4 border-2 border-cloud rounded-2xl cursor-pointer hover:border-magenta transition-colors">
-                <input
-                  type="radio"
-                  name="activation"
-                  checked={activateImmediately}
-                  onChange={() => setActivateImmediately(true)}
-                  className="mt-1 w-5 h-5 text-magenta focus:ring-magenta"
-                />
-                <div className="flex-1">
-                  <div className="font-semibold text-night font-inter">
-                    {locale === 'fr' ? 'Activer maintenant' : 'Activate Now'}
-                  </div>
-                  <div className="text-sm text-ink-muted font-inter">
-                    {locale === 'fr' 
-                      ? 'Votre cagnotte sera visible et pourra recevoir des contributions immédiatement.' 
-                      : 'Your money pool will be visible and can receive contributions immediately.'}
-                  </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl shadow-2xl border border-cloud p-6 sm:p-8 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-magenta to-sunset rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircleIcon className="h-8 w-8 text-white" />
                 </div>
-              </label>
-
-              <label className="flex items-start gap-3 p-4 border-2 border-cloud rounded-2xl cursor-pointer hover:border-magenta transition-colors">
-                <input
-                  type="radio"
-                  name="activation"
-                  checked={!activateImmediately}
-                  onChange={() => setActivateImmediately(false)}
-                  className="mt-1 w-5 h-5 text-magenta focus:ring-magenta"
-                />
-                <div className="flex-1">
-                  <div className="font-semibold text-night font-inter">
-                    {locale === 'fr' ? 'Garder en brouillon' : 'Keep as Draft'}
-                  </div>
-                  <div className="text-sm text-ink-muted font-inter">
-                    {locale === 'fr' 
-                      ? 'Vous pourrez activer votre cagnotte plus tard depuis votre tableau de bord.' 
-                      : 'You can activate your money pool later from your dashboard.'}
-                  </div>
-                </div>
-              </label>
-            </div>
-
-            {error && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm font-inter">
-                {error}
+                <h2 className="text-2xl font-bold text-night mb-2 font-inter">
+                  {t('activationTitle')}
+                </h2>
+                <p className="text-ink-muted font-inter text-sm">
+                  {t('activationQuestion')}
+                </p>
               </div>
-            )}
 
-            <div className="flex gap-4">
+              <div className="space-y-3 mb-6">
+                <label className="flex items-start gap-3 p-4 border-2 border-cloud rounded-2xl cursor-pointer hover:border-magenta transition-colors">
+                  <input
+                    type="radio"
+                    name="activation"
+                    checked={activateImmediately}
+                    onChange={() => setActivateImmediately(true)}
+                    className="mt-1 w-5 h-5 text-magenta focus:ring-magenta"
+                  />
+                  <div className="flex-1">
+                    <div className="font-semibold text-night font-inter">
+                      {t('activateNow')}
+                    </div>
+                    <div className="text-sm text-ink-muted font-inter">
+                      {t('activateNowDescription')}
+                    </div>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-3 p-4 border-2 border-cloud rounded-2xl cursor-pointer hover:border-magenta transition-colors">
+                  <input
+                    type="radio"
+                    name="activation"
+                    checked={!activateImmediately}
+                    onChange={() => setActivateImmediately(false)}
+                    className="mt-1 w-5 h-5 text-magenta focus:ring-magenta"
+                  />
+                  <div className="flex-1">
+                    <div className="font-semibold text-night font-inter">
+                      {t('keepDraft')}
+                    </div>
+                    <div className="text-sm text-ink-muted font-inter">
+                      {t('keepDraftDescription')}
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              {error && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm font-inter">
+                  {error}
+                </div>
+              )}
+
               <button
                 type="button"
                 onClick={handleActivation}
                 disabled={isLoading}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-magenta via-sunset to-coral text-white rounded-2xl font-semibold hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed font-inter"
+                className="w-full px-6 py-3 bg-gradient-to-r from-magenta via-sunset to-coral text-white rounded-2xl font-semibold hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed font-inter"
               >
                 {isLoading
-                  ? (locale === 'fr' ? 'Traitement...' : 'Processing...')
-                  : (locale === 'fr' ? 'Continuer' : 'Continue')
+                  ? t('processing')
+                  : t('continue')
                 }
               </button>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         )}
 
         {currentStep === 'success' && createdMoneyPoolId && (
@@ -1338,28 +1641,73 @@ export default function CreateMoneyPoolPage() {
                 <CheckCircleIcon className="h-12 w-12 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-night mb-2 font-inter">
-                {locale === 'fr' ? 'Cagnotte créée avec succès !' : 'Money Pool Created Successfully!'}
+                {t('successTitle')}
               </h2>
               <p className="text-lg text-ink-muted font-inter">
-                {locale === 'fr' 
-                  ? 'Votre cagnotte a été créée et est maintenant en ligne.' 
-                  : 'Your money pool has been created and is now live.'}
+                {activateImmediately 
+                  ? t('successActive')
+                  : t('successDraft')
+                }
               </p>
             </div>
 
-            <div className="flex gap-4 justify-center">
-              <Link
-                href={`/${locale}/money-pools`}
-                className="px-6 py-3 bg-white border-2 border-cloud rounded-2xl text-night font-semibold hover:border-magenta hover:bg-magenta/5 transition-all font-inter"
-              >
-                {locale === 'fr' ? 'Voir toutes les cagnottes' : 'View All Money Pools'}
-              </Link>
-              <Link
-                href={`/${locale}/money-pool/${createdMoneyPoolId}`}
-                className="px-6 py-3 bg-gradient-to-r from-magenta via-sunset to-coral text-white rounded-2xl font-semibold hover:shadow-glow transition-all font-inter"
-              >
-                {locale === 'fr' ? 'Voir ma cagnotte' : 'View My Money Pool'}
-              </Link>
+            <div className="flex flex-col gap-4">
+              {/* Message spécifique pour les cagnottes privées */}
+              {createdMoneyPoolVisibility === 'private' && (
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 mb-4">
+                  <p className="text-sm text-blue-800 font-inter">
+                    {t('privateMessage')}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-4 justify-center flex-wrap">
+                {/* Bouton "Voir toutes les cagnottes" - seulement pour publiques et actives */}
+                {createdMoneyPoolVisibility === 'public' && createdMoneyPoolStatus === 'active' && (
+                  <Link
+                    href={`/${locale}/money-pools`}
+                    className="px-6 py-3 bg-white border-2 border-cloud rounded-2xl text-night font-semibold hover:border-magenta hover:bg-magenta/5 transition-all font-inter"
+                  >
+                    {t('viewAllPools')}
+                  </Link>
+                )}
+
+                {/* Bouton "Copier le lien" - pour les cagnottes privées */}
+                {createdMoneyPoolVisibility === 'private' && (
+                  <button
+                    onClick={async () => {
+                      const url = `${window.location.origin}/${locale}/money-pool/${createdMoneyPoolId}`;
+                      try {
+                        await navigator.clipboard.writeText(url);
+                        setToast({ message: t('linkCopied'), type: 'success' });
+                      } catch (err) {
+                        // Fallback pour les navigateurs qui ne supportent pas clipboard API
+                        const textArea = document.createElement('textarea');
+                        textArea.value = url;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        setToast({ message: t('linkCopied'), type: 'success' });
+                      }
+                    }}
+                    className="px-6 py-3 bg-white border-2 border-cloud rounded-2xl text-night font-semibold hover:border-magenta hover:bg-magenta/5 transition-all font-inter flex items-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    {t('copyLink')}
+                  </button>
+                )}
+
+                {/* Bouton "Voir ma cagnotte" - toujours affiché */}
+                <Link
+                  href={`/${locale}/money-pool/${createdMoneyPoolId}`}
+                  className="px-6 py-3 bg-gradient-to-r from-magenta via-sunset to-coral text-white rounded-2xl font-semibold hover:shadow-glow transition-all font-inter"
+                >
+                  {t('viewMyPool')}
+                </Link>
+              </div>
             </div>
           </motion.div>
         )}

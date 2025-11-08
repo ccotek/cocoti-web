@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 
 export interface PublicProject {
   id: string;
@@ -23,6 +23,8 @@ export function usePublicProjects(locale: 'fr' | 'en' = 'fr'): UsePublicProjects
   const [projects, setProjects] = useState<PublicProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const previousProjectsRef = useRef<string | null>(null);
+  const isFetchingRef = useRef(false);
 
   // Mémoriser l'URL de l'API pour éviter les re-créations
   const API_URL = useMemo(() => {
@@ -33,7 +35,13 @@ export function usePublicProjects(locale: 'fr' | 'en' = 'fr'): UsePublicProjects
   const hasApiUrl = useMemo(() => !!process.env.NEXT_PUBLIC_API_URL, []);
 
   useEffect(() => {
+    // Éviter les fetchs multiples simultanés
+    if (isFetchingRef.current) {
+      return;
+    }
+
     const fetchProjects = async () => {
+      isFetchingRef.current = true;
       try {
         setLoading(true);
         setError(null);
@@ -91,10 +99,6 @@ export function usePublicProjects(locale: 'fr' | 'en' = 'fr'): UsePublicProjects
                  pool.visibility === 'public'; // S'assurer que seules les cagnottes publiques sont affichées
         });
         
-        // Logger pour debug si des cagnottes ont été filtrées
-        if (data.length > validPools.length) {
-          console.warn(`Filtered out ${data.length - validPools.length} invalid money pools from carousel`);
-        }
         
         // Le backend filtre maintenant les documents invalides
         // On fait confiance aux données retournées après validation stricte
@@ -112,15 +116,27 @@ export function usePublicProjects(locale: 'fr' | 'en' = 'fr'): UsePublicProjects
           urgent: false
         }));
         
-        setProjects(publicProjects);
+        // Comparer avec les projets précédents pour éviter les re-renders inutiles
+        const projectsString = JSON.stringify(publicProjects);
+        if (previousProjectsRef.current !== projectsString) {
+          previousProjectsRef.current = projectsString;
+          setProjects(publicProjects);
+        }
         setLoading(false);
         setError(null);
       } catch (err) {
         console.error('Error fetching money pools:', err);
         // On error, return empty array - don't fallback to mock data
-        setProjects([]);
+        const emptyProjects: PublicProject[] = [];
+        const emptyString = JSON.stringify(emptyProjects);
+        if (previousProjectsRef.current !== emptyString) {
+          previousProjectsRef.current = emptyString;
+          setProjects(emptyProjects);
+        }
         setLoading(false);
         setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        isFetchingRef.current = false;
       }
     };
 

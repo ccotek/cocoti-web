@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useContent } from "@/hooks/useContent";
 
@@ -23,7 +23,8 @@ import SimpleFloatingButton from "./SimpleFloatingButton";
 
 export default function CompleteLandingPage() {
   const pathname = usePathname();
-  const [locale, setLocale] = useState<'fr' | 'en'>('fr');
+  // Détecter la locale directement depuis le pathname pour éviter les re-renders
+  const locale = pathname.startsWith('/en') ? 'en' : 'fr';
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Utiliser le hook useContent pour charger depuis l'API
@@ -39,15 +40,6 @@ export default function CompleteLandingPage() {
     loading = false;
     error = 'Erreur dans le hook useContent';
   }
-
-  useEffect(() => {
-    // Détecter la locale basée sur l'URL
-    if (pathname.startsWith('/en')) {
-      setLocale('en');
-    } else {
-      setLocale('fr');
-    }
-  }, [pathname]);
 
   // Fonction de traduction simplifiée
   const t = (key: string) => translate(key, locale, content);

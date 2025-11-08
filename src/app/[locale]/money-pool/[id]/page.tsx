@@ -40,6 +40,7 @@ interface MoneyPool {
     auto_approve_contributors: boolean;
     cross_country: boolean;
     require_kyc_for_contributors: boolean;
+    allow_anonymous?: boolean;
   };
   currency: string;
   max_participants?: number;
@@ -970,24 +971,36 @@ export default function MoneyPoolDetailsPage() {
                 />
               </div>
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="anonymous"
-                  checked={anonymous}
-                  onChange={(e) => {
-                    setAnonymous(e.target.checked);
-                    if (e.target.checked) {
-                      // Réinitialiser le nom si on coche anonyme
-                      setFullName('');
-                    }
-                  }}
-                  className="mr-2 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                />
-                <label htmlFor="anonymous" className="text-sm text-gray-700">
-                  {t('contributeAnonymously')}
-                </label>
-              </div>
+              {/* Option anonyme - seulement si autorisée */}
+              {moneyPool?.settings?.allow_anonymous !== false && (
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="anonymous"
+                    checked={anonymous}
+                    onChange={(e) => {
+                      setAnonymous(e.target.checked);
+                      if (e.target.checked) {
+                        // Réinitialiser le nom si on coche anonyme
+                        setFullName('');
+                      }
+                    }}
+                    className="mr-2 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="anonymous" className="text-sm text-gray-700">
+                    {t('contributeAnonymously')}
+                  </label>
+                </div>
+              )}
+              
+              {/* Message si anonyme désactivé */}
+              {moneyPool?.settings?.allow_anonymous === false && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                  {locale === 'fr' 
+                    ? 'Les contributions anonymes ne sont pas autorisées pour cette cagnotte.' 
+                    : 'Anonymous contributions are not allowed for this money pool.'}
+                </div>
+              )}
 
               <div className="flex gap-4 pt-4">
                 <button
