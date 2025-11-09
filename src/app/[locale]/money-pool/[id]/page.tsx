@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
@@ -215,7 +215,13 @@ export default function MoneyPoolDetailsPage() {
   const [anonymous, setAnonymous] = useState(false);
   const [fullName, setFullName] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Vérifier si l'utilisateur est connecté
+  const [userFullName, setUserFullName] = useState<string | null>(null); // Nom complet de l'utilisateur connecté
+  const savedFullNameRef = useRef<string>(''); // Sauvegarder le nom saisi avant de cocher anonyme (ref pour éviter les re-renders)
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [showPaymentStep, setShowPaymentStep] = useState(false); // Afficher l'étape de sélection du moyen de paiement
+  const [paymentProviders, setPaymentProviders] = useState<any[]>([]);
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+  const [loadingProviders, setLoadingProviders] = useState(false);
 
       useEffect(() => {
         const fetchMoneyPool = async () => {
@@ -331,6 +337,63 @@ export default function MoneyPoolDetailsPage() {
         }
       }, [moneyPoolId, locale]);
 
+  // Récupérer les informations de l'utilisateur connecté (une seule fois au chargement)
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const { getAuthToken, isAuthenticated } = await import('@/utils/tokenStorage');
+        const token = getAuthToken();
+        
+        if (token && isAuthenticated()) {
+          setIsLoggedIn(true);
+          
+          // Récupérer les infos utilisateur depuis l'API
+          const response = await fetch(`${API_URL}/api/v1/auth/me`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            // Concaténer first_name et last_name pour créer le full_name
+            const fullNameFromUser = `${userData.first_name || ''} ${userData.last_name || ''}`.trim();
+            if (fullNameFromUser) {
+              setUserFullName(fullNameFromUser);
+            }
+          }
+        } else {
+          setIsLoggedIn(false);
+          setUserFullName(null);
+        }
+      } catch (err) {
+        // Erreur silencieuse - l'utilisateur n'est peut-être pas connecté
+        setIsLoggedIn(false);
+        setUserFullName(null);
+      }
+    };
+    
+    fetchUserInfo();
+  }, [API_URL]); // Ne dépend que de API_URL, pas de anonymous
+
+  // Ne plus vider le champ nom quand anonymous change - le nom est toujours requis
+  // On garde juste la logique de sauvegarde/restauration pour référence
+  // mais on ne vide plus le champ
+
+  // Préremplir le nom quand le modal s'ouvre (si vide)
+  useEffect(() => {
+    if (showContributeModal && !fullName.trim()) {
+      // Priorité à la valeur sauvegardée, sinon utiliser userFullName
+      if (savedFullNameRef.current.trim()) {
+        setFullName(savedFullNameRef.current);
+      } else if (userFullName) {
+        setFullName(userFullName);
+      }
+    }
+  }, [showContributeModal, userFullName]);
+
   const handleContribute = async () => {
     if (!moneyPool) {
       setNotification({
@@ -377,29 +440,79 @@ export default function MoneyPoolDetailsPage() {
       return;
     }
 
-    try {
-      // Validation : si utilisateur non connecté et pas anonyme, full_name est requis
-      if (!isLoggedIn && !anonymous && !fullName.trim()) {
-        setNotification({
-          type: 'error',
-          message: t('enterFullName')
-        });
-        return;
-      }
+    // Validation : le nom complet est toujours obligatoire (même si anonyme)
+    if (!fullName.trim()) {
+      setNotification({
+        type: 'error',
+        message: locale === 'fr' ? 'Le nom complet est obligatoire' : 'Full name is required'
+      });
+      return;
+    }
 
+    // Passer à l'étape de sélection du moyen de paiement
+    setShowPaymentStep(true);
+  };
+
+  // Charger les providers de paiement
+  useEffect(() => {
+    const fetchPaymentProviders = async () => {
+      if (!showPaymentStep || !moneyPool) return;
+      
+      try {
+        setLoadingProviders(true);
+        const countryCode = moneyPool.country || undefined;
+        const currency = moneyPool.currency || undefined;
+        
+        const params = new URLSearchParams();
+        if (countryCode) params.append('country_code', countryCode);
+        if (currency) params.append('currency', currency);
+        
+        const response = await fetch(`${API_URL}/api/v1/money-pools/payment-methods/public?${params.toString()}`);
+        if (response.ok) {
+          const providers = await response.json();
+          setPaymentProviders(providers);
+        } else {
+          console.error('Failed to fetch payment providers');
+          setPaymentProviders([]);
+        }
+      } catch (error) {
+        console.error('Error fetching payment providers:', error);
+        setPaymentProviders([]);
+      } finally {
+        setLoadingProviders(false);
+      }
+    };
+
+    fetchPaymentProviders();
+  }, [showPaymentStep, moneyPool, API_URL]);
+
+  const handlePaymentMethodSelected = async () => {
+    if (!selectedProvider) {
+      setNotification({
+        type: 'error',
+        message: locale === 'fr' ? 'Veuillez sélectionner un moyen de paiement' : 'Please select a payment method'
+      });
+      return;
+    }
+
+    // Continuer avec la contribution
+    await processContribution();
+  };
+
+  const processContribution = async () => {
+    if (!moneyPool) return;
+
+    try {
       setIsContributing(true);
       
       const requestBody: any = {
         amount: contributionAmount,
         currency: moneyPool?.currency || 'XOF',
         message: message.trim() || undefined,
-        anonymous: anonymous
+        anonymous: anonymous,
+        full_name: fullName.trim(), // Toujours envoyer le nom complet (même si anonyme)
+        payment_provider_id: selectedProvider // Ajouter le provider sélectionné
       };
-      
-      // Ajouter full_name seulement si utilisateur non connecté et pas anonyme
-      if (!isLoggedIn && !anonymous) {
-        requestBody.full_name = fullName.trim();
-      }
       
       // Get auth token if user is logged in
       const { getAuthToken } = await import('@/utils/tokenStorage');
@@ -447,6 +560,9 @@ export default function MoneyPoolDetailsPage() {
       setMessage('');
       setAnonymous(false);
       setFullName('');
+      savedFullNameRef.current = ''; // Réinitialiser la valeur sauvegardée
+      setShowPaymentStep(false);
+      setSelectedProvider(null);
       setShowContributeModal(false);
       
       // Show success message
@@ -940,23 +1056,21 @@ export default function MoneyPoolDetailsPage() {
                 )}
               </div>
 
-              {/* Nom complet pour utilisateurs non connectés */}
-              {!isLoggedIn && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t('fullName')}
-                    {!anonymous && <span className="text-red-500 ml-1">*</span>}
-                  </label>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    disabled={anonymous}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500"
-                    placeholder={t('fullNamePlaceholder')}
-                  />
-                </div>
-              )}
+              {/* Nom complet - toujours affiché et obligatoire */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t('fullName')}
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder={t('fullNamePlaceholder')}
+                  required
+                />
+              </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -980,10 +1094,7 @@ export default function MoneyPoolDetailsPage() {
                     checked={anonymous}
                     onChange={(e) => {
                       setAnonymous(e.target.checked);
-                      if (e.target.checked) {
-                        // Réinitialiser le nom si on coche anonyme
-                        setFullName('');
-                      }
+                      // La logique de sauvegarde/restauration est gérée par le useEffect
                     }}
                     className="mr-2 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                   />
@@ -1002,27 +1113,113 @@ export default function MoneyPoolDetailsPage() {
                 </div>
               )}
 
-              <div className="flex gap-4 pt-4">
-                <button
-                  onClick={() => {
-                    setShowContributeModal(false);
-                    setMessage('');
-                    setContributionAmount(0);
-                    setAnonymous(false);
-                    setFullName('');
-                  }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  {t('cancel')}
-                </button>
-                <button
-                  onClick={handleContribute}
-                  disabled={contributionAmount <= 0 || isContributing}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isContributing ? t('processing') : t('contribute')}
-                </button>
-              </div>
+              {!showPaymentStep ? (
+                <div className="flex gap-4 pt-4">
+                  <button
+                    onClick={() => {
+                      setShowContributeModal(false);
+                      setMessage('');
+                      setContributionAmount(0);
+                      setAnonymous(false);
+                      setFullName('');
+                      // Réinitialiser la valeur sauvegardée pour la prochaine ouverture
+                      savedFullNameRef.current = '';
+                      setShowPaymentStep(false);
+                      setSelectedProvider(null);
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    {t('cancel')}
+                  </button>
+                  <button
+                    onClick={handleContribute}
+                    disabled={contributionAmount <= 0 || isContributing || !fullName.trim()}
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {locale === 'fr' ? 'Continuer' : 'Continue'}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {locale === 'fr' ? 'Sélectionnez un moyen de paiement' : 'Select a payment method'}
+                  </h3>
+                  
+                  {loadingProviders ? (
+                    <div className="text-center py-8">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                      <p className="mt-2 text-gray-600">
+                        {locale === 'fr' ? 'Chargement des moyens de paiement...' : 'Loading payment methods...'}
+                      </p>
+                    </div>
+                  ) : paymentProviders.length === 0 ? (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
+                      {locale === 'fr' 
+                        ? 'Aucun moyen de paiement disponible pour cette cagnotte.' 
+                        : 'No payment method available for this money pool.'}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      {paymentProviders.map((method: any) => (
+                        <button
+                          key={method.id}
+                          onClick={() => setSelectedProvider(method.id)}
+                          className={`p-6 border-2 rounded-lg text-center transition-all flex flex-col items-center justify-center ${
+                            selectedProvider === method.id
+                              ? 'border-orange-500 bg-orange-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="flex flex-col items-center gap-3">
+                            {/* Icon - use emoji as primary, image as fallback */}
+                            <div className="w-16 h-16 flex items-center justify-center text-5xl">
+                              {method.id === 'mobile_money' ? '📱' : '💳'}
+                            </div>
+                            <div className="text-center">
+                              <p className="font-semibold text-gray-800 text-lg">
+                                {locale === 'fr' ? (method.name_fr || method.name) : (method.name_en || method.name)}
+                              </p>
+                              {method.providers && method.providers.length > 0 && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {method.providers.map((p: any) => p.name).join(', ')}
+                                </p>
+                              )}
+                            </div>
+                            {selectedProvider === method.id && (
+                              <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center mt-2">
+                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-4 pt-4">
+                    <button
+                      onClick={() => {
+                        setShowPaymentStep(false);
+                        setSelectedProvider(null);
+                      }}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      {locale === 'fr' ? 'Retour' : 'Back'}
+                    </button>
+                    <button
+                      onClick={handlePaymentMethodSelected}
+                      disabled={!selectedProvider || isContributing}
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isContributing 
+                        ? (locale === 'fr' ? 'Traitement...' : 'Processing...')
+                        : (locale === 'fr' ? 'Payer' : 'Pay')}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>
