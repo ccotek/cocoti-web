@@ -238,9 +238,7 @@ export default function MoneyPoolDetailsPage() {
               
               // Gérer les différents cas d'erreur
               if (response.status === 404) {
-                errorMessage = locale === 'fr' 
-                  ? 'Cette cagnotte n\'existe pas ou a été supprimée.' 
-                  : 'This money pool does not exist or has been removed.';
+                errorMessage = t('notFoundDescription');
               } else {
                 // Cloner la réponse pour pouvoir lire le texte ET le JSON si nécessaire
                 const clonedResponse = response.clone();
@@ -271,7 +269,7 @@ export default function MoneyPoolDetailsPage() {
                       if (errorKeys.length > 0) {
                         errorMessage = `Erreur serveur: ${JSON.stringify(errorData)}`;
                       } else {
-                        errorMessage = 'Erreur serveur interne. Veuillez vérifier les logs du serveur.';
+                        errorMessage = t('internalServerError');
                       }
                     }
                   }
@@ -407,9 +405,7 @@ export default function MoneyPoolDetailsPage() {
     if (moneyPool.status === 'archived') {
       setNotification({
         type: 'error',
-        message: locale === 'fr' 
-          ? 'Cette cagnotte est archivée. Les fonds ont été récupérés.' 
-          : 'This money pool is archived. Funds have been collected.'
+        message: t('archivedDescription')
       });
       setShowContributeModal(false);
       return;
@@ -444,7 +440,7 @@ export default function MoneyPoolDetailsPage() {
     if (!fullName.trim()) {
       setNotification({
         type: 'error',
-        message: locale === 'fr' ? 'Le nom complet est obligatoire' : 'Full name is required'
+        message: t('fullNameRequired')
       });
       return;
     }
@@ -490,7 +486,7 @@ export default function MoneyPoolDetailsPage() {
     if (!selectedProvider) {
       setNotification({
         type: 'error',
-        message: locale === 'fr' ? 'Veuillez sélectionner un moyen de paiement' : 'Please select a payment method'
+        message: t('selectPaymentMethod')
       });
       return;
     }
@@ -762,7 +758,7 @@ export default function MoneyPoolDetailsPage() {
             >
               <HeartIconSolid className="h-5 w-5" />
               {moneyPool.status === 'archived' 
-                ? (locale === 'fr' ? 'Cagnotte archivée' : 'Pool archived')
+                ? t('archived')
                 : t('contribute')
               }
             </button>
@@ -962,7 +958,7 @@ export default function MoneyPoolDetailsPage() {
               >
                 <HeartIconSolid className="h-5 w-5" />
                 {moneyPool.status === 'archived' 
-                  ? (locale === 'fr' ? 'Cagnotte archivée' : 'Pool archived')
+                  ? t('archived')
                   : t('contribute')
                 }
               </button>
@@ -1107,9 +1103,7 @@ export default function MoneyPoolDetailsPage() {
               {/* Message si anonyme désactivé */}
               {moneyPool?.settings?.allow_anonymous === false && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
-                  {locale === 'fr' 
-                    ? 'Les contributions anonymes ne sont pas autorisées pour cette cagnotte.' 
-                    : 'Anonymous contributions are not allowed for this money pool.'}
+                  {t('anonymousNotAllowed')}
                 </div>
               )}
 
@@ -1136,27 +1130,25 @@ export default function MoneyPoolDetailsPage() {
                     disabled={contributionAmount <= 0 || isContributing || !fullName.trim()}
                     className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {locale === 'fr' ? 'Continuer' : 'Continue'}
+                    {t('continue')}
                   </button>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-800">
-                    {locale === 'fr' ? 'Sélectionnez un moyen de paiement' : 'Select a payment method'}
+                    {t('selectPaymentMethodTitle')}
                   </h3>
                   
                   {loadingProviders ? (
                     <div className="text-center py-8">
                       <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
                       <p className="mt-2 text-gray-600">
-                        {locale === 'fr' ? 'Chargement des moyens de paiement...' : 'Loading payment methods...'}
+                        {t('loadingPaymentMethods')}
                       </p>
                     </div>
                   ) : paymentProviders.length === 0 ? (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
-                      {locale === 'fr' 
-                        ? 'Aucun moyen de paiement disponible pour cette cagnotte.' 
-                        : 'No payment method available for this money pool.'}
+                      {t('noPaymentMethodsAvailable')}
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-4">
@@ -1206,16 +1198,14 @@ export default function MoneyPoolDetailsPage() {
                       }}
                       className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                     >
-                      {locale === 'fr' ? 'Retour' : 'Back'}
+                      {t('back')}
                     </button>
                     <button
                       onClick={handlePaymentMethodSelected}
                       disabled={!selectedProvider || isContributing}
                       className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isContributing 
-                        ? (locale === 'fr' ? 'Traitement...' : 'Processing...')
-                        : (locale === 'fr' ? 'Payer' : 'Pay')}
+                      {isContributing ? t('processing') : t('pay')}
                     </button>
                   </div>
                 </div>
