@@ -89,119 +89,17 @@ export default function MoneyPoolDetailsPage() {
   
   // Helper function for translations using JSON files
   const t = (key: string): string => {
-    // Import translations from JSON files
-    const frTranslations = {
-      active: 'Cagnotte active',
-      archived: 'Cagnotte archivée',
-      verified: 'Cagnotte vérifiée',
-      notVerified: 'Non vérifiée',
-      anonymousAllowed: 'Anonyme autorisé',
-      contribute: 'Contribuer maintenant',
-      view: 'Voir',
-      raised: 'Collecté',
-      outOf: 'sur un objectif de',
-      progress: 'Progression',
-      participants: 'Participants',
-      maximum: 'Maximum',
-      contributors: 'Contributeurs',
-      description: 'Description',
-      contributorsAndMessages: 'Contributeurs et messages',
-      anonymousContributed: 'Anonyme a participé',
-      contributed: 'a participé',
-      youContributed: 'Vous avez participé',
-      contributor: 'Contributeur a participé',
-      finished: 'Terminée',
-      completed: 'Complétée',
-      closed: 'Fermée',
-      verifiedPool: 'Cagnotte vérifiée',
-      notFound: 'Cagnotte introuvable',
-      notFoundDescription: 'Cette cagnotte n\'existe pas ou a été supprimée.',
-      notFoundTitle: 'Cagnotte introuvable',
-      backToHome: 'Retour à l\'accueil',
-      loading: 'Chargement...',
-      home: 'Accueil',
-      moneyPools: 'Cagnottes',
-      details: 'Détails',
-      amountRaised: 'Montant collecté',
-      deadline: 'Échéance',
-      contributeToPool: 'Contribuer à cette cagnotte',
-      amount: 'Montant',
-      limits: 'Limites: ',
-      fullName: 'Nom complet',
-      fullNamePlaceholder: 'Votre nom complet',
-      message: 'Message',
-      optional: 'optionnel',
-      messagePlaceholder: 'Ajoutez un message de soutien...',
-      contributeAnonymously: 'Contribuer anonymement',
-      cancel: 'Annuler',
-      processing: 'En cours...',
-      noContributors: 'Aucun contributeur pour le moment',
-      enterValidAmount: 'Veuillez saisir un montant valide',
-      enterFullName: 'Veuillez saisir votre nom complet',
-      minAmount: 'Le montant minimum est',
-      maxAmount: 'Le montant maximum est',
-      thankYou: 'Merci pour votre contribution!',
-      contributionError: 'Erreur lors de la contribution:',
-      errorContributing: 'Error contributing:'
-    };
-    
-    const enTranslations = {
-      active: 'Active pool',
-      archived: 'Archived pool',
-      verified: 'Verified pool',
-      notVerified: 'Not verified',
-      anonymousAllowed: 'Anonymous allowed',
-      contribute: 'Contribute Now',
-      view: 'View',
-      raised: 'Raised',
-      outOf: 'out of target',
-      progress: 'Progress',
-      participants: 'Participants',
-      maximum: 'Maximum',
-      contributors: 'Contributors',
-      description: 'Description',
-      contributorsAndMessages: 'Contributors & Messages',
-      anonymousContributed: 'Anonymous contributed',
-      contributed: 'contributed',
-      youContributed: 'You contributed',
-      contributor: 'Contributor',
-      finished: 'Finished',
-      completed: 'Completed',
-      closed: 'Closed',
-      verifiedPool: 'Verified pool',
-      notFound: 'Money pool not found',
-      notFoundDescription: 'This money pool does not exist or has been removed.',
-      notFoundTitle: 'Money Pool Not Found',
-      backToHome: 'Back to Home',
-      loading: 'Loading...',
-      home: 'Home',
-      moneyPools: 'Money Pools',
-      details: 'Details',
-      amountRaised: 'Amount Raised',
-      deadline: 'Deadline',
-      contributeToPool: 'Contribute to this pool',
-      amount: 'Amount',
-      limits: 'Limits: ',
-      fullName: 'Full Name',
-      fullNamePlaceholder: 'Your full name',
-      message: 'Message',
-      optional: 'optional',
-      messagePlaceholder: 'Add a support message...',
-      contributeAnonymously: 'Contribute anonymously',
-      cancel: 'Cancel',
-      processing: 'Processing...',
-      noContributors: 'No contributors yet',
-      enterValidAmount: 'Please enter a valid amount',
-      enterFullName: 'Please enter your full name',
-      minAmount: 'Minimum amount is',
-      maxAmount: 'Maximum amount is',
-      thankYou: 'Thank you for your contribution!',
-      contributionError: 'Error contributing:',
-      errorContributing: 'Error contributing:'
-    };
-    
-    const translations = locale === 'fr' ? frTranslations : enTranslations;
-    return translations[key as keyof typeof translations] || key;
+    try {
+      const translations: Record<string, any> = {
+        fr: require('@/i18n/messages/fr.json').moneyPool || {},
+        en: require('@/i18n/messages/en.json').moneyPool || {}
+      };
+      const value = translations[locale]?.[key];
+      return value || key;
+    } catch (error) {
+      console.error('Error loading translations:', error);
+      return key;
+    }
   };
   
   const [moneyPool, setMoneyPool] = useState<MoneyPool | null>(null);
@@ -269,7 +167,7 @@ export default function MoneyPoolDetailsPage() {
                       if (errorKeys.length > 0) {
                         errorMessage = `Erreur serveur: ${JSON.stringify(errorData)}`;
                       } else {
-                        errorMessage = t('internalServerError');
+                        errorMessage = 'Erreur serveur interne. Veuillez vérifier les logs du serveur.';
                       }
                     }
                   }
@@ -405,7 +303,7 @@ export default function MoneyPoolDetailsPage() {
     if (moneyPool.status === 'archived') {
       setNotification({
         type: 'error',
-        message: t('archivedDescription')
+        message: t('archivedFundsCollected')
       });
       setShowContributeModal(false);
       return;
@@ -758,7 +656,7 @@ export default function MoneyPoolDetailsPage() {
             >
               <HeartIconSolid className="h-5 w-5" />
               {moneyPool.status === 'archived' 
-                ? t('archived')
+                ? t('poolArchived')
                 : t('contribute')
               }
             </button>
@@ -851,7 +749,7 @@ export default function MoneyPoolDetailsPage() {
                           </p>
                         </div>
                         <span className="text-xs text-ink-muted whitespace-nowrap font-inter">
-                          {new Date(contributor.created_at).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US')}
+                          {new Date(contributor.created_at).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                         </span>
                       </div>
                       {contributor.message && (
@@ -942,7 +840,7 @@ export default function MoneyPoolDetailsPage() {
                   </div>
                   <p className="text-xl font-bold text-night font-inter">
                     {moneyPool.end_date 
-                      ? new Date(moneyPool.end_date).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US')
+                      ? new Date(moneyPool.end_date).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                       : '∞'
                     }
                   </p>
@@ -958,7 +856,7 @@ export default function MoneyPoolDetailsPage() {
               >
                 <HeartIconSolid className="h-5 w-5" />
                 {moneyPool.status === 'archived' 
-                  ? t('archived')
+                  ? t('poolArchived')
                   : t('contribute')
                 }
               </button>
@@ -1148,7 +1046,7 @@ export default function MoneyPoolDetailsPage() {
                     </div>
                   ) : paymentProviders.length === 0 ? (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
-                      {t('noPaymentMethodsAvailable')}
+                      {t('noPaymentMethodAvailable')}
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-4">

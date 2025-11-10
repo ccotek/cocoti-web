@@ -15,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { getAuthToken, isAuthenticated, clearAuthToken, setAuthToken } from '@/utils/tokenStorage';
+import { APP_CONFIG } from '@/config/app';
 
 type Step = 'info' | 'verification' | 'activation' | 'success';
 
@@ -722,23 +723,33 @@ export default function CreateMoneyPoolPage() {
         visibility: formData.visibility,
         settings: {
           target_amount: parseFloat(formData.target_amount),
-          min_contribution: formData.min_contribution && parseFloat(formData.min_contribution) > 0 
-            ? parseFloat(formData.min_contribution) 
-            : undefined,
-          max_contribution: formData.max_contribution && parseFloat(formData.max_contribution) > 0 
-            ? parseFloat(formData.max_contribution) 
-            : undefined,
+          // For public money pools, don't send min/max contribution or allow_anonymous
+          min_contribution: formData.visibility === 'public' 
+            ? undefined 
+            : (formData.min_contribution && parseFloat(formData.min_contribution) > 0 
+              ? parseFloat(formData.min_contribution) 
+              : undefined),
+          max_contribution: formData.visibility === 'public' 
+            ? undefined 
+            : (formData.max_contribution && parseFloat(formData.max_contribution) > 0 
+              ? parseFloat(formData.max_contribution) 
+              : undefined),
           allow_recurring_contributions: true,
           auto_approve_contributors: true,
           cross_country: false,
           require_kyc_for_contributors: false,
-          allow_anonymous: allowAnonymous
+          allow_anonymous: formData.visibility === 'public' 
+            ? true  // Default to true for public money pools
+            : allowAnonymous
         },
         currency: formData.currency,
         country: formData.country,
-        max_participants: formData.max_participants && parseInt(formData.max_participants) > 0 
-          ? parseInt(formData.max_participants) 
-          : undefined, // Unlimited by default
+        // For public money pools, don't send max_participants
+        max_participants: formData.visibility === 'public' 
+          ? undefined 
+          : (formData.max_participants && parseInt(formData.max_participants) > 0 
+            ? parseInt(formData.max_participants) 
+            : undefined), // Unlimited by default
         start_date: formData.start_date || undefined,
         end_date: formData.end_date || undefined,
         images: formData.images.filter(img => img.trim()),
@@ -1004,19 +1015,30 @@ export default function CreateMoneyPoolPage() {
               <input type="hidden" name="currency" value={formData.currency} />
 
               {/* Advanced Settings - Collapsible */}
-              <details className="group">
-                <summary className="cursor-pointer text-sm font-semibold text-magenta hover:text-sunset transition-colors font-inter flex items-center gap-2 py-3">
-                  <svg className="h-5 w-5 transform transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <details className="group" open={formData.visibility !== 'public'}>
+                <summary className={`cursor-pointer text-sm font-semibold transition-colors font-inter flex items-center gap-2 py-3 ${
+                  formData.visibility === 'public' 
+                    ? 'text-ink-muted cursor-not-allowed' 
+                    : 'text-magenta hover:text-sunset'
+                }`}>
+                  <svg className={`h-5 w-5 transform transition-transform group-open:rotate-90 ${formData.visibility === 'public' ? 'opacity-50' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                   {t('additionalSettings')}
+                  {formData.visibility === 'public' && (
+                    <span className="text-xs text-ink-muted ml-2 font-normal">
+                      ({t('publicSettingsNotEditable') || 'Non modifiable pour les cagnottes publiques'})
+                    </span>
+                  )}
                 </summary>
-                <div className="mt-4 space-y-4 pl-7 border-l-2 border-cloud">
+                <div className={`mt-4 space-y-4 pl-7 border-l-2 border-cloud ${formData.visibility === 'public' ? 'opacity-60' : ''}`}>
                   {/* Start Date and Max Participants - 2 columns */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Start Date */}
                     <div>
-                      <label className="block text-sm font-semibold text-night mb-2 font-inter">
+                      <label className={`block text-sm font-semibold mb-2 font-inter ${
+                        formData.visibility === 'public' ? 'text-ink-muted' : 'text-night'
+                      }`}>
                         {t('startDate')}
                         <span className="text-xs text-ink-muted ml-2 font-normal">
                           ({t('startDateDefault')})
@@ -1027,13 +1049,20 @@ export default function CreateMoneyPoolPage() {
                         name="start_date"
                         value={formData.start_date}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter"
+                        disabled={formData.visibility === 'public'}
+                        className={`w-full px-4 py-3 border-2 border-cloud rounded-2xl transition-all font-inter ${
+                          formData.visibility === 'public' 
+                            ? 'bg-gray-50 cursor-not-allowed opacity-60' 
+                            : 'focus:ring-2 focus:ring-magenta focus:border-transparent'
+                        }`}
                       />
                     </div>
 
                     {/* Max Participants */}
                     <div>
-                      <label className="block text-sm font-semibold text-night mb-2 font-inter">
+                      <label className={`block text-sm font-semibold mb-2 font-inter ${
+                        formData.visibility === 'public' ? 'text-ink-muted' : 'text-night'
+                      }`}>
                         {t('maxParticipants')}
                         <span className="text-xs text-ink-muted ml-2 font-normal">
                           ({t('maxParticipantsDefault')})
@@ -1045,7 +1074,12 @@ export default function CreateMoneyPoolPage() {
                         value={formData.max_participants}
                         onChange={handleInputChange}
                         min="1"
-                        className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter"
+                        disabled={formData.visibility === 'public'}
+                        className={`w-full px-4 py-3 border-2 border-cloud rounded-2xl transition-all font-inter ${
+                          formData.visibility === 'public' 
+                            ? 'bg-gray-50 cursor-not-allowed opacity-60' 
+                            : 'focus:ring-2 focus:ring-magenta focus:border-transparent'
+                        }`}
                         placeholder={t('maxParticipantsPlaceholder')}
                       />
                     </div>
@@ -1054,7 +1088,9 @@ export default function CreateMoneyPoolPage() {
                   {/* Min/Max Contributions */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-night mb-2 font-inter">
+                      <label className={`block text-sm font-semibold mb-2 font-inter ${
+                        formData.visibility === 'public' ? 'text-ink-muted' : 'text-night'
+                      }`}>
                         {t('minContribution')}
                         <span className="text-xs text-ink-muted ml-2 font-normal">
                           ({t('minContributionDefault')})
@@ -1067,13 +1103,20 @@ export default function CreateMoneyPoolPage() {
                         onChange={handleInputChange}
                         min="0"
                         step="0.01"
-                        className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter"
+                        disabled={formData.visibility === 'public'}
+                        className={`w-full px-4 py-3 border-2 border-cloud rounded-2xl transition-all font-inter ${
+                          formData.visibility === 'public' 
+                            ? 'bg-gray-50 cursor-not-allowed opacity-60' 
+                            : 'focus:ring-2 focus:ring-magenta focus:border-transparent'
+                        }`}
                         placeholder={t('minContributionPlaceholder')}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-night mb-2 font-inter">
+                      <label className={`block text-sm font-semibold mb-2 font-inter ${
+                        formData.visibility === 'public' ? 'text-ink-muted' : 'text-night'
+                      }`}>
                         {t('maxContribution')}
                         <span className="text-xs text-ink-muted ml-2 font-normal">
                           ({t('maxContributionDefault')})
@@ -1086,22 +1129,39 @@ export default function CreateMoneyPoolPage() {
                         onChange={handleInputChange}
                         min="0"
                         step="0.01"
-                        className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter"
+                        disabled={formData.visibility === 'public'}
+                        className={`w-full px-4 py-3 border-2 border-cloud rounded-2xl transition-all font-inter ${
+                          formData.visibility === 'public' 
+                            ? 'bg-gray-50 cursor-not-allowed opacity-60' 
+                            : 'focus:ring-2 focus:ring-magenta focus:border-transparent'
+                        }`}
                         placeholder={t('maxContributionPlaceholder')}
                       />
                     </div>
                   </div>
 
                   {/* Allow Anonymous Contributions */}
-                  <div className="flex items-start gap-3 p-4 border-2 border-cloud rounded-2xl">
+                  <div className={`flex items-start gap-3 p-4 border-2 border-cloud rounded-2xl ${
+                    formData.visibility === 'public' ? 'bg-gray-50' : ''
+                  }`}>
                     <input
                       type="checkbox"
                       id="allow-anonymous"
                       checked={allowAnonymous}
                       onChange={(e) => setAllowAnonymous(e.target.checked)}
-                      className="mt-1 w-5 h-5 text-magenta focus:ring-magenta rounded"
+                      disabled={formData.visibility === 'public'}
+                      className={`mt-1 w-5 h-5 text-magenta focus:ring-magenta rounded ${
+                        formData.visibility === 'public' ? 'cursor-not-allowed opacity-60' : ''
+                      }`}
                     />
-                    <label htmlFor="allow-anonymous" className="flex-1 text-sm text-night font-inter cursor-pointer">
+                    <label 
+                      htmlFor="allow-anonymous" 
+                      className={`flex-1 text-sm font-inter ${
+                        formData.visibility === 'public' 
+                          ? 'text-ink-muted cursor-not-allowed' 
+                          : 'text-night cursor-pointer'
+                      }`}
+                    >
                       <div className="font-semibold mb-1">
                         {t('allowAnonymous')}
                       </div>
@@ -1707,6 +1767,19 @@ export default function CreateMoneyPoolPage() {
                 >
                   {t('viewMyPool')}
                 </Link>
+
+                {/* Bouton "Gérer dans le dashboard" - toujours affiché */}
+                <a
+                  href={`${APP_CONFIG.DASHBOARD_URL}/${locale}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-3 bg-white border-2 border-sunset rounded-2xl text-sunset font-semibold hover:bg-sunset/5 hover:border-magenta transition-all font-inter flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  {t('manageInDashboard')}
+                </a>
               </div>
             </div>
           </motion.div>
