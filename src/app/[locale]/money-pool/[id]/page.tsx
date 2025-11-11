@@ -116,6 +116,7 @@ export default function MoneyPoolDetailsPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Vérifier si l'utilisateur est connecté
   const [userFullName, setUserFullName] = useState<string | null>(null); // Nom complet de l'utilisateur connecté
   const savedFullNameRef = useRef<string>(''); // Sauvegarder le nom saisi avant de cocher anonyme (ref pour éviter les re-renders)
+  const sharingRef = useRef(false); // Ref pour suivre l'état de partage
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [cocotiTip, setCocotiTip] = useState<number>(0);
@@ -124,6 +125,7 @@ export default function MoneyPoolDetailsPage() {
   const [cocotiTipMax, setCocotiTipMax] = useState<number>(20.0); // Maximum par défaut
   const [skipCocotiTip, setSkipCocotiTip] = useState<boolean>(false);
   const [showTipModify, setShowTipModify] = useState<boolean>(false); // Cacher la barre de modification par défaut
+
 
       useEffect(() => {
         const fetchMoneyPool = async () => {
@@ -335,61 +337,91 @@ export default function MoneyPoolDetailsPage() {
     e.preventDefault();
     e.stopPropagation();
     
-    if (!moneyPool || isSharing) {
+    console.log('handleShare called', { moneyPool: !!moneyPool, isSharing, sharingRef: sharingRef.current });
+    
+    if (!moneyPool) {
+      console.warn('Cannot share: moneyPool is null');
+      return;
+    }
+    
+    if (sharingRef.current || isSharing) {
+      console.warn('Share already in progress');
       return;
     }
 
-    setIsSharing(true);
     const shareUrl = `${window.location.origin}/${locale}/money-pool/${moneyPoolId}`;
+    console.log('Sharing URL:', shareUrl);
+    
+    // Fonction helper pour copier dans le presse-papiers
+    const copyToClipboard = async (text: string): Promise<boolean> => {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } else {
+          // Fallback pour navigateurs anciens
+          const textArea = document.createElement('textarea');
+          textArea.value = text;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          textArea.style.top = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          const successful = document.execCommand('copy');
+          document.body.removeChild(textArea);
+          return successful;
+        }
+      } catch (err) {
+        console.error('Copy error:', err);
+        return false;
+      }
+    };
+
+    // Marquer comme en cours avec ref et state
+    sharingRef.current = true;
+    setIsSharing(true);
+    console.log('Share started, isSharing set to true');
+
+    let shareCompleted = false;
 
     try {
       // Essayer d'utiliser l'API Web Share si disponible (mobile)
       if (navigator.share) {
+        console.log('Trying navigator.share...');
         try {
           await navigator.share({
             title: moneyPool.name,
             text: moneyPool.description ? moneyPool.description.substring(0, 200) + '...' : '',
             url: shareUrl,
           });
+          console.log('Share successful via navigator.share');
           setNotification({
             type: 'success',
             message: locale === 'fr' ? 'Partage réussi !' : 'Shared successfully!'
           });
           setTimeout(() => setNotification(null), 3000);
-          setIsSharing(false);
-          return;
+          shareCompleted = true;
         } catch (shareErr: any) {
-          // Si l'utilisateur annule, ne rien faire
+          console.log('Share API error:', shareErr);
+          // Si l'utilisateur annule, ne rien faire mais continuer pour réinitialiser
           if (shareErr.name === 'AbortError') {
-            setIsSharing(false);
-            return;
+            console.log('User aborted share');
+            shareCompleted = true; // Marquer comme complété pour ne pas essayer le fallback
+            // Ne pas faire de return, laisser le finally s'exécuter
+          } else {
+            // Continuer avec le fallback clipboard
+            console.log('Share API failed, trying clipboard fallback');
           }
-          // Sinon, continuer avec le fallback clipboard
         }
       }
       
-      // Fallback: copier dans le presse-papiers
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(shareUrl);
-        setNotification({
-          type: 'success',
-          message: locale === 'fr' ? 'Lien copié' : 'Link copied'
-        });
-        setTimeout(() => setNotification(null), 3000);
-      } else {
-        // Fallback pour navigateurs anciens
-        const textArea = document.createElement('textarea');
-        textArea.value = shareUrl;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        const successful = document.execCommand('copy');
-        document.body.removeChild(textArea);
-        
-        if (successful) {
+      // Si le partage n'a pas été complété, utiliser le clipboard
+      if (!shareCompleted) {
+        console.log('Using clipboard fallback...');
+        const copied = await copyToClipboard(shareUrl);
+        if (copied) {
+          console.log('Clipboard copy successful');
           setNotification({
             type: 'success',
             message: locale === 'fr' ? 'Lien copié' : 'Link copied'
@@ -407,10 +439,11 @@ export default function MoneyPoolDetailsPage() {
       });
       setTimeout(() => setNotification(null), 3000);
     } finally {
-      // Toujours réinitialiser isSharing après un court délai pour éviter les clics multiples
-      setTimeout(() => {
-        setIsSharing(false);
-      }, 500);
+      // Toujours réinitialiser isSharing et ref, même en cas d'erreur ou d'annulation
+      console.log('Finally block: resetting isSharing');
+      sharingRef.current = false;
+      setIsSharing(false);
+      console.log('isSharing reset to false');
     }
   };
 
@@ -744,6 +777,17 @@ export default function MoneyPoolDetailsPage() {
                 : t('contribute')
               }
             </button>
+
+            {/* Share Button - Mobile */}
+            <button
+              type="button"
+              onClick={handleShare}
+              disabled={isSharing || !moneyPool}
+              className="w-full mt-3 bg-white border-2 border-magenta text-magenta py-3 px-6 rounded-2xl font-semibold hover:bg-magenta/5 transition-all flex items-center justify-center gap-2 font-inter disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ShareIcon className="h-5 w-5" />
+              {isSharing ? (locale === 'fr' ? 'Partage...' : 'Sharing...') : (locale === 'fr' ? 'Partager' : 'Share')}
+            </button>
           </motion.div>
         </div>
 
@@ -950,16 +994,12 @@ export default function MoneyPoolDetailsPage() {
               {/* Share Button */}
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleShare(e);
-                }}
+                onClick={handleShare}
                 disabled={isSharing || !moneyPool}
                 className="w-full bg-white border-2 border-magenta text-magenta py-3 px-6 rounded-2xl font-semibold hover:bg-magenta/5 transition-all flex items-center justify-center gap-2 font-inter mt-3 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ShareIcon className="h-5 w-5" />
-                {locale === 'fr' ? 'Partager' : 'Share'}
+                {isSharing ? (locale === 'fr' ? 'Partage...' : 'Sharing...') : (locale === 'fr' ? 'Partager' : 'Share')}
               </button>
 
               {/* Info */}

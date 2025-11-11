@@ -38,7 +38,7 @@ export default function WhatsAppButtonSimple({
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="hidden lg:flex fixed bottom-6 right-6 z-50">
       {/* Bouton principal */}
       <motion.button
         onClick={handleWhatsAppClick}

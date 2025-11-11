@@ -23,7 +23,7 @@ export default function SimpleFloatingButton({ locale }: SimpleFloatingButtonPro
   };
 
   return (
-    <div className="fixed bottom-32 right-6 z-[9999]">
+    <div className="fixed bottom-6 right-6 lg:bottom-32 z-[9999]">
       {/* Menu expandable */}
       <AnimatePresence>
         {isExpanded && (
@@ -55,7 +55,7 @@ export default function SimpleFloatingButton({ locale }: SimpleFloatingButtonPro
       {/* Bouton principal */}
       <motion.button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-24 h-24 bg-gradient-to-r from-sunset to-magenta rounded-full shadow-2xl hover:shadow-3xl transition-all border-2 border-white flex items-center justify-center group"
+        className="w-16 h-16 lg:w-24 lg:h-24 bg-gradient-to-r from-sunset to-magenta rounded-full shadow-2xl hover:shadow-3xl transition-all border-2 border-white flex items-center justify-center group"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         initial={{ opacity: 0, scale: 0 }}
@@ -112,7 +112,7 @@ export default function SimpleFloatingButton({ locale }: SimpleFloatingButtonPro
               exit={{ rotate: 90, opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <XMarkIcon className="h-12 w-12 text-white drop-shadow-lg" />
+              <XMarkIcon className="h-8 w-8 lg:h-12 lg:w-12 text-white drop-shadow-lg" />
             </motion.div>
           ) : (
             <motion.div
@@ -123,7 +123,7 @@ export default function SimpleFloatingButton({ locale }: SimpleFloatingButtonPro
               exit={{ rotate: -90, opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <PlusIcon className="h-12 w-12 text-white drop-shadow-lg" />
+              <PlusIcon className="h-8 w-8 lg:h-12 lg:w-12 text-white drop-shadow-lg" />
             </motion.div>
           )}
         </AnimatePresence>
