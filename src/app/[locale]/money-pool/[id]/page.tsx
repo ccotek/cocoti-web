@@ -530,6 +530,7 @@ export default function MoneyPoolDetailsPage() {
       const token = getAuthToken();
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
+        'Accept-Language': locale || 'fr',
       };
       
       if (token) {

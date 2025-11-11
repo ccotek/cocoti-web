@@ -695,7 +695,8 @@ export default function CreateMoneyPoolPage() {
 
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        'Accept-Language': locale || 'fr',
       };
 
       // Publier la cagnotte
@@ -788,6 +789,7 @@ export default function CreateMoneyPoolPage() {
 
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
+        'Accept-Language': locale || 'fr',
       };
 
       if (token) {
