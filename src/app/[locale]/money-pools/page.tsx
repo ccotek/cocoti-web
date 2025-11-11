@@ -153,13 +153,15 @@ export default function MoneyPoolsListPage() {
     }
     
     // Separate by status (normalize to lowercase for comparison)
+    // Active pools only
     const active = filtered.filter(pool => {
       const status = (pool.status || 'active').toLowerCase();
       return status === 'active';
     });
+    // Archived and closed pools (treat closed as archived for public display)
     const archived = filtered.filter(pool => {
       const status = (pool.status || '').toLowerCase();
-      return status === 'archived';
+      return status === 'archived' || status === 'closed';
     });
     
     
@@ -429,7 +431,9 @@ export default function MoneyPoolsListPage() {
                               {/* Badge statut */}
                               <div className="absolute top-4 left-4">
                                 <span className="bg-gray-500/95 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-semibold font-inter shadow-sm">
-                                  {locale === 'fr' ? 'Archivée' : 'Archived'}
+                                  {pool.status?.toLowerCase() === 'closed' 
+                                    ? (locale === 'fr' ? 'Clôturée' : 'Closed')
+                                    : (locale === 'fr' ? 'Archivée' : 'Archived')}
                                 </span>
                               </div>
                             </div>
@@ -474,7 +478,9 @@ export default function MoneyPoolsListPage() {
                                   </span>
                                 </div>
                                 <span className="text-gray-400 font-semibold flex items-center gap-1 font-inter">
-                                  {locale === 'fr' ? 'Archivée' : 'Archived'}
+                                  {pool.status?.toLowerCase() === 'closed' 
+                                    ? (locale === 'fr' ? 'Clôturée' : 'Closed')
+                                    : (locale === 'fr' ? 'Archivée' : 'Archived')}
                                 </span>
                               </div>
                             </div>

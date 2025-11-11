@@ -15,7 +15,8 @@ import {
   ExclamationCircleIcon,
   ArrowLeftIcon,
   ChevronRightIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  ShareIcon
 } from '@heroicons/react/24/outline';
 import { 
   HeartIcon as HeartIconSolid
@@ -116,10 +117,13 @@ export default function MoneyPoolDetailsPage() {
   const [userFullName, setUserFullName] = useState<string | null>(null); // Nom complet de l'utilisateur connecté
   const savedFullNameRef = useRef<string>(''); // Sauvegarder le nom saisi avant de cocher anonyme (ref pour éviter les re-renders)
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [showPaymentStep, setShowPaymentStep] = useState(false); // Afficher l'étape de sélection du moyen de paiement
-  const [paymentProviders, setPaymentProviders] = useState<any[]>([]);
-  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-  const [loadingProviders, setLoadingProviders] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [cocotiTip, setCocotiTip] = useState<number>(0);
+  const [cocotiTipPercentage, setCocotiTipPercentage] = useState<number>(5.5); // 5.5% par défaut
+  const [cocotiTipMin, setCocotiTipMin] = useState<number>(4.5); // Minimum par défaut
+  const [cocotiTipMax, setCocotiTipMax] = useState<number>(20.0); // Maximum par défaut
+  const [skipCocotiTip, setSkipCocotiTip] = useState<boolean>(false);
+  const [showTipModify, setShowTipModify] = useState<boolean>(false); // Cacher la barre de modification par défaut
 
       useEffect(() => {
         const fetchMoneyPool = async () => {
@@ -278,6 +282,32 @@ export default function MoneyPoolDetailsPage() {
   // On garde juste la logique de sauvegarde/restauration pour référence
   // mais on ne vide plus le champ
 
+  // Charger la configuration du tip depuis le backend
+  useEffect(() => {
+    const fetchTipConfig = async () => {
+      if (!moneyPool) return;
+      
+      try {
+        const countryCode = moneyPool.country || 'SN';
+        const response = await fetch(
+          `${API_URL}/api/v1/money-pools/tip-config/public?product_type=money_pool&country_code=${countryCode}`
+        );
+        if (response.ok) {
+          const config = await response.json();
+          if (config.tip_enabled) {
+            setCocotiTipMin(config.tip_min_percentage || 4.5);
+            setCocotiTipMax(config.tip_max_percentage || 20.0);
+            setCocotiTipPercentage(config.tip_default_percentage || 5.5);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching tip config:', error);
+        // Garder les valeurs par défaut en cas d'erreur
+      }
+    };
+    fetchTipConfig();
+  }, [API_URL, moneyPool]);
+
   // Préremplir le nom quand le modal s'ouvre (si vide)
   useEffect(() => {
     if (showContributeModal && !fullName.trim()) {
@@ -290,6 +320,100 @@ export default function MoneyPoolDetailsPage() {
     }
   }, [showContributeModal, userFullName]);
 
+  // Calculer automatiquement le pourboire quand le montant change
+  useEffect(() => {
+    if (contributionAmount > 0) {
+      const calculatedTip = Math.round(contributionAmount * (cocotiTipPercentage / 100));
+      setCocotiTip(calculatedTip);
+    } else {
+      setCocotiTip(0);
+    }
+  }, [contributionAmount, cocotiTipPercentage]);
+
+  // Fonction de partage
+  const handleShare = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!moneyPool || isSharing) {
+      return;
+    }
+
+    setIsSharing(true);
+    const shareUrl = `${window.location.origin}/${locale}/money-pool/${moneyPoolId}`;
+
+    try {
+      // Essayer d'utiliser l'API Web Share si disponible (mobile)
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: moneyPool.name,
+            text: moneyPool.description ? moneyPool.description.substring(0, 200) + '...' : '',
+            url: shareUrl,
+          });
+          setNotification({
+            type: 'success',
+            message: locale === 'fr' ? 'Partage réussi !' : 'Shared successfully!'
+          });
+          setTimeout(() => setNotification(null), 3000);
+          setIsSharing(false);
+          return;
+        } catch (shareErr: any) {
+          // Si l'utilisateur annule, ne rien faire
+          if (shareErr.name === 'AbortError') {
+            setIsSharing(false);
+            return;
+          }
+          // Sinon, continuer avec le fallback clipboard
+        }
+      }
+      
+      // Fallback: copier dans le presse-papiers
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        setNotification({
+          type: 'success',
+          message: locale === 'fr' ? 'Lien copié' : 'Link copied'
+        });
+        setTimeout(() => setNotification(null), 3000);
+      } else {
+        // Fallback pour navigateurs anciens
+        const textArea = document.createElement('textarea');
+        textArea.value = shareUrl;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (successful) {
+          setNotification({
+            type: 'success',
+            message: locale === 'fr' ? 'Lien copié' : 'Link copied'
+          });
+          setTimeout(() => setNotification(null), 3000);
+        } else {
+          throw new Error('Failed to copy to clipboard');
+        }
+      }
+    } catch (err: any) {
+      console.error('Share error:', err);
+      setNotification({
+        type: 'error',
+        message: locale === 'fr' ? 'Erreur lors du partage' : 'Error sharing'
+      });
+      setTimeout(() => setNotification(null), 3000);
+    } finally {
+      // Toujours réinitialiser isSharing après un court délai pour éviter les clics multiples
+      setTimeout(() => {
+        setIsSharing(false);
+      }, 500);
+    }
+  };
+
   const handleContribute = async () => {
     if (!moneyPool) {
       setNotification({
@@ -299,11 +423,13 @@ export default function MoneyPoolDetailsPage() {
       return;
     }
 
-    // Vérifier que la cagnotte n'est pas archivée
-    if (moneyPool.status === 'archived') {
+    // Vérifier que la cagnotte n'est pas archivée ou clôturée
+    if (moneyPool.status === 'archived' || moneyPool.status === 'closed') {
       setNotification({
         type: 'error',
-        message: t('archivedFundsCollected')
+        message: moneyPool.status === 'closed' 
+          ? (locale === 'fr' ? 'Cette cagnotte est clôturée et n\'accepte plus de contributions.' : 'This money pool is closed and no longer accepts contributions.')
+          : t('archivedFundsCollected')
       });
       setShowContributeModal(false);
       return;
@@ -343,60 +469,17 @@ export default function MoneyPoolDetailsPage() {
       return;
     }
 
-    // Passer à l'étape de sélection du moyen de paiement
-    setShowPaymentStep(true);
-  };
-
-  // Charger les providers de paiement
-  useEffect(() => {
-    const fetchPaymentProviders = async () => {
-      if (!showPaymentStep || !moneyPool) return;
-      
-      try {
-        setLoadingProviders(true);
-        const countryCode = moneyPool.country || undefined;
-        const currency = moneyPool.currency || undefined;
-        
-        const params = new URLSearchParams();
-        if (countryCode) params.append('country_code', countryCode);
-        if (currency) params.append('currency', currency);
-        
-        const response = await fetch(`${API_URL}/api/v1/money-pools/payment-methods/public?${params.toString()}`);
-        if (response.ok) {
-          const providers = await response.json();
-          setPaymentProviders(providers);
-        } else {
-          console.error('Failed to fetch payment providers');
-          setPaymentProviders([]);
-        }
-      } catch (error) {
-        console.error('Error fetching payment providers:', error);
-        setPaymentProviders([]);
-      } finally {
-        setLoadingProviders(false);
-      }
-    };
-
-    fetchPaymentProviders();
-  }, [showPaymentStep, moneyPool, API_URL]);
-
-  const handlePaymentMethodSelected = async () => {
-    if (!selectedProvider) {
-      setNotification({
-        type: 'error',
-        message: t('selectPaymentMethod')
-      });
-      return;
-    }
-
-    // Continuer avec la contribution
+    // Traiter directement la contribution
     await processContribution();
   };
+
 
   const processContribution = async () => {
     if (!moneyPool) return;
 
     try {
+      // Calculer le montant total (contribution + pourboire Cocoti)
+      const totalAmount = contributionAmount + cocotiTip;
       setIsContributing(true);
       
       const requestBody: any = {
@@ -405,7 +488,8 @@ export default function MoneyPoolDetailsPage() {
         message: message.trim() || undefined,
         anonymous: anonymous,
         full_name: fullName.trim(), // Toujours envoyer le nom complet (même si anonyme)
-        payment_provider_id: selectedProvider // Ajouter le provider sélectionné
+        cocoti_tip: cocotiTip, // Pourboire Cocoti (obligatoire)
+        total_amount: totalAmount // Montant total (contribution + pourboire)
       };
       
       // Get auth token if user is logged in
@@ -455,8 +539,6 @@ export default function MoneyPoolDetailsPage() {
       setAnonymous(false);
       setFullName('');
       savedFullNameRef.current = ''; // Réinitialiser la valeur sauvegardée
-      setShowPaymentStep(false);
-      setSelectedProvider(null);
       setShowContributeModal(false);
       
       // Show success message
@@ -481,9 +563,9 @@ export default function MoneyPoolDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-magenta/5 to-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-magenta mx-auto mb-4"></div>
           <p className="text-gray-600">
             {t('loading')}
           </p>
@@ -494,7 +576,7 @@ export default function MoneyPoolDetailsPage() {
 
   if (error || !moneyPool) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-b from-magenta/5 to-white flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <div className="mb-6">
             <ExclamationCircleIcon className="h-16 w-16 text-red-500 mx-auto mb-4" />
@@ -507,7 +589,7 @@ export default function MoneyPoolDetailsPage() {
           </div>
           <button
             onClick={() => router.push(`/${locale}`)}
-            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+            className="px-6 py-3 bg-gradient-to-r from-magenta to-sunset text-white rounded-lg font-semibold hover:shadow-lg transition-all"
           >
             {t('backToHome')}
           </button>
@@ -655,8 +737,10 @@ export default function MoneyPoolDetailsPage() {
               className="w-full mt-4 bg-gradient-to-r from-magenta via-sunset to-coral text-white py-4 px-6 rounded-2xl font-semibold hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-inter"
             >
               <HeartIconSolid className="h-5 w-5" />
-              {moneyPool.status === 'archived' 
-                ? t('poolArchived')
+              {moneyPool.status === 'archived' || moneyPool.status === 'closed'
+                ? (moneyPool.status === 'closed' 
+                    ? (locale === 'fr' ? 'Cagnotte clôturée' : 'Money pool closed')
+                    : t('poolArchived'))
                 : t('contribute')
               }
             </button>
@@ -855,15 +939,32 @@ export default function MoneyPoolDetailsPage() {
                 className="w-full bg-gradient-to-r from-magenta via-sunset to-coral text-white py-4 px-6 rounded-2xl font-semibold hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-inter"
               >
                 <HeartIconSolid className="h-5 w-5" />
-                {moneyPool.status === 'archived' 
-                  ? t('poolArchived')
+                {moneyPool.status === 'archived' || moneyPool.status === 'closed'
+                  ? (moneyPool.status === 'closed' 
+                      ? (locale === 'fr' ? 'Cagnotte clôturée' : 'Money pool closed')
+                      : t('poolArchived'))
                   : t('contribute')
                 }
               </button>
 
+              {/* Share Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleShare(e);
+                }}
+                disabled={isSharing || !moneyPool}
+                className="w-full bg-white border-2 border-magenta text-magenta py-3 px-6 rounded-2xl font-semibold hover:bg-magenta/5 transition-all flex items-center justify-center gap-2 font-inter mt-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ShareIcon className="h-5 w-5" />
+                {locale === 'fr' ? 'Partager' : 'Share'}
+              </button>
+
               {/* Info */}
               <div className="mt-6 space-y-3 text-sm">
-                {/* Status: Active or Archived */}
+                {/* Status: Active, Closed or Archived */}
                 <div className="flex items-center text-ink-muted font-inter">
                   <div className={`p-1.5 rounded-lg mr-2 ${
                     moneyPool.status === 'active' 
@@ -874,7 +975,14 @@ export default function MoneyPoolDetailsPage() {
                       moneyPool.status === 'active' ? 'text-green-500' : 'text-gray-500'
                     }`} />
                   </div>
-                  <span>{moneyPool.status === 'active' ? t('active') : t('archived')}</span>
+                  <span>
+                    {moneyPool.status === 'active' 
+                      ? t('active') 
+                      : moneyPool.status === 'closed'
+                      ? (locale === 'fr' ? 'Clôturée' : 'Closed')
+                      : t('archived')
+                    }
+                  </span>
                 </div>
                 
                 {/* Verified Status - Always show */}
@@ -921,34 +1029,103 @@ export default function MoneyPoolDetailsPage() {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   {t('amount')} ({getCurrencySymbol(moneyPool.currency)})
                 </label>
-                <input
-                  type="number"
-                  min={moneyPool.settings.min_contribution || 0}
-                  max={moneyPool.settings.max_contribution || undefined}
-                  value={contributionAmount || ''}
-                  onChange={(e) => setContributionAmount(parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder={
-                    moneyPool.settings.min_contribution && moneyPool.settings.max_contribution
-                      ? `${moneyPool.settings.min_contribution.toLocaleString('fr-FR')} - ${moneyPool.settings.max_contribution.toLocaleString('fr-FR')} ${getCurrencySymbol(moneyPool.currency)}`
-                      : moneyPool.settings.min_contribution
-                      ? `${moneyPool.settings.min_contribution.toLocaleString('fr-FR')}+ ${getCurrencySymbol(moneyPool.currency)}`
-                      : '0'
-                  }
-                />
-                {(moneyPool.settings.min_contribution || moneyPool.settings.max_contribution) && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {t('limits')}
-                    {moneyPool.settings.min_contribution && (
-                      <span>Min: {moneyPool.settings.min_contribution.toLocaleString('fr-FR')} {getCurrencySymbol(moneyPool.currency)}</span>
-                    )}
-                    {moneyPool.settings.min_contribution && moneyPool.settings.max_contribution && ' • '}
-                    {moneyPool.settings.max_contribution && (
-                      <span>Max: {moneyPool.settings.max_contribution.toLocaleString('fr-FR')} {getCurrencySymbol(moneyPool.currency)}</span>
-                    )}
-                  </p>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={moneyPool.settings.min_contribution || 0}
+                    max={moneyPool.settings.max_contribution || undefined}
+                    value={contributionAmount || ''}
+                    onChange={(e) => {
+                      const newAmount = parseFloat(e.target.value) || 0;
+                      setContributionAmount(newAmount);
+                      // Recalculer le pourboire automatiquement
+                      if (newAmount > 0) {
+                        const calculatedTip = Math.round(newAmount * (cocotiTipPercentage / 100));
+                        setCocotiTip(calculatedTip);
+                      } else {
+                        setCocotiTip(0);
+                      }
+                    }}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta text-lg font-semibold text-green-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    placeholder={
+                      moneyPool.settings.min_contribution && moneyPool.settings.max_contribution
+                        ? `${moneyPool.settings.min_contribution.toLocaleString('fr-FR')} - ${moneyPool.settings.max_contribution.toLocaleString('fr-FR')}`
+                        : moneyPool.settings.min_contribution
+                        ? `${moneyPool.settings.min_contribution.toLocaleString('fr-FR')}+`
+                        : '0'
+                    }
+                  />
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-600 font-semibold">
+                    {getCurrencySymbol(moneyPool.currency)}
+                  </div>
+                </div>
+                
+                {/* Indicateur discret des frais de service Cocoti */}
+                {contributionAmount > 0 && cocotiTip > 0 && (
+                  <div className="mt-2 flex items-center justify-between text-xs text-gray-400">
+                    <span className="flex items-center gap-1">
+                      <span>+ {formatCurrency(cocotiTip, moneyPool.currency)}</span>
+                      <span className="text-gray-500">{t('cocotiServiceFees')}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowTipModify(!showTipModify)}
+                      className="text-magenta hover:text-magenta/80 underline text-xs transition-colors"
+                    >
+                      {showTipModify ? t('hideDetails') : t('adjustSupport')}
+                    </button>
+                  </div>
                 )}
               </div>
+
+              {/* Section de modification du pourboire - très discrète */}
+              {showTipModify && contributionAmount > 0 && (
+                <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    {t('tipExplanation')}
+                  </p>
+                  
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={contributionAmount > 0 ? Math.round(contributionAmount * (cocotiTipMin / 100)) : 0}
+                        value={cocotiTip || ''}
+                        onChange={(e) => {
+                          const newTip = parseFloat(e.target.value) || 0;
+                          const minTip = contributionAmount > 0 ? Math.round(contributionAmount * (cocotiTipMin / 100)) : 0;
+                          const validatedTip = Math.max(newTip, minTip);
+                          setCocotiTip(validatedTip);
+                          if (contributionAmount > 0) {
+                            const percentage = Math.round((validatedTip / contributionAmount) * 100 * 10) / 10;
+                            setCocotiTipPercentage(percentage);
+                          }
+                        }}
+                        className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-magenta focus:border-magenta"
+                      />
+                    </div>
+                    
+                    <input
+                      type="range"
+                      min={cocotiTipMin}
+                      max={cocotiTipMax}
+                      step="0.1"
+                      value={cocotiTipPercentage}
+                      onChange={(e) => {
+                        const newPercentage = parseFloat(e.target.value);
+                        setCocotiTipPercentage(newPercentage);
+                        if (contributionAmount > 0) {
+                          setCocotiTip(Math.round(contributionAmount * (newPercentage / 100)));
+                        }
+                      }}
+                      className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #ff3a81 0%, #ff3a81 ${((cocotiTipPercentage - cocotiTipMin) / (cocotiTipMax - cocotiTipMin)) * 100}%, #e5e7eb ${((cocotiTipPercentage - cocotiTipMin) / (cocotiTipMax - cocotiTipMin)) * 100}%, #e5e7eb 100%)`
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Nom complet - toujours affiché et obligatoire */}
               <div>
@@ -960,7 +1137,7 @@ export default function MoneyPoolDetailsPage() {
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta"
                   placeholder={t('fullNamePlaceholder')}
                   required
                 />
@@ -973,7 +1150,7 @@ export default function MoneyPoolDetailsPage() {
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta"
                   rows={3}
                   placeholder={t('messagePlaceholder')}
                 />
@@ -990,7 +1167,7 @@ export default function MoneyPoolDetailsPage() {
                       setAnonymous(e.target.checked);
                       // La logique de sauvegarde/restauration est gérée par le useEffect
                     }}
-                    className="mr-2 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                    className="mr-2 h-4 w-4 text-magenta focus:ring-magenta border-gray-300 rounded"
                   />
                   <label htmlFor="anonymous" className="text-sm text-gray-700">
                     {t('contributeAnonymously')}
@@ -1005,109 +1182,15 @@ export default function MoneyPoolDetailsPage() {
                 </div>
               )}
 
-              {!showPaymentStep ? (
-                <div className="flex gap-4 pt-4">
-                  <button
-                    onClick={() => {
-                      setShowContributeModal(false);
-                      setMessage('');
-                      setContributionAmount(0);
-                      setAnonymous(false);
-                      setFullName('');
-                      // Réinitialiser la valeur sauvegardée pour la prochaine ouverture
-                      savedFullNameRef.current = '';
-                      setShowPaymentStep(false);
-                      setSelectedProvider(null);
-                    }}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    {t('cancel')}
-                  </button>
-                  <button
-                    onClick={handleContribute}
-                    disabled={contributionAmount <= 0 || isContributing || !fullName.trim()}
-                    className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {t('continue')}
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {t('selectPaymentMethodTitle')}
-                  </h3>
-                  
-                  {loadingProviders ? (
-                    <div className="text-center py-8">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-                      <p className="mt-2 text-gray-600">
-                        {t('loadingPaymentMethods')}
-                      </p>
-                    </div>
-                  ) : paymentProviders.length === 0 ? (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
-                      {t('noPaymentMethodAvailable')}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-4">
-                      {paymentProviders.map((method: any) => (
-                        <button
-                          key={method.id}
-                          onClick={() => setSelectedProvider(method.id)}
-                          className={`p-6 border-2 rounded-lg text-center transition-all flex flex-col items-center justify-center ${
-                            selectedProvider === method.id
-                              ? 'border-orange-500 bg-orange-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                        >
-                          <div className="flex flex-col items-center gap-3">
-                            {/* Icon - use emoji as primary, image as fallback */}
-                            <div className="w-16 h-16 flex items-center justify-center text-5xl">
-                              {method.id === 'mobile_money' ? '📱' : '💳'}
-                            </div>
-                            <div className="text-center">
-                              <p className="font-semibold text-gray-800 text-lg">
-                                {locale === 'fr' ? (method.name_fr || method.name) : (method.name_en || method.name)}
-                              </p>
-                              {method.providers && method.providers.length > 0 && (
-                                <p className="text-xs text-gray-500 mt-1">
-                                  {method.providers.map((p: any) => p.name).join(', ')}
-                                </p>
-                              )}
-                            </div>
-                            {selectedProvider === method.id && (
-                              <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center mt-2">
-                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  
-                  <div className="flex gap-4 pt-4">
-                    <button
-                      onClick={() => {
-                        setShowPaymentStep(false);
-                        setSelectedProvider(null);
-                      }}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      {t('back')}
-                    </button>
-                    <button
-                      onClick={handlePaymentMethodSelected}
-                      disabled={!selectedProvider || isContributing}
-                      className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isContributing ? t('processing') : t('pay')}
-                    </button>
-                  </div>
-                </div>
-              )}
+              <div className="pt-4">
+                <button
+                  onClick={handleContribute}
+                  disabled={contributionAmount <= 0 || isContributing || !fullName.trim()}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-magenta to-sunset text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isContributing ? t('processing') : `${t('pay')} (${formatCurrency(contributionAmount + cocotiTip, moneyPool.currency)})`}
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>

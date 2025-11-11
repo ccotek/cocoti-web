@@ -16,6 +16,7 @@ import {
 import Link from 'next/link';
 import { getAuthToken, isAuthenticated, clearAuthToken, setAuthToken } from '@/utils/tokenStorage';
 import { APP_CONFIG } from '@/config/app';
+import CustomConfirmationModal from '@/components/CustomConfirmationModal';
 
 type Step = 'info' | 'verification' | 'activation' | 'success';
 
@@ -87,6 +88,7 @@ export default function CreateMoneyPoolPage() {
   const [activateImmediately, setActivateImmediately] = useState(false);
   const [receivedToken, setReceivedToken] = useState<string | null>(null); // Token received from OTP authentication
   const [allowAnonymous, setAllowAnonymous] = useState(true); // Allow anonymous contributions by default
+  const [showPublishWarning, setShowPublishWarning] = useState(false);
 
   const [formData, setFormData] = useState<MoneyPoolFormData>({
     name: '',
@@ -510,7 +512,7 @@ export default function CreateMoneyPoolPage() {
       setError(t('errors.descriptionRequired'));
       return false;
     }
-    if (formData.description.trim().length < 500) {
+    if (formData.description.trim().length < 300) {
       setError(t('errors.descriptionMinLength'));
       return false;
     }
@@ -646,6 +648,20 @@ export default function CreateMoneyPoolPage() {
   const handleActivation = async () => {
     if (!createdMoneyPoolId) return;
     
+    // Si on veut publier, afficher l'avertissement
+    if (activateImmediately) {
+      setShowPublishWarning(true);
+      return;
+    }
+    
+    // Si on garde en brouillon, passer directement à l'étape success
+    setCurrentStep('success');
+  };
+
+  const handleConfirmPublish = async () => {
+    if (!createdMoneyPoolId) return;
+    
+    setShowPublishWarning(false);
     setIsLoading(true);
     setError('');
 
@@ -682,25 +698,23 @@ export default function CreateMoneyPoolPage() {
         'Authorization': `Bearer ${token}`
       };
 
-      // Si on veut activer, publier la cagnotte
-      if (activateImmediately) {
-        const response = await fetch(`${API_URL}/api/v1/money-pools/${createdMoneyPoolId}/publish`, {
-          method: 'PATCH',
-          headers
-        });
+      // Publier la cagnotte
+      const response = await fetch(`${API_URL}/api/v1/money-pools/${createdMoneyPoolId}/publish`, {
+        method: 'PATCH',
+        headers
+      });
 
-        if (!response.ok) {
-          // If 401 or 403, token might be invalid
-          if (response.status === 401 || response.status === 403) {
-            clearAuthToken();
-            throw new Error(locale === 'fr' 
-              ? 'Session expirée. Veuillez vous reconnecter.' 
-              : 'Session expired. Please log in again.');
-          }
-          
-          const data = await response.json();
-          throw new Error(data.detail || data.message || 'Failed to activate money pool');
+      if (!response.ok) {
+        // If 401 or 403, token might be invalid
+        if (response.status === 401 || response.status === 403) {
+          clearAuthToken();
+          throw new Error(locale === 'fr' 
+            ? 'Session expirée. Veuillez vous reconnecter.' 
+            : 'Session expired. Please log in again.');
         }
+        
+        const data = await response.json();
+        throw new Error(data.detail || data.message || 'Failed to publish money pool');
       }
 
       // Passer à l'étape success
@@ -956,8 +970,8 @@ export default function CreateMoneyPoolPage() {
               <div>
                 <label className="block text-sm font-semibold text-night mb-2 font-inter">
                   {t('description')}
-                  <span className={`text-xs ml-2 font-normal ${formData.description.length < 500 ? 'text-red-500' : 'text-ink-muted'}`}>
-                    ({formData.description.length}/500 {t('descriptionMinChars')})
+                  <span className={`text-xs ml-2 font-normal ${formData.description.length < 300 ? 'text-red-500' : 'text-ink-muted'}`}>
+                    ({formData.description.length}/300 {t('descriptionMinChars')})
                   </span>
                 </label>
                 <textarea
@@ -966,13 +980,13 @@ export default function CreateMoneyPoolPage() {
                   onChange={handleInputChange}
                   required
                   rows={6}
-                  minLength={500}
+                  minLength={300}
                   className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter"
                   placeholder={t('descriptionPlaceholder')}
                 />
-                {formData.description.length > 0 && formData.description.length < 500 && (
+                {formData.description.length > 0 && formData.description.length < 300 && (
                   <p className="mt-1 text-xs text-red-500 font-inter">
-                    {`${500 - formData.description.length} ${t('descriptionMissing')}`}
+                    {`${300 - formData.description.length} ${t('descriptionMissing')}`}
                   </p>
                 )}
               </div>
@@ -1642,10 +1656,10 @@ export default function CreateMoneyPoolPage() {
                   />
                   <div className="flex-1">
                     <div className="font-semibold text-night font-inter">
-                      {t('activateNow')}
+                      {t('publishNow')}
                     </div>
                     <div className="text-sm text-ink-muted font-inter">
-                      {t('activateNowDescription')}
+                      {t('publishNowDescription')}
                     </div>
                   </div>
                 </label>
@@ -1689,6 +1703,19 @@ export default function CreateMoneyPoolPage() {
             </motion.div>
           </div>
         )}
+
+        {/* Publish Warning Modal */}
+        <CustomConfirmationModal
+          isOpen={showPublishWarning}
+          onClose={() => setShowPublishWarning(false)}
+          onConfirm={handleConfirmPublish}
+          title={t('publishWarningTitle')}
+          message={t('publishWarningMessage')}
+          confirmText={t('publishConfirm')}
+          cancelText={t('cancel')}
+          type="warning"
+          isLoading={isLoading}
+        />
 
         {currentStep === 'success' && createdMoneyPoolId && (
           <motion.div
