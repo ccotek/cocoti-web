@@ -23,6 +23,7 @@ import {
 } from '@heroicons/react/24/solid';
 import MoneyPoolGallery from '@/components/MoneyPoolGallery';
 import Link from 'next/link';
+import { APP_CONFIG } from '@/config/app';
 
 interface MoneyPool {
   id: string;
@@ -76,6 +77,10 @@ const getCurrencySymbol = (currency: string): string => {
   return currency;
 };
 
+// Regex patterns for validation
+const phoneRegex = /^[\d\s\+\-\(\)]+$/;
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function MoneyPoolDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -95,8 +100,19 @@ export default function MoneyPoolDetailsPage() {
         fr: require('@/i18n/messages/fr.json').moneyPool || {},
         en: require('@/i18n/messages/en.json').moneyPool || {}
       };
-      const value = translations[locale]?.[key];
-      return value || key;
+      
+      // Handle nested keys like "paymentInfo.title"
+      const keys = key.split('.');
+      let value: any = translations[locale];
+      
+      for (const k of keys) {
+        value = value?.[k];
+        if (value === undefined || value === null) {
+          break;
+        }
+      }
+      
+      return typeof value === 'string' ? value : key;
     } catch (error) {
       console.error('Error loading translations:', error);
       return key;
@@ -109,23 +125,58 @@ export default function MoneyPoolDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [contributionAmount, setContributionAmount] = useState<number>(0);
   const [showContributeModal, setShowContributeModal] = useState(false);
+  const [contributionStep, setContributionStep] = useState<1 | 2>(1); // Étape 1: formulaire, Étape 2: paiement
   const [isContributing, setIsContributing] = useState(false);
   const [message, setMessage] = useState('');
   const [anonymous, setAnonymous] = useState(false);
-  const [fullName, setFullName] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Vérifier si l'utilisateur est connecté
   const [userFullName, setUserFullName] = useState<string | null>(null); // Nom complet de l'utilisateur connecté
-  const savedFullNameRef = useRef<string>(''); // Sauvegarder le nom saisi avant de cocher anonyme (ref pour éviter les re-renders)
-  const sharingRef = useRef(false); // Ref pour suivre l'état de partage
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [isSharing, setIsSharing] = useState(false);
   const [cocotiTip, setCocotiTip] = useState<number>(0);
   const [cocotiTipPercentage, setCocotiTipPercentage] = useState<number>(5.5); // 5.5% par défaut
   const [cocotiTipMin, setCocotiTipMin] = useState<number>(4.5); // Minimum par défaut
   const [cocotiTipMax, setCocotiTipMax] = useState<number>(20.0); // Maximum par défaut
   const [skipCocotiTip, setSkipCocotiTip] = useState<boolean>(false);
   const [showTipModify, setShowTipModify] = useState<boolean>(false); // Cacher la barre de modification par défaut
+  // Informations de paiement (étape 2)
+  const [paymentFullName, setPaymentFullName] = useState<string>(''); // Nom complet (obligatoire dans étape 2)
+  const [paymentEmail, setPaymentEmail] = useState<string>('');
+  const [paymentPhone, setPaymentPhone] = useState<string>('');
+  const [paymentMethod, setPaymentMethod] = useState<string>(''); // 'wave', 'orange_money', 'card'
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  // Informations carte bancaire (si méthode = card)
+  const [cardNumber, setCardNumber] = useState<string>('');
+  const [cardExpiry, setCardExpiry] = useState<string>('');
+  const [cardCVC, setCardCVC] = useState<string>('');
+  // Sélecteur de pays avec indicatif téléphonique
+  const [countries, setCountries] = useState<any[]>([]);
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string>('SN'); // Sénégal par défaut
+  const [selectedCallingCode, setSelectedCallingCode] = useState<string>('+221'); // +221 par défaut
 
+
+      // Charger la liste des pays actifs avec indicatifs téléphoniques
+      useEffect(() => {
+        const fetchCountries = async () => {
+          try {
+            const response = await fetch(`${API_URL}/api/v1/geography/countries/public?language=${locale}`);
+            if (response.ok) {
+              const data = await response.json();
+              if (data.success && data.countries) {
+                setCountries(data.countries);
+                // Définir le pays par défaut (Sénégal)
+                const defaultCountry = data.countries.find((c: any) => c.code === 'SN');
+                if (defaultCountry) {
+                  setSelectedCountryCode(defaultCountry.code);
+                  setSelectedCallingCode(defaultCountry.calling_code || '+221');
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching countries:', error);
+          }
+        };
+        fetchCountries();
+      }, [API_URL, locale]);
 
       useEffect(() => {
         const fetchMoneyPool = async () => {
@@ -310,17 +361,14 @@ export default function MoneyPoolDetailsPage() {
     fetchTipConfig();
   }, [API_URL, moneyPool]);
 
-  // Préremplir le nom quand le modal s'ouvre (si vide)
+  // Préremplir le nom dans l'étape 2 quand le modal s'ouvre (si vide)
   useEffect(() => {
-    if (showContributeModal && !fullName.trim()) {
-      // Priorité à la valeur sauvegardée, sinon utiliser userFullName
-      if (savedFullNameRef.current.trim()) {
-        setFullName(savedFullNameRef.current);
-      } else if (userFullName) {
-        setFullName(userFullName);
-      }
+    if (showContributeModal && !paymentFullName.trim() && userFullName) {
+      // Pré-remplir avec le nom de l'utilisateur connecté
+      setPaymentFullName(userFullName);
     }
-  }, [showContributeModal, userFullName]);
+  }, [showContributeModal, userFullName, paymentFullName]);
+
 
   // Calculer automatiquement le pourboire quand le montant change
   useEffect(() => {
@@ -332,119 +380,34 @@ export default function MoneyPoolDetailsPage() {
     }
   }, [contributionAmount, cocotiTipPercentage]);
 
-  // Fonction de partage
-  const handleShare = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  // Fonction de partage - exactement comme dans cocoti-dash
+  const handleShare = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     
-    console.log('handleShare called', { moneyPool: !!moneyPool, isSharing, sharingRef: sharingRef.current });
-    
     if (!moneyPool) {
-      console.warn('Cannot share: moneyPool is null');
-      return;
-    }
-    
-    if (sharingRef.current || isSharing) {
-      console.warn('Share already in progress');
       return;
     }
 
-    const shareUrl = `${window.location.origin}/${locale}/money-pool/${moneyPoolId}`;
-    console.log('Sharing URL:', shareUrl);
+    const shareUrl = `${APP_CONFIG.WEB_APP_URL}/${locale}/money-pool/${moneyPoolId}`;
     
-    // Fonction helper pour copier dans le presse-papiers
-    const copyToClipboard = async (text: string): Promise<boolean> => {
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(text);
-          return true;
-        } else {
-          // Fallback pour navigateurs anciens
-          const textArea = document.createElement('textarea');
-          textArea.value = text;
-          textArea.style.position = 'fixed';
-          textArea.style.left = '-999999px';
-          textArea.style.top = '-999999px';
-          document.body.appendChild(textArea);
-          textArea.focus();
-          textArea.select();
-          const successful = document.execCommand('copy');
-          document.body.removeChild(textArea);
-          return successful;
-        }
-      } catch (err) {
-        console.error('Copy error:', err);
-        return false;
-      }
-    };
-
-    // Marquer comme en cours avec ref et state
-    sharingRef.current = true;
-    setIsSharing(true);
-    console.log('Share started, isSharing set to true');
-
-    let shareCompleted = false;
-
-    try {
-      // Essayer d'utiliser l'API Web Share si disponible (mobile)
-      if (navigator.share) {
-        console.log('Trying navigator.share...');
-        try {
-          await navigator.share({
-            title: moneyPool.name,
-            text: moneyPool.description ? moneyPool.description.substring(0, 200) + '...' : '',
-            url: shareUrl,
-          });
-          console.log('Share successful via navigator.share');
-          setNotification({
-            type: 'success',
-            message: locale === 'fr' ? 'Partage réussi !' : 'Shared successfully!'
-          });
-          setTimeout(() => setNotification(null), 3000);
-          shareCompleted = true;
-        } catch (shareErr: any) {
-          console.log('Share API error:', shareErr);
-          // Si l'utilisateur annule, ne rien faire mais continuer pour réinitialiser
-          if (shareErr.name === 'AbortError') {
-            console.log('User aborted share');
-            shareCompleted = true; // Marquer comme complété pour ne pas essayer le fallback
-            // Ne pas faire de return, laisser le finally s'exécuter
-          } else {
-            // Continuer avec le fallback clipboard
-            console.log('Share API failed, trying clipboard fallback');
-          }
-        }
-      }
-      
-      // Si le partage n'a pas été complété, utiliser le clipboard
-      if (!shareCompleted) {
-        console.log('Using clipboard fallback...');
-        const copied = await copyToClipboard(shareUrl);
-        if (copied) {
-          console.log('Clipboard copy successful');
-          setNotification({
-            type: 'success',
-            message: locale === 'fr' ? 'Lien copié' : 'Link copied'
-          });
-          setTimeout(() => setNotification(null), 3000);
-        } else {
-          throw new Error('Failed to copy to clipboard');
-        }
-      }
-    } catch (err: any) {
-      console.error('Share error:', err);
-      setNotification({
-        type: 'error',
-        message: locale === 'fr' ? 'Erreur lors du partage' : 'Error sharing'
+    // Utiliser directement navigator.clipboard.writeText comme dans cocoti-dash
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => {
+        setNotification({
+          type: 'success',
+          message: locale === 'fr' ? 'Lien copié' : 'Link copied'
+        });
+        setTimeout(() => setNotification(null), 3000);
+      })
+      .catch((err) => {
+        console.error('Share error:', err);
+        setNotification({
+          type: 'error',
+          message: locale === 'fr' ? 'Erreur lors du partage' : 'Error sharing'
+        });
+        setTimeout(() => setNotification(null), 3000);
       });
-      setTimeout(() => setNotification(null), 3000);
-    } finally {
-      // Toujours réinitialiser isSharing et ref, même en cas d'erreur ou d'annulation
-      console.log('Finally block: resetting isSharing');
-      sharingRef.current = false;
-      setIsSharing(false);
-      console.log('isSharing reset to false');
-    }
   };
 
   const handleContribute = async () => {
@@ -468,44 +431,163 @@ export default function MoneyPoolDetailsPage() {
       return;
     }
 
-    if (contributionAmount <= 0) {
+    if (contributionStep === 1) {
+      // Étape 1 : Validation du formulaire
+      if (contributionAmount <= 0) {
+        setNotification({
+          type: 'error',
+          message: t('enterValidAmount')
+        });
+        return;
+      }
+
+      // Validate amount against min/max
+      if (moneyPool.settings.min_contribution && contributionAmount < moneyPool.settings.min_contribution) {
+        setNotification({
+          type: 'error',
+          message: `${t('minAmount')} ${moneyPool.settings.min_contribution.toLocaleString('fr-FR')} ${getCurrencySymbol(moneyPool.currency)}`
+        });
+        return;
+      }
+
+      if (moneyPool.settings.max_contribution && contributionAmount > moneyPool.settings.max_contribution) {
+        setNotification({
+          type: 'error',
+          message: `${t('maxAmount')} ${moneyPool.settings.max_contribution.toLocaleString('fr-FR')} ${getCurrencySymbol(moneyPool.currency)}`
+        });
+        return;
+      }
+
+      // Passer à l'étape 2 : Informations de paiement
+      setContributionStep(2);
+      return;
+    }
+
+    // Étape 2 : Validation et traitement du paiement
+    // Full name obligatoire
+    if (!paymentFullName.trim()) {
       setNotification({
         type: 'error',
-        message: t('enterValidAmount')
+        message: locale === 'fr' ? 'Le nom complet est obligatoire' : 'Full name is required'
       });
       return;
     }
 
-    // Validate amount against min/max
-    if (moneyPool.settings.min_contribution && contributionAmount < moneyPool.settings.min_contribution) {
+    // Méthode de paiement obligatoire
+    if (!paymentMethod) {
       setNotification({
         type: 'error',
-        message: `${t('minAmount')} ${moneyPool.settings.min_contribution.toLocaleString('fr-FR')} ${getCurrencySymbol(moneyPool.currency)}`
+        message: locale === 'fr' ? 'Veuillez sélectionner une méthode de paiement' : 'Please select a payment method'
       });
       return;
     }
 
-    if (moneyPool.settings.max_contribution && contributionAmount > moneyPool.settings.max_contribution) {
+    // Téléphone obligatoire pour Wave et Orange Money
+    if ((paymentMethod === 'wave' || paymentMethod === 'orange_money') && !paymentPhone.trim()) {
       setNotification({
         type: 'error',
-        message: `${t('maxAmount')} ${moneyPool.settings.max_contribution.toLocaleString('fr-FR')} ${getCurrencySymbol(moneyPool.currency)}`
+        message: t('paymentInfo.phoneRequired')
       });
       return;
     }
 
-    // Validation : le nom complet est toujours obligatoire (même si anonyme)
-    if (!fullName.trim()) {
+    // Valider le téléphone si fourni (format basique)
+    if (paymentPhone.trim() && (!phoneRegex.test(paymentPhone.trim()) || paymentPhone.trim().length < 8)) {
       setNotification({
         type: 'error',
-        message: t('fullNameRequired')
+        message: t('paymentInfo.phoneInvalid')
       });
       return;
     }
 
-    // Traiter directement la contribution
+    // Validation carte bancaire si méthode = card
+    if (paymentMethod === 'card') {
+      if (!cardNumber.trim() || !cardExpiry.trim() || !cardCVC.trim()) {
+        setNotification({
+          type: 'error',
+          message: locale === 'fr' ? 'Veuillez remplir tous les champs de la carte bancaire' : 'Please fill all card fields'
+        });
+        return;
+      }
+    }
+
+    // Email optionnel mais validé si fourni
+    if (paymentEmail.trim()) {
+      if (!emailRegex.test(paymentEmail.trim())) {
+        setNotification({
+          type: 'error',
+          message: t('paymentInfo.emailInvalid')
+        });
+        return;
+      }
+    }
+
+    // Traiter le paiement
     await processContribution();
   };
 
+
+  // Fonction helper pour gérer le paiement PayDunya SoftPay
+  const handlePayDunyaPayment = (paymentData: any) => {
+    if ((window as any).PayDunyaCheckout) {
+      const PayDunyaCheckout = (window as any).PayDunyaCheckout;
+      
+      // Configurer PayDunya SoftPay (intégration transparente)
+      PayDunyaCheckout.config({
+        public_key: paymentData.public_key,
+        invoice_token: paymentData.invoice_token,
+        amount: paymentData.amount,
+        currency: paymentData.currency || 'XOF',
+        customer: paymentData.customer,
+        // Options SoftPay : pas de branding PayDunya visible
+        hide_paydunya_branding: true
+      });
+      
+      // Ouvrir le modal de paiement (transparent, sans mentionner PayDunya)
+      PayDunyaCheckout.open();
+      
+      // Écouter les événements PayDunya
+      PayDunyaCheckout.on('success', () => {
+        // Paiement réussi
+        setNotification({
+          type: 'success',
+          message: locale === 'fr' ? 'Paiement effectué avec succès !' : 'Payment successful!'
+        });
+        
+        // Fermer le modal de contribution
+        setShowContributeModal(false);
+        
+        // Recharger les données
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      });
+      
+      PayDunyaCheckout.on('cancel', () => {
+        // Paiement annulé
+        setNotification({
+          type: 'error',
+          message: locale === 'fr' ? 'Paiement annulé' : 'Payment cancelled'
+        });
+      });
+      
+      PayDunyaCheckout.on('error', (error: any) => {
+        // Erreur de paiement
+        setNotification({
+          type: 'error',
+          message: locale === 'fr' 
+            ? `Erreur de paiement: ${error.message || 'Erreur inconnue'}` 
+            : `Payment error: ${error.message || 'Unknown error'}`
+        });
+      });
+    } else {
+      // Fallback : redirection si SDK non disponible
+      const checkoutUrl = paymentData.checkout_url;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      }
+    }
+  };
 
   const processContribution = async () => {
     if (!moneyPool) return;
@@ -515,74 +597,145 @@ export default function MoneyPoolDetailsPage() {
       const totalAmount = contributionAmount + cocotiTip;
       setIsContributing(true);
       
-      const requestBody: any = {
-        amount: contributionAmount,
-        currency: moneyPool?.currency || 'XOF',
-        message: message.trim() || undefined,
-        anonymous: anonymous,
-        full_name: fullName.trim(), // Toujours envoyer le nom complet (même si anonyme)
-        cocoti_tip: cocotiTip, // Pourboire Cocoti (obligatoire)
-        total_amount: totalAmount // Montant total (contribution + pourboire)
-      };
+      setPaymentProcessing(true);
       
       // Get auth token if user is logged in
       const { getAuthToken } = await import('@/utils/tokenStorage');
       const token = getAuthToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-        'Accept-Language': locale || 'fr',
-      };
       
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const response = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/participate`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(requestBody)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.detail || 'Failed to contribute');
-      }
-      
-      // Reload contributions from API
       try {
-        const contribResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
-        if (contribResponse.ok) {
-          const contribData = await contribResponse.json();
-          setContributors(contribData.contributions || []);
+        // Créer la contribution ET initier le paiement PayDunya en une seule requête
+        const requestBody: any = {
+          amount: contributionAmount,
+          currency: moneyPool?.currency || 'XOF',
+          message: message.trim() || undefined,
+          anonymous: anonymous,
+          full_name: paymentFullName.trim(), // Nom complet de l'étape 2
+          // Payment information pour initier PayDunya
+          customer_name: paymentFullName.trim(),
+          customer_email: paymentEmail.trim() || undefined,
+          customer_phone: paymentPhone.trim() ? `${selectedCallingCode}${paymentPhone.trim().replace(/^\+/, '')}` : undefined, // Ajouter l'indicatif si téléphone fourni
+          payment_method: paymentMethod, // Méthode de paiement choisie
+          initiate_payment: true  // Initier le paiement PayDunya après création de la contribution
+        };
+        
+        // Use the same token for the participation request
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+          'Accept-Language': locale || 'fr',
+        };
+        
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
         }
-      } catch (contribErr) {
-        console.error('Error reloading contributions:', contribErr);
-      }
-      
-      // Reload money pool data to get updated amount
-      const poolResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}`);
-      if (poolResponse.ok) {
-        const poolData = await poolResponse.json();
-        setMoneyPool(poolData);
-      }
-      
-      // Reset form
-      setContributionAmount(0);
-      setMessage('');
-      setAnonymous(false);
-      setFullName('');
-      savedFullNameRef.current = ''; // Réinitialiser la valeur sauvegardée
-      setShowContributeModal(false);
-      
-      // Show success message
-      setNotification({
-        type: 'success',
-        message: t('thankYou')
-      });
+        
+        const response = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/participate`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(requestBody)
+        });
 
-      // Auto-hide notification after 5 seconds
-      setTimeout(() => setNotification(null), 5000);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || 'Failed to contribute');
+        }
+        
+        // Si PayDunya SoftPay a été initié, intégrer le SDK pour paiement transparent
+        if (data.payment && data.payment.payment_data) {
+          const paymentData = data.payment.payment_data;
+          
+          // Pour SoftPay, on utilise le SDK PayDunya directement dans la page (intégration transparente)
+          // Charger le SDK PayDunya dynamiquement
+          try {
+            // Vérifier si le SDK est déjà chargé
+            if ((window as any).PayDunyaCheckout) {
+              // SDK déjà chargé, utiliser directement
+              handlePayDunyaPayment(paymentData);
+            } else {
+              // Créer un script pour charger le SDK PayDunya
+              const script = document.createElement('script');
+              script.src = 'https://cdn.paydunya.com/checkout.js';
+              script.async = true;
+              
+              script.onload = () => {
+                handlePayDunyaPayment(paymentData);
+              };
+              
+              script.onerror = () => {
+                // Si le SDK ne charge pas, utiliser la redirection comme fallback
+                const checkoutUrl = paymentData.checkout_url || data.payment.payment_url;
+                if (checkoutUrl) {
+                  setNotification({
+                    type: 'success',
+                    message: locale === 'fr' 
+                      ? 'Redirection vers la page de paiement sécurisée...' 
+                      : 'Redirecting to secure payment page...'
+                  });
+                  setTimeout(() => {
+                    window.location.href = checkoutUrl;
+                  }, 1000);
+                }
+              };
+              
+              document.head.appendChild(script);
+            }
+            
+            return; // Ne pas fermer le modal, attendre le résultat du paiement
+          } catch (error) {
+            console.error('Error loading PayDunya SDK:', error);
+            // Fallback : redirection
+            const checkoutUrl = paymentData.checkout_url || data.payment.payment_url;
+            if (checkoutUrl) {
+              window.location.href = checkoutUrl;
+            }
+          }
+        }
+        
+        // Reload contributions from API
+        try {
+          const contribResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
+          if (contribResponse.ok) {
+            const contribData = await contribResponse.json();
+            setContributors(contribData.contributions || []);
+          }
+        } catch (contribErr) {
+          console.error('Error reloading contributions:', contribErr);
+        }
+        
+        // Reload money pool data to get updated amount
+        const poolResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}`);
+        if (poolResponse.ok) {
+          const poolData = await poolResponse.json();
+          setMoneyPool(poolData);
+        }
+        
+        // Reset form
+        setContributionAmount(0);
+        setMessage('');
+        setAnonymous(false);
+        setPaymentFullName('');
+        setPaymentEmail('');
+        setPaymentPhone('');
+        setPaymentMethod('');
+        setCardNumber('');
+        setCardExpiry('');
+        setCardCVC('');
+        setContributionStep(1);
+        setShowContributeModal(false);
+        
+        // Show success message
+        setNotification({
+          type: 'success',
+          message: t('thankYou')
+        });
+
+        // Auto-hide notification after 5 seconds
+        setTimeout(() => setNotification(null), 5000);
+      } catch (paydunyaErr) {
+        // Erreur spécifique PayDunya
+        throw paydunyaErr;
+      }
       
     } catch (err) {
       console.error('Error contributing:', err);
@@ -590,8 +743,10 @@ export default function MoneyPoolDetailsPage() {
         type: 'error',
         message: `${t('contributionError')} ${err instanceof Error ? err.message : 'Unknown error'}`
       });
+      setPaymentProcessing(false);
     } finally {
       setIsContributing(false);
+      setPaymentProcessing(false);
     }
   };
 
@@ -783,11 +938,11 @@ export default function MoneyPoolDetailsPage() {
             <button
               type="button"
               onClick={handleShare}
-              disabled={isSharing || !moneyPool}
+              disabled={!moneyPool}
               className="w-full mt-3 bg-white border-2 border-magenta text-magenta py-3 px-6 rounded-2xl font-semibold hover:bg-magenta/5 transition-all flex items-center justify-center gap-2 font-inter disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ShareIcon className="h-5 w-5" />
-              {isSharing ? (locale === 'fr' ? 'Partage...' : 'Sharing...') : (locale === 'fr' ? 'Partager' : 'Share')}
+              {locale === 'fr' ? 'Partager' : 'Share'}
             </button>
           </motion.div>
         </div>
@@ -996,11 +1151,11 @@ export default function MoneyPoolDetailsPage() {
               <button
                 type="button"
                 onClick={handleShare}
-                disabled={isSharing || !moneyPool}
+                disabled={!moneyPool}
                 className="w-full bg-white border-2 border-magenta text-magenta py-3 px-6 rounded-2xl font-semibold hover:bg-magenta/5 transition-all flex items-center justify-center gap-2 font-inter mt-3 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ShareIcon className="h-5 w-5" />
-                {isSharing ? (locale === 'fr' ? 'Partage...' : 'Sharing...') : (locale === 'fr' ? 'Partager' : 'Share')}
+                {locale === 'fr' ? 'Partager' : 'Share'}
               </button>
 
               {/* Info */}
@@ -1059,13 +1214,45 @@ export default function MoneyPoolDetailsPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl max-w-md w-full p-6"
+            className="bg-white rounded-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"
           >
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              {t('contributeToPool')}
-            </h2>
+            {/* En-tête avec indicateur d'étape */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {contributionStep === 1 ? t('contributeToPool') : t('paymentInfo.title')}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowContributeModal(false);
+                    setContributionStep(1);
+                    setPaymentEmail('');
+                    setPaymentPhone('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              {/* Indicateur de progression */}
+              <div className="flex items-center gap-2 mb-4">
+                <div className={`flex-1 h-2 rounded-full ${contributionStep >= 1 ? 'bg-gradient-to-r from-magenta to-sunset' : 'bg-gray-200'}`}></div>
+                <div className={`flex-1 h-2 rounded-full ${contributionStep >= 2 ? 'bg-gradient-to-r from-magenta to-sunset' : 'bg-gray-200'}`}></div>
+              </div>
+              <div className="flex justify-between text-xs text-gray-500">
+                <span className={contributionStep === 1 ? 'font-semibold text-magenta' : ''}>
+                  {t('paymentInfo.step1')}
+                </span>
+                <span className={contributionStep === 2 ? 'font-semibold text-magenta' : ''}>
+                  {t('paymentInfo.step2')}
+                </span>
+              </div>
+            </div>
 
-            <div className="space-y-4">
+            {contributionStep === 1 ? (
+              /* ÉTAPE 1 : Formulaire de contribution */
+              <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   {t('amount')} ({getCurrencySymbol(moneyPool.currency)})
@@ -1168,21 +1355,7 @@ export default function MoneyPoolDetailsPage() {
                 </div>
               )}
 
-              {/* Nom complet - toujours affiché et obligatoire */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('fullName')}
-                  <span className="text-red-500 ml-1">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta"
-                  placeholder={t('fullNamePlaceholder')}
-                  required
-                />
-              </div>
+              {/* Le nom complet n'est plus demandé dans l'étape 1 */}
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -1226,13 +1399,299 @@ export default function MoneyPoolDetailsPage() {
               <div className="pt-4">
                 <button
                   onClick={handleContribute}
-                  disabled={contributionAmount <= 0 || isContributing || !fullName.trim()}
+                  disabled={contributionAmount <= 0 || isContributing}
                   className="w-full px-4 py-2 bg-gradient-to-r from-magenta to-sunset text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isContributing ? t('processing') : `${t('pay')} (${formatCurrency(contributionAmount + cocotiTip, moneyPool.currency)})`}
+                  {t('continue')}
                 </button>
               </div>
             </div>
+            ) : (
+              /* ÉTAPE 2 : Informations de paiement */
+              <div className="space-y-4">
+                {/* Nom complet - Obligatoire */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {locale === 'fr' ? 'Nom complet' : 'Full name'}
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentFullName}
+                    onChange={(e) => setPaymentFullName(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta"
+                    placeholder={locale === 'fr' ? 'Prénom Nom' : 'First Name Last Name'}
+                    required
+                  />
+                </div>
+
+                {/* Email - Optionnel */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('paymentInfo.email')}
+                    <span className="text-gray-400 ml-1 text-xs">({t('paymentInfo.emailOptional')})</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={paymentEmail}
+                    onChange={(e) => setPaymentEmail(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta"
+                    placeholder={t('paymentInfo.emailPlaceholder')}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t('paymentInfo.emailHelp')}
+                  </p>
+                </div>
+
+                {/* Sélecteur de méthode de paiement */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {locale === 'fr' ? 'Méthode de paiement' : 'Payment method'}
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <div className="grid grid-cols-1 gap-3">
+                    {/* Wave */}
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('wave')}
+                      className={`p-4 border-2 rounded-lg text-left transition-all ${
+                        paymentMethod === 'wave'
+                          ? 'border-magenta bg-magenta/5'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          paymentMethod === 'wave' ? 'border-magenta bg-magenta' : 'border-gray-300'
+                        }`}>
+                          {paymentMethod === 'wave' && (
+                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900">Wave</div>
+                          <div className="text-xs text-gray-500">{locale === 'fr' ? 'Paiement mobile Wave' : 'Wave mobile payment'}</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Orange Money */}
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('orange_money')}
+                      className={`p-4 border-2 rounded-lg text-left transition-all ${
+                        paymentMethod === 'orange_money'
+                          ? 'border-magenta bg-magenta/5'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          paymentMethod === 'orange_money' ? 'border-magenta bg-magenta' : 'border-gray-300'
+                        }`}>
+                          {paymentMethod === 'orange_money' && (
+                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900">Orange Money</div>
+                          <div className="text-xs text-gray-500">{locale === 'fr' ? 'Paiement mobile Orange Money' : 'Orange Money mobile payment'}</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Carte bancaire */}
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('card')}
+                      className={`p-4 border-2 rounded-lg text-left transition-all ${
+                        paymentMethod === 'card'
+                          ? 'border-magenta bg-magenta/5'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          paymentMethod === 'card' ? 'border-magenta bg-magenta' : 'border-gray-300'
+                        }`}>
+                          {paymentMethod === 'card' && (
+                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900">{locale === 'fr' ? 'Carte bancaire' : 'Credit/Debit Card'}</div>
+                          <div className="text-xs text-gray-500">{locale === 'fr' ? 'Visa, Mastercard' : 'Visa, Mastercard'}</div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Téléphone avec indicatif - Affiché seulement si Wave ou Orange Money */}
+                {(paymentMethod === 'wave' || paymentMethod === 'orange_money') && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      {t('paymentInfo.phoneNumber')}
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <div className="flex gap-2">
+                      {/* Sélecteur d'indicatif (sans nom de pays) */}
+                      <div className="relative flex-shrink-0">
+                        <select
+                          value={selectedCountryCode}
+                          onChange={(e) => {
+                            const country = countries.find((c: any) => c.code === e.target.value);
+                            if (country) {
+                              setSelectedCountryCode(country.code);
+                              setSelectedCallingCode(country.calling_code || '+221');
+                            }
+                          }}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta bg-white appearance-none pr-10 min-w-[100px]"
+                          required
+                        >
+                          {countries.map((country: any) => (
+                            <option key={country.code} value={country.code}>
+                              {country.flag_emoji || '🏳️'} {country.calling_code}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                          <ChevronRightIcon className="h-4 w-4 text-gray-400 rotate-90" />
+                        </div>
+                      </div>
+                      {/* Champ numéro de téléphone */}
+                      <input
+                        type="tel"
+                        value={paymentPhone}
+                        onChange={(e) => {
+                          // Nettoyer le numéro (enlever les espaces, garder seulement les chiffres)
+                          const cleaned = e.target.value.replace(/\s/g, '').replace(/[^\d+]/g, '');
+                          setPaymentPhone(cleaned);
+                        }}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta"
+                        placeholder={locale === 'fr' ? '771234567' : '771234567'}
+                        required
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {t('paymentInfo.phoneHelp')}
+                    </p>
+                  </div>
+                )}
+
+                {/* Champs carte bancaire - Affichés seulement si méthode = card */}
+                {paymentMethod === 'card' && (
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="text-sm font-semibold text-gray-700">
+                      {locale === 'fr' ? 'Informations de la carte bancaire' : 'Card information'}
+                    </h4>
+                    
+                    {/* Numéro de carte */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        {locale === 'fr' ? 'Numéro de carte' : 'Card number'}
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={cardNumber}
+                        onChange={(e) => {
+                          // Formater le numéro de carte (espaces tous les 4 chiffres)
+                          const cleaned = e.target.value.replace(/\s/g, '').replace(/[^\d]/g, '');
+                          const formatted = cleaned.match(/.{1,4}/g)?.join(' ') || cleaned;
+                          setCardNumber(formatted);
+                        }}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta"
+                        placeholder="1234 5678 9012 3456"
+                        maxLength={19}
+                        required
+                      />
+                    </div>
+
+                    {/* Date d'expiration et CVC */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          {locale === 'fr' ? 'Date d\'expiration' : 'Expiry date'}
+                          <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={cardExpiry}
+                          onChange={(e) => {
+                            // Formater MM/YY
+                            const cleaned = e.target.value.replace(/\D/g, '');
+                            let formatted = cleaned;
+                            if (cleaned.length >= 2) {
+                              formatted = cleaned.slice(0, 2) + '/' + cleaned.slice(2, 4);
+                            }
+                            setCardExpiry(formatted);
+                          }}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta"
+                          placeholder="MM/YY"
+                          maxLength={5}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          CVC
+                          <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={cardCVC}
+                          onChange={(e) => {
+                            const cleaned = e.target.value.replace(/\D/g, '').slice(0, 4);
+                            setCardCVC(cleaned);
+                          }}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta"
+                          placeholder="123"
+                          maxLength={4}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Boutons */}
+                <div className="pt-4 flex gap-3">
+                  <button
+                    onClick={() => setContributionStep(1)}
+                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-all"
+                  >
+                    {t('paymentInfo.back')}
+                  </button>
+                  <button
+                    onClick={handleContribute}
+                    disabled={
+                      !paymentFullName.trim() || 
+                      !paymentMethod || 
+                      paymentProcessing || 
+                      isContributing ||
+                      (paymentMethod === 'wave' && !paymentPhone.trim()) ||
+                      (paymentMethod === 'orange_money' && !paymentPhone.trim()) ||
+                      (paymentMethod === 'card' && (!cardNumber.trim() || !cardExpiry.trim() || !cardCVC.trim()))
+                    }
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-magenta to-sunset text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {paymentProcessing || isContributing
+                      ? t('paymentInfo.processing')
+                      : `${t('paymentInfo.pay')} ${formatCurrency(contributionAmount + cocotiTip, moneyPool.currency)}`
+                    }
+                  </button>
+                </div>
+
+                {/* Sécurité */}
+                <div className="pt-2 text-center">
+                  <p className="text-xs text-gray-500 flex items-center justify-center gap-1">
+                    <ShieldCheckIcon className="h-4 w-4" />
+                    {t('paymentInfo.securePayment')}
+                  </p>
+                </div>
+              </div>
+            )}
           </motion.div>
         </div>
       )}

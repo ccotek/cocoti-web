@@ -580,16 +580,24 @@ export default function CreateMoneyPoolPage() {
       }
 
       // OTP verified - check if user exists
-      if (data.user_exists) {
+      if (data.success && data.user) {
         // User exists, proceed with creation
         setOtpVerified(true);
         setNeedsRegistration(false);
+        // Store tokens if provided
+        if (data.tokens) {
+          localStorage.setItem('cocoti_access_token', data.tokens.access_token);
+          localStorage.setItem('cocoti_refresh_token', data.tokens.refresh_token);
+        }
         // Create money pool with OTP credentials
         await submitForm(undefined);
-      } else {
+      } else if (data.success && data.user_exists === false) {
         // User doesn't exist, need registration info
         setOtpVerified(true);
         setNeedsRegistration(true);
+      } else {
+        // OTP verification failed
+        setError(data.message || 'Erreur lors de la vérification OTP');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to verify OTP');
@@ -639,10 +647,59 @@ export default function CreateMoneyPoolPage() {
         setError(t('errors.fullNameRequired'));
         return;
       }
+      
+      // Register user with name using otp/register
+      try {
+        const sessionId = localStorage.getItem('cocoti_otp_session_id') || otpSessionId;
+        if (!sessionId) {
+          setError('Session OTP introuvable. Veuillez redemander un code.');
+          return;
+        }
+        
+        // Split full name into first and last name
+        const nameParts = fullName.trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        
+        const registerResponse = await fetch(`${API_URL}/api/v1/auth/otp/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            phone: phone.trim(),
+            first_name: firstName,
+            last_name: lastName,
+            otp_session_id: sessionId,
+            country_code: 'SN' // Default, could be extracted from phone
+          })
+        });
+        
+        const registerData = await registerResponse.json();
+        
+        if (!registerResponse.ok || !registerData.success) {
+          throw new Error(registerData.message || registerData.detail || 'Erreur lors de l\'inscription');
+        }
+        
+        // Store tokens if provided
+        if (registerData.tokens) {
+          localStorage.setItem('cocoti_access_token', registerData.tokens.access_token);
+          localStorage.setItem('cocoti_refresh_token', registerData.tokens.refresh_token);
+          setAuthToken(registerData.tokens.access_token);
+          setReceivedToken(registerData.tokens.access_token);
+        }
+        
+        // User registered, proceed with money pool creation
+        setNeedsRegistration(false);
+        await submitForm(registerData.tokens?.access_token);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur lors de l\'inscription');
+        return;
+      }
+    } else {
+      // User already exists, ready to create money pool
+      await submitForm(undefined);
     }
-    
-    // Ready to create money pool
-    await submitForm(undefined);
   };
 
   const handleActivation = async () => {
@@ -1382,7 +1439,7 @@ export default function CreateMoneyPoolPage() {
                       setOtpCode('');
                       setOtpSessionId(null);
                       setOtpVerified(false);
-                      setNeedsRegistration(false);
+                      // User is automatically created, no registration needed
                       setFullName('');
                       setPhone('');
                       setPhoneNumber('');
@@ -1589,7 +1646,7 @@ export default function CreateMoneyPoolPage() {
                       setOtpCode('');
                       setOtpSessionId(null);
                       setOtpVerified(false);
-                      setNeedsRegistration(false);
+                      // User is automatically created, no registration needed
                       setFullName('');
                       setPhone('');
                       setPhoneNumber('');

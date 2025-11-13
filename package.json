@@ -7,7 +7,8 @@
         "build": "next build",
         "start": "next start --port 4000",
         "start:prod": "node .next/standalone/server.js",
-        "lint": "eslint"
+        "lint": "eslint",
+        "clean": "powershell -ExecutionPolicy Bypass -File ./clean-cache.ps1"
     },
     "dependencies": {
         "@heroicons/react": "^2.2.0",
