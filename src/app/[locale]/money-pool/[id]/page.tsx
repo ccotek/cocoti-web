@@ -88,6 +88,9 @@ export default function MoneyPoolDetailsPage() {
   const moneyPoolId = params.id as string;
   const locale = params.locale as string;
   
+  // Vérifier s'il y a un paiement en attente de vérification (stocké dans sessionStorage)
+  // Plus besoin de nettoyer l'URL car PayDunya utilise maintenant des URLs propres
+  
   // API URL configuration (same as money-pools list page)
   const API_URL = useMemo(() => {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -124,6 +127,8 @@ export default function MoneyPoolDetailsPage() {
   const [contributors, setContributors] = useState<Contributor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Ref pour éviter les traitements multiples du paiement
+  const paymentProcessedRef = useRef<Set<string>>(new Set());
   const [contributionAmount, setContributionAmount] = useState<number>(0);
   const [showContributeModal, setShowContributeModal] = useState(false);
   const [contributionStep, setContributionStep] = useState<1 | 2>(1); // Étape 1: formulaire, Étape 2: paiement
@@ -290,6 +295,138 @@ export default function MoneyPoolDetailsPage() {
           fetchMoneyPool();
         }
       }, [moneyPoolId, locale]);
+
+  // Vérifier le statut du paiement après retour de PayDunya
+  // PayDunya ajoute automatiquement le paramètre "token" à l'URL de retour
+  useEffect(() => {
+    const checkPaymentStatus = async () => {
+      if (typeof window === 'undefined') return;
+      
+      // Récupérer l'invoice_token depuis l'URL (ajouté par PayDunya) ou sessionStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      let invoiceToken = urlParams.get('token') || urlParams.get('invoice_token');
+      
+      // Si pas dans l'URL, vérifier sessionStorage (stocké avant l'initiation du paiement)
+      if (!invoiceToken) {
+        invoiceToken = sessionStorage.getItem('pending_payment_token');
+      }
+      
+      // Si pas d'invoice_token, ne rien faire
+      if (!invoiceToken) {
+        return;
+      }
+      
+      // Nettoyer l'URL immédiatement (enlever le paramètre token)
+      // Utiliser router.replace de Next.js pour forcer le nettoyage
+      const cleanPath = `/${locale}/money-pool/${moneyPoolId}`;
+      window.history.replaceState(null, '', cleanPath);
+      router.replace(cleanPath, { scroll: false });
+      console.log('[PAYMENT CHECK] URL cleaned:', cleanPath, 'Current URL:', window.location.href);
+      
+      console.log('[PAYMENT CHECK] Checking payment status for invoice_token:', invoiceToken);
+      
+      // Créer une clé unique pour ce paiement
+      const paymentKey = `token_${invoiceToken}`;
+      
+      // Vérifier si ce paiement a déjà été traité (dans cette session)
+      if (paymentProcessedRef.current.has(paymentKey)) {
+        console.log('[PAYMENT CHECK] Payment already processed in this session, skipping...', paymentKey);
+        // Nettoyer sessionStorage
+        sessionStorage.removeItem('pending_payment_token');
+        return;
+      }
+      
+      // Marquer comme en cours de traitement
+      paymentProcessedRef.current.add(paymentKey);
+      
+      // Vérifier le statut du paiement via l'API
+      try {
+        const { getAuthToken } = await import('@/utils/tokenStorage');
+        const token = getAuthToken();
+        
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+          'Accept-Language': locale || 'fr',
+        };
+        
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        // Vérifier le statut du paiement via l'API
+        const statusResponse = await fetch(`${API_URL}/api/v1/payments/paydunya/status/${invoiceToken}`, {
+          method: 'GET',
+          headers
+        });
+        
+        if (statusResponse.ok) {
+          const statusData = await statusResponse.json();
+          console.log('[PAYMENT CHECK] Payment status from API:', statusData);
+          
+          if (statusData.status === 'completed' || statusData.status === 'success') {
+            setNotification({
+              type: 'success',
+              message: locale === 'fr' 
+                ? 'Paiement effectué avec succès !' 
+                : 'Payment successful!'
+            });
+            
+            // Recharger les données
+            try {
+              const poolResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}`);
+              if (poolResponse.ok) {
+                const poolData = await poolResponse.json();
+                setMoneyPool(poolData);
+              }
+              
+              const contribResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
+              if (contribResponse.ok) {
+                const contribData = await contribResponse.json();
+                setContributors(contribData.contributions || []);
+              }
+            } catch (reloadError) {
+              console.error('[PAYMENT CHECK] Error reloading data:', reloadError);
+            }
+          } else if (statusData.status === 'failed' || statusData.status === 'cancelled') {
+            setNotification({
+              type: 'error',
+              message: locale === 'fr' 
+                ? statusData.status === 'cancelled' 
+                  ? 'Le paiement a été annulé.' 
+                  : 'Le paiement a échoué.'
+                : statusData.status === 'cancelled'
+                  ? 'Payment was cancelled.'
+                  : 'Payment failed.'
+            });
+          }
+        } else {
+          console.error('[PAYMENT CHECK] Failed to check payment status:', statusResponse.status);
+        }
+        
+        // Nettoyer sessionStorage après vérification
+        sessionStorage.removeItem('pending_payment_token');
+      } catch (error) {
+        console.error('[PAYMENT CHECK] Error checking payment status:', error);
+        // Nettoyer sessionStorage même en cas d'erreur
+        sessionStorage.removeItem('pending_payment_token');
+      }
+      
+      console.log('[PAYMENT CHECK] Payment status check completed');
+    };
+    
+    // Vérifier immédiatement si on a des paramètres de paiement dans l'URL
+    // Utiliser un timeout court pour s'assurer que le composant est monté
+    const timeoutId = setTimeout(() => {
+      checkPaymentStatus();
+    }, 50);
+    
+    return () => {
+      clearTimeout(timeoutId);
+    };
+    // Se déclencher uniquement quand moneyPoolId ou locale changent (nouvelle page)
+    // Ne pas inclure API_URL car c'est une constante
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moneyPoolId, locale]); // Se déclencher quand on change de money pool ou locale
 
   // Récupérer les informations de l'utilisateur connecté (une seule fois au chargement)
   useEffect(() => {
@@ -560,24 +697,119 @@ export default function MoneyPoolDetailsPage() {
         // Écouter les événements PayDunya
         PayDunyaCheckout.on('success', () => {
           console.log('[PAYDUNYA SDK] Payment success event received');
-          // Paiement réussi
-          setNotification({
-            type: 'success',
-            message: locale === 'fr' ? 'Paiement effectué avec succès !' : 'Payment successful!'
-          });
+          
+          // Récupérer l'invoice_token depuis sessionStorage
+          const invoiceToken = sessionStorage.getItem('pending_payment_token');
+          console.log('[PAYDUNYA SDK] Invoice token from sessionStorage:', invoiceToken);
           
           // Fermer le modal de contribution
           setShowContributeModal(false);
           
-          // Recharger les données
-          setTimeout(() => {
+          // Vérifier le statut via l'API et recharger les données
+          if (invoiceToken) {
+            // Vérifier le statut via l'API
+            const checkStatus = async () => {
+              try {
+                const { getAuthToken } = await import('@/utils/tokenStorage');
+                const token = getAuthToken();
+                
+                const headers: HeadersInit = {
+                  'Content-Type': 'application/json',
+                  'Accept-Language': locale || 'fr',
+                };
+                
+                if (token) {
+                  headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const statusResponse = await fetch(`${API_URL}/api/v1/payments/paydunya/status/${invoiceToken}`, {
+                  method: 'GET',
+                  headers
+                });
+                
+                if (statusResponse.ok) {
+                  const statusData = await statusResponse.json();
+                  console.log('[PAYDUNYA SDK] Payment status from API:', statusData);
+                  
+                  // Recharger les données
+                  const poolResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}`);
+                  if (poolResponse.ok) {
+                    const poolData = await poolResponse.json();
+                    setMoneyPool(poolData);
+                  }
+                  
+                  const contribResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
+                  if (contribResponse.ok) {
+                    const contribData = await contribResponse.json();
+                    setContributors(contribData.contributions || []);
+                  }
+                  
+                  // Afficher notification
+                  setNotification({
+                    type: 'success',
+                    message: locale === 'fr' ? 'Paiement effectué avec succès !' : 'Payment successful!'
+                  });
+                } else {
+                  console.error('[PAYDUNYA SDK] Failed to check payment status:', statusResponse.status);
+                  // Recharger quand même la page
+                  window.location.reload();
+                }
+              } catch (error) {
+                console.error('[PAYDUNYA SDK] Error checking payment status:', error);
+                // Recharger la page en cas d'erreur
+                window.location.reload();
+              }
+            };
+            
+            checkStatus();
+          } else {
+            // Pas de token, recharger la page
+            console.warn('[PAYDUNYA SDK] No invoice token in sessionStorage, reloading page');
             window.location.reload();
-          }, 1500);
+          }
         });
         
         PayDunyaCheckout.on('cancel', () => {
           console.log('[PAYDUNYA SDK] Payment cancel event received');
-          // Paiement annulé
+          
+          // Récupérer l'invoice_token depuis sessionStorage
+          const invoiceToken = sessionStorage.getItem('pending_payment_token');
+          console.log('[PAYDUNYA SDK] Invoice token from sessionStorage (cancel):', invoiceToken);
+          
+          // Vérifier le statut via l'API
+          if (invoiceToken) {
+            const checkStatus = async () => {
+              try {
+                const { getAuthToken } = await import('@/utils/tokenStorage');
+                const token = getAuthToken();
+                
+                const headers: HeadersInit = {
+                  'Content-Type': 'application/json',
+                  'Accept-Language': locale || 'fr',
+                };
+                
+                if (token) {
+                  headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const statusResponse = await fetch(`${API_URL}/api/v1/payments/paydunya/status/${invoiceToken}`, {
+                  method: 'GET',
+                  headers
+                });
+                
+                if (statusResponse.ok) {
+                  const statusData = await statusResponse.json();
+                  console.log('[PAYDUNYA SDK] Payment status from API (cancel):', statusData);
+                }
+              } catch (error) {
+                console.error('[PAYDUNYA SDK] Error checking payment status (cancel):', error);
+              }
+            };
+            
+            checkStatus();
+          }
+          
+          // Afficher notification
           setNotification({
             type: 'error',
             message: locale === 'fr' ? 'Paiement annulé' : 'Payment cancelled'
@@ -634,87 +866,109 @@ export default function MoneyPoolDetailsPage() {
       const { getAuthToken } = await import('@/utils/tokenStorage');
       const token = getAuthToken();
       
-      try {
-        // Créer la contribution ET initier le paiement PayDunya en une seule requête
-        // Formater le numéro de téléphone avec l'indicatif
-        let formattedPhone: string | undefined = undefined;
-        if (paymentPhone.trim()) {
-          // Nettoyer le numéro (enlever les espaces et le + s'il est déjà présent)
-          const cleanedPhone = paymentPhone.trim().replace(/\s/g, '').replace(/^\+/, '');
-          // Ajouter l'indicatif si le numéro ne commence pas déjà par l'indicatif
-          if (cleanedPhone && !cleanedPhone.startsWith(selectedCallingCode.replace('+', ''))) {
-            formattedPhone = `${selectedCallingCode}${cleanedPhone}`;
-          } else if (cleanedPhone) {
-            formattedPhone = cleanedPhone.startsWith('+') ? cleanedPhone : `+${cleanedPhone}`;
-          }
+      // Créer la contribution ET initier le paiement PayDunya en une seule requête
+      // Formater le numéro de téléphone avec l'indicatif
+      let formattedPhone: string | undefined = undefined;
+      if (paymentPhone.trim()) {
+        // Nettoyer le numéro (enlever les espaces et le + s'il est déjà présent)
+        const cleanedPhone = paymentPhone.trim().replace(/\s/g, '').replace(/^\+/, '');
+        // Ajouter l'indicatif si le numéro ne commence pas déjà par l'indicatif
+        if (cleanedPhone && !cleanedPhone.startsWith(selectedCallingCode.replace('+', ''))) {
+          formattedPhone = `${selectedCallingCode}${cleanedPhone}`;
+        } else if (cleanedPhone) {
+          formattedPhone = cleanedPhone.startsWith('+') ? cleanedPhone : `+${cleanedPhone}`;
         }
-        
-        console.log('[CONTRIBUTION] Payment phone formatting:', {
-          original: paymentPhone,
-          callingCode: selectedCallingCode,
-          formatted: formattedPhone
+      }
+      
+      console.log('[CONTRIBUTION] Payment phone formatting:', {
+        original: paymentPhone,
+        callingCode: selectedCallingCode,
+        formatted: formattedPhone
+      });
+      
+      const requestBody: any = {
+        amount: contributionAmount,
+        currency: moneyPool?.currency || 'XOF',
+        message: message.trim() || undefined,
+        anonymous: anonymous,
+        full_name: paymentFullName.trim(), // Nom complet de l'étape 2
+        // Payment information pour initier PayDunya
+        customer_name: paymentFullName.trim(),
+        customer_email: paymentEmail.trim() || undefined,
+        customer_phone: formattedPhone, // Numéro formaté avec indicatif
+        payment_method: paymentMethod, // Méthode de paiement choisie
+        initiate_payment: true  // Initier le paiement PayDunya après création de la contribution
+      };
+      
+      console.log('[CONTRIBUTION] Request body:', JSON.stringify(requestBody, null, 2));
+      
+      // Use the same token for the participation request
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Accept-Language': locale || 'fr',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/participate`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(requestBody)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to contribute');
+      }
+      
+      console.log('[CONTRIBUTION] Response data:', JSON.stringify(data, null, 2));
+      console.log('[CONTRIBUTION] Payment initiated?', data.payment_initiated);
+      console.log('[CONTRIBUTION] Payment data exists?', !!data.payment);
+      console.log('[CONTRIBUTION] Payment error?', data.payment_error);
+      
+      // Vérifier si le paiement a été initié
+      if (data.payment_initiated === false || data.payment_error) {
+        // Le paiement n'a pas été initié - afficher une erreur
+        setNotification({
+          type: 'error',
+          message: locale === 'fr' 
+            ? `Erreur : Le paiement n'a pas pu être initié. ${data.payment_error || 'Veuillez réessayer ou contacter le support.'}`
+            : `Error: Payment could not be initiated. ${data.payment_error || 'Please try again or contact support.'}`
+        });
+        setPaymentProcessing(false);
+        setIsContributing(false);
+        return; // Ne pas fermer le modal, laisser l'utilisateur réessayer
+      }
+      
+      // Si PayDunya SoftPay a été initié, utiliser l'URL de checkout
+      if (data.payment) {
+        // Stocker l'invoice_token dans sessionStorage pour vérification après paiement
+        const invoiceToken = data.payment.invoice_token;
+        console.log('[CONTRIBUTION] Payment response received:', {
+          has_invoice_token: !!invoiceToken,
+          invoice_token: invoiceToken,
+          payment_data: data.payment
         });
         
-        const requestBody: any = {
-          amount: contributionAmount,
-          currency: moneyPool?.currency || 'XOF',
-          message: message.trim() || undefined,
-          anonymous: anonymous,
-          full_name: paymentFullName.trim(), // Nom complet de l'étape 2
-          // Payment information pour initier PayDunya
-          customer_name: paymentFullName.trim(),
-          customer_email: paymentEmail.trim() || undefined,
-          customer_phone: formattedPhone, // Numéro formaté avec indicatif
-          payment_method: paymentMethod, // Méthode de paiement choisie
-          initiate_payment: true  // Initier le paiement PayDunya après création de la contribution
-        };
-        
-        console.log('[CONTRIBUTION] Request body:', JSON.stringify(requestBody, null, 2));
-        
-        // Use the same token for the participation request
-        const headers: HeadersInit = {
-          'Content-Type': 'application/json',
-          'Accept-Language': locale || 'fr',
-        };
-        
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
+        if (invoiceToken) {
+          sessionStorage.setItem('pending_payment_token', invoiceToken);
+          console.log('[CONTRIBUTION] Stored invoice_token in sessionStorage:', invoiceToken);
+          console.log('[CONTRIBUTION] sessionStorage.getItem check:', sessionStorage.getItem('pending_payment_token'));
+        } else {
+          console.error('[CONTRIBUTION] No invoice_token in payment response!', data.payment);
         }
         
-        const response = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/participate`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(requestBody)
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.detail || 'Failed to contribute');
-        }
+        // PayDunya renvoie payment_data (pour SDK) ET payment_url (pour redirection fallback)
+        const paymentData = data.payment.payment_data;
+        const paymentUrl = data.payment.payment_url || data.payment.checkout_url || (paymentData?.checkout_url);
         
-        console.log('[CONTRIBUTION] Response data:', JSON.stringify(data, null, 2));
-        console.log('[CONTRIBUTION] Payment initiated?', data.payment_initiated);
-        console.log('[CONTRIBUTION] Payment data exists?', !!data.payment);
-        console.log('[CONTRIBUTION] Payment error?', data.payment_error);
-        
-        // Vérifier si le paiement a été initié
-        if (data.payment_initiated === false || data.payment_error) {
-          // Le paiement n'a pas été initié - afficher une erreur
-          setNotification({
-            type: 'error',
-            message: locale === 'fr' 
-              ? `Erreur : Le paiement n'a pas pu être initié. ${data.payment_error || 'Veuillez réessayer ou contacter le support.'}`
-              : `Error: Payment could not be initiated. ${data.payment_error || 'Please try again or contact support.'}`
-          });
-          setPaymentProcessing(false);
-          setIsContributing(false);
-          return; // Ne pas fermer le modal, laisser l'utilisateur réessayer
-        }
-        
-        // Si PayDunya SoftPay a été initié, intégrer le SDK pour paiement transparent
-        if (data.payment && data.payment.payment_data) {
-          const paymentData = data.payment.payment_data;
+        // Pour SoftPay, on essaie d'abord le SDK, puis on fait fallback vers redirection
+        // Si on a payment_data, essayer d'utiliser le SDK (si disponible)
+        if (paymentData) {
+          console.log('[CONTRIBUTION] PayDunya payment_data received, attempting to use SDK');
           
           // Pour SoftPay, on utilise le SDK PayDunya directement dans la page (intégration transparente)
           // Charger le SDK PayDunya dynamiquement
@@ -722,23 +976,27 @@ export default function MoneyPoolDetailsPage() {
             // Vérifier si le SDK est déjà chargé
             if ((window as any).PayDunyaCheckout) {
               // SDK déjà chargé, utiliser directement
+              console.log('[CONTRIBUTION] PayDunya SDK already loaded, using it directly');
               handlePayDunyaPayment(paymentData);
             } else {
-              // Créer un script pour charger le SDK PayDunya
-              const script = document.createElement('script');
-              script.src = 'https://cdn.paydunya.com/checkout.js';
-              script.async = true;
-              
-              script.onload = () => {
-                console.log('[CONTRIBUTION] PayDunya SDK script loaded successfully');
-                // Attendre un peu pour que le SDK soit complètement initialisé
-                setTimeout(() => {
+              // Vérifier si le script est déjà en cours de chargement
+              const existingScript = document.querySelector('script[src="https://cdn.paydunya.com/checkout.js"]');
+              if (existingScript) {
+                console.log('[CONTRIBUTION] PayDunya SDK script already exists, waiting for it to load...');
+                // Attendre que le script existant se charge
+                let attempts = 0;
+                const maxAttempts = 10;
+                const checkInterval = setInterval(() => {
+                  attempts++;
+                  console.log(`[CONTRIBUTION] Checking for PayDunyaCheckout from existing script (attempt ${attempts}/${maxAttempts})...`);
+                  
                   if ((window as any).PayDunyaCheckout) {
-                    console.log('[CONTRIBUTION] PayDunyaCheckout is now available, calling handlePayDunyaPayment');
+                    console.log('[CONTRIBUTION] PayDunyaCheckout is now available from existing script');
+                    clearInterval(checkInterval);
                     handlePayDunyaPayment(paymentData);
-                  } else {
-                    console.error('[CONTRIBUTION] PayDunyaCheckout still not available after script load');
-                    // Pas de fallback de redirection pour SoftPay
+                  } else if (attempts >= maxAttempts) {
+                    console.error('[CONTRIBUTION] PayDunyaCheckout still not available from existing script');
+                    clearInterval(checkInterval);
                     setNotification({
                       type: 'error',
                       message: locale === 'fr' 
@@ -748,12 +1006,62 @@ export default function MoneyPoolDetailsPage() {
                     setPaymentProcessing(false);
                     setIsContributing(false);
                   }
-                }, 100);
+                }, 200);
+                return; // Ne pas créer un nouveau script
+              }
+              
+              // Créer un script pour charger le SDK PayDunya
+              console.log('[CONTRIBUTION] Creating new script to load PayDunya SDK from https://cdn.paydunya.com/checkout.js');
+              const script = document.createElement('script');
+              script.src = 'https://cdn.paydunya.com/checkout.js';
+              script.async = true;
+              script.id = 'paydunya-checkout-script';
+              
+              script.onload = () => {
+                console.log('[CONTRIBUTION] PayDunya SDK script loaded successfully');
+                // Attendre que le SDK soit complètement initialisé
+                // Essayer plusieurs fois avec des délais progressifs
+                let attempts = 0;
+                const maxAttempts = 10;
+                const checkInterval = setInterval(() => {
+                  attempts++;
+                  console.log(`[CONTRIBUTION] Checking for PayDunyaCheckout (attempt ${attempts}/${maxAttempts})...`);
+                  
+                  if ((window as any).PayDunyaCheckout) {
+                    console.log('[CONTRIBUTION] PayDunyaCheckout is now available, calling handlePayDunyaPayment');
+                    clearInterval(checkInterval);
+                    handlePayDunyaPayment(paymentData);
+                  } else if (attempts >= maxAttempts) {
+                    console.error('[CONTRIBUTION] PayDunyaCheckout still not available after all attempts');
+                    clearInterval(checkInterval);
+                    // Fallback : utiliser l'URL de checkout si disponible
+                    if (paymentUrl) {
+                      console.log('[CONTRIBUTION] SDK not available, falling back to checkout URL:', paymentUrl);
+                      window.location.href = paymentUrl;
+                      return;
+                    }
+                    // Pas de fallback disponible
+                    setNotification({
+                      type: 'error',
+                      message: locale === 'fr' 
+                        ? 'Erreur : Le système de paiement n\'a pas pu être chargé. Veuillez rafraîchir la page et réessayer.'
+                        : 'Error: Payment system could not be loaded. Please refresh the page and try again.'
+                    });
+                    setPaymentProcessing(false);
+                    setIsContributing(false);
+                  }
+                }, 200); // Vérifier toutes les 200ms
               };
               
               script.onerror = (error) => {
                 console.error('[CONTRIBUTION] PayDunya SDK script failed to load:', error);
-                // Pas de fallback de redirection pour SoftPay - on doit utiliser le SDK
+                // Fallback : utiliser l'URL de checkout si disponible
+                if (paymentUrl) {
+                  console.log('[CONTRIBUTION] SDK failed to load, falling back to checkout URL:', paymentUrl);
+                  window.location.href = paymentUrl;
+                  return;
+                }
+                // Pas de fallback disponible
                 setNotification({
                   type: 'error',
                   message: locale === 'fr' 
@@ -770,7 +1078,13 @@ export default function MoneyPoolDetailsPage() {
             return; // Ne pas fermer le modal, attendre le résultat du paiement
           } catch (error) {
             console.error('[CONTRIBUTION] Error loading PayDunya SDK:', error);
-            // Pas de fallback de redirection pour SoftPay
+            // Fallback : utiliser l'URL de checkout si disponible
+            if (paymentUrl) {
+              console.log('[CONTRIBUTION] SDK failed, falling back to checkout URL:', paymentUrl);
+              window.location.href = paymentUrl;
+              return;
+            }
+            // Pas de fallback disponible
             setNotification({
               type: 'error',
               message: locale === 'fr' 
@@ -780,10 +1094,15 @@ export default function MoneyPoolDetailsPage() {
             setPaymentProcessing(false);
             setIsContributing(false);
           }
+        } else if (paymentUrl) {
+          // Pas de payment_data mais on a une URL de checkout - utiliser la redirection
+          console.log('[CONTRIBUTION] No payment_data but checkout URL available, using redirection:', paymentUrl);
+          window.location.href = paymentUrl;
+          return; // Ne pas fermer le modal, la redirection va se faire
         } else {
           // Le paiement n'a pas été initié et aucune erreur n'a été retournée
           // Cela ne devrait pas arriver, mais on gère le cas
-          console.warn('[CONTRIBUTION] No payment data in response, but no error either');
+          console.warn('[CONTRIBUTION] No payment data or URL in response, but no error either');
           setNotification({
             type: 'error',
             message: locale === 'fr' 
@@ -794,50 +1113,6 @@ export default function MoneyPoolDetailsPage() {
           setIsContributing(false);
           return; // Ne pas fermer le modal
         }
-        
-        // Reload contributions from API
-        try {
-          const contribResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
-          if (contribResponse.ok) {
-            const contribData = await contribResponse.json();
-            setContributors(contribData.contributions || []);
-          }
-        } catch (contribErr) {
-          console.error('Error reloading contributions:', contribErr);
-        }
-        
-        // Reload money pool data to get updated amount
-        const poolResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}`);
-        if (poolResponse.ok) {
-          const poolData = await poolResponse.json();
-          setMoneyPool(poolData);
-        }
-        
-        // Reset form
-        setContributionAmount(0);
-        setMessage('');
-        setAnonymous(false);
-        setPaymentFullName('');
-        setPaymentEmail('');
-        setPaymentPhone('');
-        setPaymentMethod('');
-        setCardNumber('');
-        setCardExpiry('');
-        setCardCVC('');
-        setContributionStep(1);
-        setShowContributeModal(false);
-        
-        // Show success message
-        setNotification({
-          type: 'success',
-          message: t('thankYou')
-        });
-
-        // Auto-hide notification after 5 seconds
-        setTimeout(() => setNotification(null), 5000);
-      } catch (paydunyaErr) {
-        // Erreur spécifique PayDunya
-        throw paydunyaErr;
       }
       
     } catch (err) {
