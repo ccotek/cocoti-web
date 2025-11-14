@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
@@ -138,6 +138,8 @@ export default function MoneyPoolDetailsPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Vérifier si l'utilisateur est connecté
   const [userFullName, setUserFullName] = useState<string | null>(null); // Nom complet de l'utilisateur connecté
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [showThankYouDialog, setShowThankYouDialog] = useState(false);
+  const [paymentError, setPaymentError] = useState<{ type: 'cancelled' | 'failed' | null }>({ type: null });
   const [cocotiTip, setCocotiTip] = useState<number>(0);
   const [cocotiTipPercentage, setCocotiTipPercentage] = useState<number>(5.5); // 5.5% par défaut
   const [cocotiTipMin, setCocotiTipMin] = useState<number>(4.5); // Minimum par défaut
@@ -296,34 +298,62 @@ export default function MoneyPoolDetailsPage() {
         }
       }, [moneyPoolId, locale]);
 
+  // Stocker le money_pool_id et locale dans sessionStorage avant d'initier le paiement
+  // Cela permettra à la page intermédiaire de savoir où rediriger
+  useEffect(() => {
+    if (typeof window !== 'undefined' && moneyPoolId && locale) {
+      sessionStorage.setItem('pending_money_pool_id', moneyPoolId);
+      sessionStorage.setItem('pending_locale', locale);
+    }
+  }, [moneyPoolId, locale]);
+
+  // Restaurer les informations du formulaire depuis sessionStorage si disponibles (après annulation)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && showContributeModal && contributionStep === 2) {
+      const savedData = sessionStorage.getItem('pending_contribution_data');
+      if (savedData) {
+        try {
+          const data = JSON.parse(savedData);
+          if (data.paymentFullName) setPaymentFullName(data.paymentFullName);
+          if (data.paymentEmail) setPaymentEmail(data.paymentEmail);
+          if (data.paymentPhone) setPaymentPhone(data.paymentPhone);
+          if (data.selectedCallingCode) setSelectedCallingCode(data.selectedCallingCode);
+          if (data.paymentMethod) setPaymentMethod(data.paymentMethod);
+          if (data.cardNumber) setCardNumber(data.cardNumber);
+          if (data.cardExpiry) setCardExpiry(data.cardExpiry);
+          if (data.cardCVC) setCardCVC(data.cardCVC);
+          if (data.contributionAmount) setContributionAmount(data.contributionAmount);
+          if (data.message !== undefined) setMessage(data.message);
+          if (data.anonymous !== undefined) setAnonymous(data.anonymous);
+          
+          console.log('[CONTRIBUTION] Restored form data from sessionStorage');
+        } catch (error) {
+          console.error('[CONTRIBUTION] Error restoring form data:', error);
+        }
+      }
+    }
+  }, [showContributeModal, contributionStep]);
+  
   // Vérifier le statut du paiement après retour de PayDunya
-  // PayDunya ajoute automatiquement le paramètre "token" à l'URL de retour
+  // Cette partie s'exécute après le nettoyage de l'URL (si nécessaire)
   useEffect(() => {
     const checkPaymentStatus = async () => {
       if (typeof window === 'undefined') return;
       
-      // Récupérer l'invoice_token depuis l'URL (ajouté par PayDunya) ou sessionStorage
-      const urlParams = new URLSearchParams(window.location.search);
-      let invoiceToken = urlParams.get('token') || urlParams.get('invoice_token');
-      
-      // Si pas dans l'URL, vérifier sessionStorage (stocké avant l'initiation du paiement)
-      if (!invoiceToken) {
-        invoiceToken = sessionStorage.getItem('pending_payment_token');
-      }
+      // Récupérer l'invoice_token depuis sessionStorage (stocké avant nettoyage ou lors de l'initiation)
+      let invoiceToken = sessionStorage.getItem('pending_payment_token');
       
       // Si pas d'invoice_token, ne rien faire
       if (!invoiceToken) {
         return;
       }
       
-      // Nettoyer l'URL immédiatement (enlever le paramètre token)
-      // Utiliser router.replace de Next.js pour forcer le nettoyage
-      const cleanPath = `/${locale}/money-pool/${moneyPoolId}`;
-      window.history.replaceState(null, '', cleanPath);
-      router.replace(cleanPath, { scroll: false });
-      console.log('[PAYMENT CHECK] URL cleaned:', cleanPath, 'Current URL:', window.location.href);
-      
       console.log('[PAYMENT CHECK] Checking payment status for invoice_token:', invoiceToken);
+      
+      // Vérifier que l'URL est bien propre (sans paramètres)
+      if (window.location.search) {
+        console.warn('[PAYMENT CHECK] URL still has params, this should not happen:', window.location.search);
+      }
       
       // Créer une clé unique pour ce paiement
       const paymentKey = `token_${invoiceToken}`;
@@ -364,12 +394,12 @@ export default function MoneyPoolDetailsPage() {
           console.log('[PAYMENT CHECK] Payment status from API:', statusData);
           
           if (statusData.status === 'completed' || statusData.status === 'success') {
-            setNotification({
-              type: 'success',
-              message: locale === 'fr' 
-                ? 'Paiement effectué avec succès !' 
-                : 'Payment successful!'
-            });
+            // Afficher la boîte de dialogue de remerciement au lieu d'une simple notification
+            setShowThankYouDialog(true);
+            
+            // Nettoyer l'erreur de paiement et les données du formulaire sauvegardées après succès
+            setPaymentError({ type: null });
+            sessionStorage.removeItem('pending_contribution_data');
             
             // Recharger les données
             try {
@@ -388,15 +418,16 @@ export default function MoneyPoolDetailsPage() {
               console.error('[PAYMENT CHECK] Error reloading data:', reloadError);
             }
           } else if (statusData.status === 'failed' || statusData.status === 'cancelled') {
-            setNotification({
-              type: 'error',
-              message: locale === 'fr' 
-                ? statusData.status === 'cancelled' 
-                  ? 'Le paiement a été annulé.' 
-                  : 'Le paiement a échoué.'
-                : statusData.status === 'cancelled'
-                  ? 'Payment was cancelled.'
-                  : 'Payment failed.'
+            // Ne pas fermer le modal, revenir à l'étape 2 avec les informations déjà remplies
+            // Les informations seront restaurées depuis sessionStorage par le useEffect
+            setContributionStep(2);
+            setShowContributeModal(true);
+            setPaymentProcessing(false);
+            setIsContributing(false);
+            
+            // Définir l'erreur de paiement pour l'afficher dans le formulaire
+            setPaymentError({
+              type: statusData.status === 'cancelled' ? 'cancelled' : 'failed'
             });
           }
         } else {
@@ -602,6 +633,8 @@ export default function MoneyPoolDetailsPage() {
     }
 
     // Étape 2 : Validation et traitement du paiement
+    // Réinitialiser l'erreur de paiement si on réessaie
+    setPaymentError({ type: null });
     // Full name obligatoire
     if (!paymentFullName.trim()) {
       setNotification({
@@ -678,6 +711,11 @@ export default function MoneyPoolDetailsPage() {
       
       try {
         // Configurer PayDunya SoftPay (intégration transparente)
+        // Note: Les URLs de retour sont configurées dans l'invoice côté backend
+        // PayDunya devrait utiliser ces URLs, mais on peut aussi les configurer côté SDK si nécessaire
+        const returnUrl = `/${locale}/payment/return?money_pool_id=${moneyPoolId}&locale=${locale}`;
+        const cancelUrl = `/${locale}/payment/return?money_pool_id=${moneyPoolId}&locale=${locale}&cancelled=true`;
+        
         PayDunyaCheckout.config({
           public_key: paymentData.public_key,
           invoice_token: paymentData.invoice_token,
@@ -685,7 +723,10 @@ export default function MoneyPoolDetailsPage() {
           currency: paymentData.currency || 'XOF',
           customer: paymentData.customer || {},
           // Options SoftPay : pas de branding PayDunya visible
-          hide_paydunya_branding: paymentData.hide_paydunya_branding !== false  // Utiliser la valeur du backend ou true par défaut
+          hide_paydunya_branding: paymentData.hide_paydunya_branding !== false,  // Utiliser la valeur du backend ou true par défaut
+          // URLs de retour (si le SDK les supporte)
+          return_url: returnUrl,
+          cancel_url: cancelUrl
         });
         
         console.log('[PAYDUNYA SDK] PayDunya Checkout configured successfully');
@@ -744,11 +785,12 @@ export default function MoneyPoolDetailsPage() {
                     setContributors(contribData.contributions || []);
                   }
                   
-                  // Afficher notification
-                  setNotification({
-                    type: 'success',
-                    message: locale === 'fr' ? 'Paiement effectué avec succès !' : 'Payment successful!'
-                  });
+                      // Afficher la boîte de dialogue de remerciement
+                      setShowThankYouDialog(true);
+                      
+                      // Nettoyer l'erreur de paiement et les données du formulaire sauvegardées après succès
+                      setPaymentError({ type: null });
+                      sessionStorage.removeItem('pending_contribution_data');
                 } else {
                   console.error('[PAYDUNYA SDK] Failed to check payment status:', statusResponse.status);
                   // Recharger quand même la page
@@ -769,86 +811,89 @@ export default function MoneyPoolDetailsPage() {
           }
         });
         
-        PayDunyaCheckout.on('cancel', () => {
-          console.log('[PAYDUNYA SDK] Payment cancel event received');
-          
-          // Récupérer l'invoice_token depuis sessionStorage
-          const invoiceToken = sessionStorage.getItem('pending_payment_token');
-          console.log('[PAYDUNYA SDK] Invoice token from sessionStorage (cancel):', invoiceToken);
-          
-          // Vérifier le statut via l'API
-          if (invoiceToken) {
-            const checkStatus = async () => {
-              try {
-                const { getAuthToken } = await import('@/utils/tokenStorage');
-                const token = getAuthToken();
-                
-                const headers: HeadersInit = {
-                  'Content-Type': 'application/json',
-                  'Accept-Language': locale || 'fr',
+            PayDunyaCheckout.on('cancel', () => {
+              console.log('[PAYDUNYA SDK] Payment cancel event received');
+              
+              // Ne pas fermer le modal, revenir à l'étape 2 avec les informations déjà remplies
+              setContributionStep(2);
+              setShowContributeModal(true);
+              setPaymentProcessing(false);
+              setIsContributing(false);
+              
+              // Définir l'erreur de paiement pour l'afficher dans le formulaire
+              setPaymentError({ type: 'cancelled' });
+              
+              // Récupérer l'invoice_token depuis sessionStorage
+              const invoiceToken = sessionStorage.getItem('pending_payment_token');
+              console.log('[PAYDUNYA SDK] Invoice token from sessionStorage (cancel):', invoiceToken);
+              
+              // Vérifier le statut via l'API
+              if (invoiceToken) {
+                const checkStatus = async () => {
+                  try {
+                    const { getAuthToken } = await import('@/utils/tokenStorage');
+                    const token = getAuthToken();
+                    
+                    const headers: HeadersInit = {
+                      'Content-Type': 'application/json',
+                      'Accept-Language': locale || 'fr',
+                    };
+                    
+                    if (token) {
+                      headers['Authorization'] = `Bearer ${token}`;
+                    }
+                    
+                    const statusResponse = await fetch(`${API_URL}/api/v1/payments/paydunya/status/${invoiceToken}`, {
+                      method: 'GET',
+                      headers
+                    });
+                    
+                    if (statusResponse.ok) {
+                      const statusData = await statusResponse.json();
+                      console.log('[PAYDUNYA SDK] Payment status from API (cancel):', statusData);
+                    }
+                  } catch (error) {
+                    console.error('[PAYDUNYA SDK] Error checking payment status (cancel):', error);
+                  }
                 };
                 
-                if (token) {
-                  headers['Authorization'] = `Bearer ${token}`;
-                }
-                
-                const statusResponse = await fetch(`${API_URL}/api/v1/payments/paydunya/status/${invoiceToken}`, {
-                  method: 'GET',
-                  headers
-                });
-                
-                if (statusResponse.ok) {
-                  const statusData = await statusResponse.json();
-                  console.log('[PAYDUNYA SDK] Payment status from API (cancel):', statusData);
-                }
-              } catch (error) {
-                console.error('[PAYDUNYA SDK] Error checking payment status (cancel):', error);
+                checkStatus();
               }
-            };
-            
-            checkStatus();
-          }
-          
-          // Afficher notification
-          setNotification({
-            type: 'error',
-            message: locale === 'fr' ? 'Paiement annulé' : 'Payment cancelled'
-          });
-        });
+            });
         
         PayDunyaCheckout.on('error', (error: any) => {
           console.error('[PAYDUNYA SDK] Payment error event received:', error);
-          // Erreur de paiement
-          setNotification({
-            type: 'error',
-            message: locale === 'fr' 
-              ? `Erreur de paiement: ${error.message || 'Erreur inconnue'}` 
-              : `Payment error: ${error.message || 'Unknown error'}`
-          });
+          
+          // Ne pas fermer le modal, revenir à l'étape 2 avec les informations déjà remplies
+          setContributionStep(2);
+          setShowContributeModal(true);
+          setPaymentProcessing(false);
+          setIsContributing(false);
+          
+          // Définir l'erreur de paiement pour l'afficher dans le formulaire
+          setPaymentError({ type: 'failed' });
         });
       } catch (configError) {
         console.error('[PAYDUNYA SDK] Error configuring PayDunya Checkout:', configError);
-        // Pas de fallback de redirection pour SoftPay - on doit utiliser le SDK
-        setNotification({
-          type: 'error',
-          message: locale === 'fr' 
-            ? 'Erreur : Impossible de configurer le paiement. Veuillez réessayer.'
-            : 'Error: Unable to configure payment. Please try again.'
-        });
+        // Pas de fallback de redirection pour SoftPay - revenir à l'étape 2
+        setContributionStep(2);
+        setShowContributeModal(true);
         setPaymentProcessing(false);
         setIsContributing(false);
+        
+        // Définir l'erreur de paiement pour l'afficher dans le formulaire
+        setPaymentError({ type: 'failed' });
       }
     } else {
       console.error('[PAYDUNYA SDK] PayDunyaCheckout not available - SoftPay requires SDK');
-      // Pas de fallback de redirection pour SoftPay - on doit utiliser le SDK
-      setNotification({
-        type: 'error',
-        message: locale === 'fr' 
-          ? 'Erreur : Le système de paiement n\'a pas pu être chargé. Veuillez rafraîchir la page et réessayer.'
-          : 'Error: Payment system could not be loaded. Please refresh the page and try again.'
-      });
+      // Pas de fallback de redirection pour SoftPay - revenir à l'étape 2
+      setContributionStep(2);
+      setShowContributeModal(true);
       setPaymentProcessing(false);
       setIsContributing(false);
+      
+      // Définir l'erreur de paiement pour l'afficher dans le formulaire
+      setPaymentError({ type: 'failed' });
     }
   };
 
@@ -902,6 +947,21 @@ export default function MoneyPoolDetailsPage() {
       
       console.log('[CONTRIBUTION] Request body:', JSON.stringify(requestBody, null, 2));
       
+      // Stocker les informations du formulaire dans sessionStorage pour les restaurer en cas d'annulation
+      sessionStorage.setItem('pending_contribution_data', JSON.stringify({
+        paymentFullName,
+        paymentEmail,
+        paymentPhone,
+        selectedCallingCode,
+        paymentMethod,
+        cardNumber,
+        cardExpiry,
+        cardCVC,
+        contributionAmount,
+        message,
+        anonymous
+      }));
+      
       // Use the same token for the participation request
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
@@ -931,15 +991,14 @@ export default function MoneyPoolDetailsPage() {
       
       // Vérifier si le paiement a été initié
       if (data.payment_initiated === false || data.payment_error) {
-        // Le paiement n'a pas été initié - afficher une erreur
-        setNotification({
-          type: 'error',
-          message: locale === 'fr' 
-            ? `Erreur : Le paiement n'a pas pu être initié. ${data.payment_error || 'Veuillez réessayer ou contacter le support.'}`
-            : `Error: Payment could not be initiated. ${data.payment_error || 'Please try again or contact support.'}`
-        });
+        // Le paiement n'a pas été initié - revenir à l'étape 2 avec les informations déjà remplies
+        setContributionStep(2);
+        setShowContributeModal(true);
         setPaymentProcessing(false);
         setIsContributing(false);
+        
+        // Définir l'erreur de paiement pour l'afficher dans le formulaire
+        setPaymentError({ type: 'failed' });
         return; // Ne pas fermer le modal, laisser l'utilisateur réessayer
       }
       
@@ -1061,16 +1120,15 @@ export default function MoneyPoolDetailsPage() {
                   window.location.href = paymentUrl;
                   return;
                 }
-                // Pas de fallback disponible
-                setNotification({
-                  type: 'error',
-                  message: locale === 'fr' 
-                    ? 'Erreur : Le système de paiement n\'a pas pu être chargé. Veuillez vérifier votre connexion internet et réessayer.'
-                    : 'Error: Payment system could not be loaded. Please check your internet connection and try again.'
-                });
+                // Pas de fallback disponible - revenir à l'étape 2
+                setContributionStep(2);
+                setShowContributeModal(true);
                 setPaymentProcessing(false);
                 setIsContributing(false);
-              };
+                
+                // Définir l'erreur de paiement pour l'afficher dans le formulaire
+                setPaymentError({ type: 'failed' });
+              }
               
               document.head.appendChild(script);
             }
@@ -1084,15 +1142,14 @@ export default function MoneyPoolDetailsPage() {
               window.location.href = paymentUrl;
               return;
             }
-            // Pas de fallback disponible
-            setNotification({
-              type: 'error',
-              message: locale === 'fr' 
-                ? 'Erreur : Le système de paiement n\'a pas pu être chargé. Veuillez réessayer.'
-                : 'Error: Payment system could not be loaded. Please try again.'
-            });
+            // Pas de fallback disponible - revenir à l'étape 2
+            setContributionStep(2);
+            setShowContributeModal(true);
             setPaymentProcessing(false);
             setIsContributing(false);
+            
+            // Définir l'erreur de paiement pour l'afficher dans le formulaire
+            setPaymentError({ type: 'failed' });
           }
         } else if (paymentUrl) {
           // Pas de payment_data mais on a une URL de checkout - utiliser la redirection
@@ -1101,27 +1158,30 @@ export default function MoneyPoolDetailsPage() {
           return; // Ne pas fermer le modal, la redirection va se faire
         } else {
           // Le paiement n'a pas été initié et aucune erreur n'a été retournée
-          // Cela ne devrait pas arriver, mais on gère le cas
+          // Cela ne devrait pas arriver, mais on gère le cas - revenir à l'étape 2
           console.warn('[CONTRIBUTION] No payment data or URL in response, but no error either');
-          setNotification({
-            type: 'error',
-            message: locale === 'fr' 
-              ? 'Erreur : Le paiement n\'a pas pu être initié. Veuillez réessayer.'
-              : 'Error: Payment could not be initiated. Please try again.'
-          });
+          setContributionStep(2);
+          setShowContributeModal(true);
           setPaymentProcessing(false);
           setIsContributing(false);
+          
+          // Définir l'erreur de paiement pour l'afficher dans le formulaire
+          setPaymentError({ type: 'failed' });
           return; // Ne pas fermer le modal
         }
       }
       
     } catch (err) {
       console.error('Error contributing:', err);
-      setNotification({
-        type: 'error',
-        message: `${t('contributionError')} ${err instanceof Error ? err.message : 'Unknown error'}`
-      });
+      
+      // Revenir à l'étape 2 avec les informations déjà remplies
+      setContributionStep(2);
+      setShowContributeModal(true);
       setPaymentProcessing(false);
+      setIsContributing(false);
+      
+      // Définir l'erreur de paiement pour l'afficher dans le formulaire
+      setPaymentError({ type: 'failed' });
     } finally {
       setIsContributing(false);
       setPaymentProcessing(false);
@@ -1173,22 +1233,15 @@ export default function MoneyPoolDetailsPage() {
   return (
     <div className="min-h-screen bg-sand">
       {/* Notification Toast */}
-      {notification && (
+      {/* Notification d'erreur (les succès utilisent maintenant la boîte de dialogue) */}
+      {notification && notification.type === 'error' && (
         <motion.div
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -50 }}
-          className={`fixed top-4 right-4 z-50 max-w-md ${
-            notification.type === 'success' 
-              ? 'bg-green-500 text-white' 
-              : 'bg-red-500 text-white'
-          } px-6 py-4 rounded-lg shadow-lg flex items-center gap-3`}
+          className="fixed top-4 right-4 z-50 max-w-md bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3"
         >
-          {notification.type === 'success' ? (
-            <CheckCircleIcon className="h-6 w-6" />
-          ) : (
-            <ExclamationCircleIcon className="h-6 w-6" />
-          )}
+          <ExclamationCircleIcon className="h-6 w-6" />
           <span className="flex-1">{notification.message}</span>
           <button
             onClick={() => setNotification(null)}
@@ -1197,6 +1250,59 @@ export default function MoneyPoolDetailsPage() {
             ✕
           </button>
         </motion.div>
+      )}
+
+      {/* Boîte de dialogue de remerciement */}
+      {showThankYouDialog && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+          onClick={() => setShowThankYouDialog(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Bouton de fermeture */}
+            <button
+              onClick={() => setShowThankYouDialog(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label={t('accessibility.closeModal')}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Contenu de la carte de remerciement */}
+            <div className="text-center">
+              {/* Icône de succès */}
+              <div className="mx-auto w-16 h-16 bg-gradient-to-r from-magenta to-sunset rounded-full flex items-center justify-center mb-4">
+                <CheckCircleIcon className="h-10 w-10 text-white" />
+              </div>
+
+              {/* Titre */}
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                {t('thankYouTitle')}
+              </h3>
+
+              {/* Message */}
+              <p className="text-gray-600 mb-6">
+                {t('thankYouMessage')}
+              </p>
+
+              {/* Bouton de fermeture */}
+              <button
+                onClick={() => setShowThankYouDialog(false)}
+                className="w-full px-6 py-3 bg-gradient-to-r from-magenta to-sunset text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+              >
+                {t('thankYouClose')}
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
 
       {/* Breadcrumb Navigation */}
@@ -1787,6 +1893,51 @@ export default function MoneyPoolDetailsPage() {
             ) : (
               /* ÉTAPE 2 : Informations de paiement */
               <div className="space-y-4">
+                {/* Message d'erreur de paiement */}
+                {paymentError.type && (
+                  <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-red-800 mb-1">
+                          {paymentError.type === 'cancelled' 
+                            ? (locale === 'fr' ? 'Paiement annulé' : 'Payment cancelled')
+                            : (locale === 'fr' ? 'Paiement refusé' : 'Payment refused')
+                          }
+                        </h4>
+                        <p className="text-sm text-red-700 mb-3">
+                          {locale === 'fr' 
+                            ? 'Votre paiement n\'a pas pu être effectué. Vous pouvez réessayer avec les mêmes informations ou choisir une autre méthode de paiement.'
+                            : 'Your payment could not be processed. You can try again with the same information or choose another payment method.'
+                          }
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setPaymentError({ type: null });
+                              // Réessayer avec les mêmes informations
+                            }}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+                          >
+                            {locale === 'fr' ? 'Réessayer' : 'Retry'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setPaymentError({ type: null });
+                              setPaymentMethod(''); // Réinitialiser la méthode de paiement
+                            }}
+                            className="px-4 py-2 bg-white border-2 border-red-600 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors"
+                          >
+                            {locale === 'fr' ? 'Changer de méthode' : 'Change method'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Nom complet - Obligatoire */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -1879,9 +2030,9 @@ export default function MoneyPoolDetailsPage() {
                       {t('paymentInfo.phoneNumber')}
                       <span className="text-red-500 ml-1">*</span>
                     </label>
-                    <div className="flex gap-2">
-                      {/* Sélecteur d'indicatif (sans nom de pays) */}
-                      <div className="relative flex-shrink-0">
+                    <div className="flex gap-2 min-w-0">
+                      {/* Sélecteur d'indicatif (sans nom de pays) - Optimisé pour mobile */}
+                      <div className="relative flex-shrink-0 w-auto">
                         <select
                           value={selectedCountryCode}
                           onChange={(e) => {
@@ -1891,7 +2042,7 @@ export default function MoneyPoolDetailsPage() {
                               setSelectedCallingCode(country.calling_code || '+221');
                             }
                           }}
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta bg-white appearance-none pr-10 min-w-[100px]"
+                          className="px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta bg-white appearance-none pr-8 sm:pr-10 text-sm sm:text-base min-w-[90px] sm:min-w-[100px] max-w-[120px]"
                           required
                         >
                           {countries.map((country: any) => (
@@ -1900,11 +2051,11 @@ export default function MoneyPoolDetailsPage() {
                             </option>
                           ))}
                         </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                          <ChevronRightIcon className="h-4 w-4 text-gray-400 rotate-90" />
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1 sm:pr-2">
+                          <ChevronRightIcon className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 rotate-90" />
                         </div>
                       </div>
-                      {/* Champ numéro de téléphone */}
+                      {/* Champ numéro de téléphone - Prend le reste de l'espace */}
                       <input
                         type="tel"
                         value={paymentPhone}
@@ -1913,7 +2064,7 @@ export default function MoneyPoolDetailsPage() {
                           const cleaned = e.target.value.replace(/\s/g, '').replace(/[^\d+]/g, '');
                           setPaymentPhone(cleaned);
                         }}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta"
+                        className="flex-1 min-w-0 px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta text-sm sm:text-base"
                         placeholder={locale === 'fr' ? '771234567' : '771234567'}
                         required
                       />
