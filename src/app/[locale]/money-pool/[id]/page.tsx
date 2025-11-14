@@ -24,6 +24,7 @@ import {
 import MoneyPoolGallery from '@/components/MoneyPoolGallery';
 import Link from 'next/link';
 import { APP_CONFIG } from '@/config/app';
+import { WaveIcon, OrangeMoneyIcon, CreditCardIcon } from '@/components/payment-icons';
 
 interface MoneyPool {
   id: string;
@@ -56,7 +57,7 @@ interface MoneyPool {
 }
 
 interface Contributor {
-  user_id: string | null;
+  participant_id?: string | null;  // FK vers money_pool_participants (peut être null pour contributions anonymes)
   full_name?: string | null;
   amount: number;
   message?: string;
@@ -529,63 +530,93 @@ export default function MoneyPoolDetailsPage() {
 
   // Fonction helper pour gérer le paiement PayDunya SoftPay
   const handlePayDunyaPayment = (paymentData: any) => {
+    console.log('[PAYDUNYA SDK] handlePayDunyaPayment called');
+    console.log('[PAYDUNYA SDK] Payment data:', paymentData);
+    console.log('[PAYDUNYA SDK] PayDunyaCheckout available?', !!(window as any).PayDunyaCheckout);
+    
     if ((window as any).PayDunyaCheckout) {
       const PayDunyaCheckout = (window as any).PayDunyaCheckout;
       
-      // Configurer PayDunya SoftPay (intégration transparente)
-      PayDunyaCheckout.config({
-        public_key: paymentData.public_key,
-        invoice_token: paymentData.invoice_token,
-        amount: paymentData.amount,
-        currency: paymentData.currency || 'XOF',
-        customer: paymentData.customer,
-        // Options SoftPay : pas de branding PayDunya visible
-        hide_paydunya_branding: true
-      });
+      console.log('[PAYDUNYA SDK] Configuring PayDunya Checkout for SoftPay...');
       
-      // Ouvrir le modal de paiement (transparent, sans mentionner PayDunya)
-      PayDunyaCheckout.open();
-      
-      // Écouter les événements PayDunya
-      PayDunyaCheckout.on('success', () => {
-        // Paiement réussi
-        setNotification({
-          type: 'success',
-          message: locale === 'fr' ? 'Paiement effectué avec succès !' : 'Payment successful!'
+      try {
+        // Configurer PayDunya SoftPay (intégration transparente)
+        PayDunyaCheckout.config({
+          public_key: paymentData.public_key,
+          invoice_token: paymentData.invoice_token,
+          amount: paymentData.amount,
+          currency: paymentData.currency || 'XOF',
+          customer: paymentData.customer || {},
+          // Options SoftPay : pas de branding PayDunya visible
+          hide_paydunya_branding: paymentData.hide_paydunya_branding !== false  // Utiliser la valeur du backend ou true par défaut
         });
         
-        // Fermer le modal de contribution
-        setShowContributeModal(false);
+        console.log('[PAYDUNYA SDK] PayDunya Checkout configured successfully');
         
-        // Recharger les données
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      });
-      
-      PayDunyaCheckout.on('cancel', () => {
-        // Paiement annulé
-        setNotification({
-          type: 'error',
-          message: locale === 'fr' ? 'Paiement annulé' : 'Payment cancelled'
+        // Ouvrir le modal de paiement (transparent, sans mentionner PayDunya)
+        console.log('[PAYDUNYA SDK] Opening PayDunya Checkout modal (SoftPay mode)...');
+        PayDunyaCheckout.open();
+        
+        // Écouter les événements PayDunya
+        PayDunyaCheckout.on('success', () => {
+          console.log('[PAYDUNYA SDK] Payment success event received');
+          // Paiement réussi
+          setNotification({
+            type: 'success',
+            message: locale === 'fr' ? 'Paiement effectué avec succès !' : 'Payment successful!'
+          });
+          
+          // Fermer le modal de contribution
+          setShowContributeModal(false);
+          
+          // Recharger les données
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
         });
-      });
-      
-      PayDunyaCheckout.on('error', (error: any) => {
-        // Erreur de paiement
+        
+        PayDunyaCheckout.on('cancel', () => {
+          console.log('[PAYDUNYA SDK] Payment cancel event received');
+          // Paiement annulé
+          setNotification({
+            type: 'error',
+            message: locale === 'fr' ? 'Paiement annulé' : 'Payment cancelled'
+          });
+        });
+        
+        PayDunyaCheckout.on('error', (error: any) => {
+          console.error('[PAYDUNYA SDK] Payment error event received:', error);
+          // Erreur de paiement
+          setNotification({
+            type: 'error',
+            message: locale === 'fr' 
+              ? `Erreur de paiement: ${error.message || 'Erreur inconnue'}` 
+              : `Payment error: ${error.message || 'Unknown error'}`
+          });
+        });
+      } catch (configError) {
+        console.error('[PAYDUNYA SDK] Error configuring PayDunya Checkout:', configError);
+        // Pas de fallback de redirection pour SoftPay - on doit utiliser le SDK
         setNotification({
           type: 'error',
           message: locale === 'fr' 
-            ? `Erreur de paiement: ${error.message || 'Erreur inconnue'}` 
-            : `Payment error: ${error.message || 'Unknown error'}`
+            ? 'Erreur : Impossible de configurer le paiement. Veuillez réessayer.'
+            : 'Error: Unable to configure payment. Please try again.'
         });
-      });
-    } else {
-      // Fallback : redirection si SDK non disponible
-      const checkoutUrl = paymentData.checkout_url;
-      if (checkoutUrl) {
-        window.location.href = checkoutUrl;
+        setPaymentProcessing(false);
+        setIsContributing(false);
       }
+    } else {
+      console.error('[PAYDUNYA SDK] PayDunyaCheckout not available - SoftPay requires SDK');
+      // Pas de fallback de redirection pour SoftPay - on doit utiliser le SDK
+      setNotification({
+        type: 'error',
+        message: locale === 'fr' 
+          ? 'Erreur : Le système de paiement n\'a pas pu être chargé. Veuillez rafraîchir la page et réessayer.'
+          : 'Error: Payment system could not be loaded. Please refresh the page and try again.'
+      });
+      setPaymentProcessing(false);
+      setIsContributing(false);
     }
   };
 
@@ -605,6 +636,25 @@ export default function MoneyPoolDetailsPage() {
       
       try {
         // Créer la contribution ET initier le paiement PayDunya en une seule requête
+        // Formater le numéro de téléphone avec l'indicatif
+        let formattedPhone: string | undefined = undefined;
+        if (paymentPhone.trim()) {
+          // Nettoyer le numéro (enlever les espaces et le + s'il est déjà présent)
+          const cleanedPhone = paymentPhone.trim().replace(/\s/g, '').replace(/^\+/, '');
+          // Ajouter l'indicatif si le numéro ne commence pas déjà par l'indicatif
+          if (cleanedPhone && !cleanedPhone.startsWith(selectedCallingCode.replace('+', ''))) {
+            formattedPhone = `${selectedCallingCode}${cleanedPhone}`;
+          } else if (cleanedPhone) {
+            formattedPhone = cleanedPhone.startsWith('+') ? cleanedPhone : `+${cleanedPhone}`;
+          }
+        }
+        
+        console.log('[CONTRIBUTION] Payment phone formatting:', {
+          original: paymentPhone,
+          callingCode: selectedCallingCode,
+          formatted: formattedPhone
+        });
+        
         const requestBody: any = {
           amount: contributionAmount,
           currency: moneyPool?.currency || 'XOF',
@@ -614,10 +664,12 @@ export default function MoneyPoolDetailsPage() {
           // Payment information pour initier PayDunya
           customer_name: paymentFullName.trim(),
           customer_email: paymentEmail.trim() || undefined,
-          customer_phone: paymentPhone.trim() ? `${selectedCallingCode}${paymentPhone.trim().replace(/^\+/, '')}` : undefined, // Ajouter l'indicatif si téléphone fourni
+          customer_phone: formattedPhone, // Numéro formaté avec indicatif
           payment_method: paymentMethod, // Méthode de paiement choisie
           initiate_payment: true  // Initier le paiement PayDunya après création de la contribution
         };
+        
+        console.log('[CONTRIBUTION] Request body:', JSON.stringify(requestBody, null, 2));
         
         // Use the same token for the participation request
         const headers: HeadersInit = {
@@ -641,6 +693,25 @@ export default function MoneyPoolDetailsPage() {
           throw new Error(data.detail || 'Failed to contribute');
         }
         
+        console.log('[CONTRIBUTION] Response data:', JSON.stringify(data, null, 2));
+        console.log('[CONTRIBUTION] Payment initiated?', data.payment_initiated);
+        console.log('[CONTRIBUTION] Payment data exists?', !!data.payment);
+        console.log('[CONTRIBUTION] Payment error?', data.payment_error);
+        
+        // Vérifier si le paiement a été initié
+        if (data.payment_initiated === false || data.payment_error) {
+          // Le paiement n'a pas été initié - afficher une erreur
+          setNotification({
+            type: 'error',
+            message: locale === 'fr' 
+              ? `Erreur : Le paiement n'a pas pu être initié. ${data.payment_error || 'Veuillez réessayer ou contacter le support.'}`
+              : `Error: Payment could not be initiated. ${data.payment_error || 'Please try again or contact support.'}`
+          });
+          setPaymentProcessing(false);
+          setIsContributing(false);
+          return; // Ne pas fermer le modal, laisser l'utilisateur réessayer
+        }
+        
         // Si PayDunya SoftPay a été initié, intégrer le SDK pour paiement transparent
         if (data.payment && data.payment.payment_data) {
           const paymentData = data.payment.payment_data;
@@ -659,23 +730,38 @@ export default function MoneyPoolDetailsPage() {
               script.async = true;
               
               script.onload = () => {
-                handlePayDunyaPayment(paymentData);
+                console.log('[CONTRIBUTION] PayDunya SDK script loaded successfully');
+                // Attendre un peu pour que le SDK soit complètement initialisé
+                setTimeout(() => {
+                  if ((window as any).PayDunyaCheckout) {
+                    console.log('[CONTRIBUTION] PayDunyaCheckout is now available, calling handlePayDunyaPayment');
+                    handlePayDunyaPayment(paymentData);
+                  } else {
+                    console.error('[CONTRIBUTION] PayDunyaCheckout still not available after script load');
+                    // Pas de fallback de redirection pour SoftPay
+                    setNotification({
+                      type: 'error',
+                      message: locale === 'fr' 
+                        ? 'Erreur : Le système de paiement n\'a pas pu être chargé. Veuillez rafraîchir la page et réessayer.'
+                        : 'Error: Payment system could not be loaded. Please refresh the page and try again.'
+                    });
+                    setPaymentProcessing(false);
+                    setIsContributing(false);
+                  }
+                }, 100);
               };
               
-              script.onerror = () => {
-                // Si le SDK ne charge pas, utiliser la redirection comme fallback
-                const checkoutUrl = paymentData.checkout_url || data.payment.payment_url;
-                if (checkoutUrl) {
-                  setNotification({
-                    type: 'success',
-                    message: locale === 'fr' 
-                      ? 'Redirection vers la page de paiement sécurisée...' 
-                      : 'Redirecting to secure payment page...'
-                  });
-                  setTimeout(() => {
-                    window.location.href = checkoutUrl;
-                  }, 1000);
-                }
+              script.onerror = (error) => {
+                console.error('[CONTRIBUTION] PayDunya SDK script failed to load:', error);
+                // Pas de fallback de redirection pour SoftPay - on doit utiliser le SDK
+                setNotification({
+                  type: 'error',
+                  message: locale === 'fr' 
+                    ? 'Erreur : Le système de paiement n\'a pas pu être chargé. Veuillez vérifier votre connexion internet et réessayer.'
+                    : 'Error: Payment system could not be loaded. Please check your internet connection and try again.'
+                });
+                setPaymentProcessing(false);
+                setIsContributing(false);
               };
               
               document.head.appendChild(script);
@@ -683,13 +769,30 @@ export default function MoneyPoolDetailsPage() {
             
             return; // Ne pas fermer le modal, attendre le résultat du paiement
           } catch (error) {
-            console.error('Error loading PayDunya SDK:', error);
-            // Fallback : redirection
-            const checkoutUrl = paymentData.checkout_url || data.payment.payment_url;
-            if (checkoutUrl) {
-              window.location.href = checkoutUrl;
-            }
+            console.error('[CONTRIBUTION] Error loading PayDunya SDK:', error);
+            // Pas de fallback de redirection pour SoftPay
+            setNotification({
+              type: 'error',
+              message: locale === 'fr' 
+                ? 'Erreur : Le système de paiement n\'a pas pu être chargé. Veuillez réessayer.'
+                : 'Error: Payment system could not be loaded. Please try again.'
+            });
+            setPaymentProcessing(false);
+            setIsContributing(false);
           }
+        } else {
+          // Le paiement n'a pas été initié et aucune erreur n'a été retournée
+          // Cela ne devrait pas arriver, mais on gère le cas
+          console.warn('[CONTRIBUTION] No payment data in response, but no error either');
+          setNotification({
+            type: 'error',
+            message: locale === 'fr' 
+              ? 'Erreur : Le paiement n\'a pas pu être initié. Veuillez réessayer.'
+              : 'Error: Payment could not be initiated. Please try again.'
+          });
+          setPaymentProcessing(false);
+          setIsContributing(false);
+          return; // Ne pas fermer le modal
         }
         
         // Reload contributions from API
@@ -1016,16 +1119,16 @@ export default function MoneyPoolDetailsPage() {
                               if (contributor.anonymous) {
                                 return t('anonymousContributed');
                               }
-                              // Priorité au nom complet s'il est fourni par l'API ou la saisie
+                              // Priorité au nom complet s'il est fourni par l'API
                               if (contributor.full_name && contributor.full_name.trim().length > 0) {
                                 return `${contributor.full_name} ${t('contributed')}`;
                               }
-                              // Affichage spécifique pour l'utilisateur courant
-                              if (contributor.user_id === 'current_user') {
-                                return t('youContributed');
+                              // Si participant_id existe mais pas de full_name, afficher "Contributeur"
+                              if (contributor.participant_id) {
+                                return `${t('contributor')} ${t('contributed')}`;
                               }
-                              // Fallback générique si aucun nom exploitable
-                              return t('contributor');
+                              // Fallback : si pas anonyme mais pas de nom, afficher "Contributeur"
+                              return `${t('contributor')} ${t('contributed')}`;
                             })()}
                           </p>
                           <p className="text-sm text-ink-muted font-inter">
@@ -1449,80 +1552,47 @@ export default function MoneyPoolDetailsPage() {
                     {locale === 'fr' ? 'Méthode de paiement' : 'Payment method'}
                     <span className="text-red-500 ml-1">*</span>
                   </label>
-                  <div className="grid grid-cols-1 gap-3">
+                  <div className="flex gap-3 w-full">
                     {/* Wave */}
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('wave')}
-                      className={`p-4 border-2 rounded-lg text-left transition-all ${
+                      className={`flex-1 p-2 border-2 rounded-lg transition-all flex items-center justify-center aspect-square ${
                         paymentMethod === 'wave'
                           ? 'border-magenta bg-magenta/5'
                           : 'border-gray-300 hover:border-gray-400'
                       }`}
+                      title="Wave"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          paymentMethod === 'wave' ? 'border-magenta bg-magenta' : 'border-gray-300'
-                        }`}>
-                          {paymentMethod === 'wave' && (
-                            <div className="w-2 h-2 rounded-full bg-white"></div>
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-900">Wave</div>
-                          <div className="text-xs text-gray-500">{locale === 'fr' ? 'Paiement mobile Wave' : 'Wave mobile payment'}</div>
-                        </div>
-                      </div>
+                      <WaveIcon className="w-full h-full object-contain" />
                     </button>
 
                     {/* Orange Money */}
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('orange_money')}
-                      className={`p-4 border-2 rounded-lg text-left transition-all ${
+                      className={`flex-1 p-2 border-2 rounded-lg transition-all flex items-center justify-center aspect-square ${
                         paymentMethod === 'orange_money'
                           ? 'border-magenta bg-magenta/5'
                           : 'border-gray-300 hover:border-gray-400'
                       }`}
+                      title="Orange Money"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          paymentMethod === 'orange_money' ? 'border-magenta bg-magenta' : 'border-gray-300'
-                        }`}>
-                          {paymentMethod === 'orange_money' && (
-                            <div className="w-2 h-2 rounded-full bg-white"></div>
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-900">Orange Money</div>
-                          <div className="text-xs text-gray-500">{locale === 'fr' ? 'Paiement mobile Orange Money' : 'Orange Money mobile payment'}</div>
-                        </div>
-                      </div>
+                      <OrangeMoneyIcon className="w-full h-full object-contain" />
                     </button>
 
                     {/* Carte bancaire */}
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('card')}
-                      className={`p-4 border-2 rounded-lg text-left transition-all ${
+                      className={`flex-1 p-2 border-2 rounded-lg transition-all flex items-center justify-center aspect-square ${
                         paymentMethod === 'card'
                           ? 'border-magenta bg-magenta/5'
                           : 'border-gray-300 hover:border-gray-400'
                       }`}
+                      title={locale === 'fr' ? 'Carte bancaire' : 'Credit/Debit Card'}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          paymentMethod === 'card' ? 'border-magenta bg-magenta' : 'border-gray-300'
-                        }`}>
-                          {paymentMethod === 'card' && (
-                            <div className="w-2 h-2 rounded-full bg-white"></div>
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-900">{locale === 'fr' ? 'Carte bancaire' : 'Credit/Debit Card'}</div>
-                          <div className="text-xs text-gray-500">{locale === 'fr' ? 'Visa, Mastercard' : 'Visa, Mastercard'}</div>
-                        </div>
-                      </div>
+                      <CreditCardIcon className="w-full h-full object-contain" />
                     </button>
                   </div>
                 </div>
