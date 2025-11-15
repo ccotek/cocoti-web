@@ -15,6 +15,8 @@ interface MoneyPoolGalleryProps {
   videos?: string[];
   alt: string;
   className?: string;
+  disableModal?: boolean; // Désactiver l'ouverture du modal au clic
+  onClick?: () => void; // Gestionnaire de clic personnalisé
 }
 
 const DEFAULT_IMAGES = [
@@ -27,7 +29,9 @@ const MoneyPoolGallery: React.FC<MoneyPoolGalleryProps> = ({
   images, 
   videos = [], 
   alt, 
-  className = "" 
+  className = "",
+  disableModal = false,
+  onClick
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -65,6 +69,10 @@ const MoneyPoolGallery: React.FC<MoneyPoolGalleryProps> = ({
   };
 
   const openModal = () => {
+    if (disableModal && onClick) {
+      onClick();
+      return;
+    }
     setIsModalOpen(true);
   };
 
@@ -88,7 +96,10 @@ const MoneyPoolGallery: React.FC<MoneyPoolGalleryProps> = ({
   return (
     <>
       {/* Galerie principale */}
-      <div className={`relative w-full h-64 rounded-lg overflow-hidden group cursor-pointer ${className}`} onClick={openModal}>
+      <div 
+        className={`relative w-full h-64 rounded-lg overflow-hidden group ${disableModal ? '' : 'cursor-pointer'} ${className}`} 
+        onClick={disableModal ? undefined : openModal}
+      >
         {/* Image/Vidéo principale */}
         <div className="relative w-full h-full">
           {mediaItems[currentIndex].type === 'image' ? (

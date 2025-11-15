@@ -89,7 +89,7 @@ export default function CausesSection({ locale }: CausesSectionProps) {
 
         <div className="relative">
           {/* Carousel Container */}
-          <div className="overflow-hidden rounded-3xl">
+          <div className="overflow-hidden rounded-3xl relative">
             <motion.div
               className="flex transition-transform duration-500 ease-in-out"
               animate={{ x: `-${currentIndex * 100}%` }}
@@ -107,20 +107,24 @@ export default function CausesSection({ locale }: CausesSectionProps) {
                             <div className="flex h-56">
                       {/* Image Section - Left */}
                       <div className="relative w-1/3 flex-shrink-0">
-                        <MoneyPoolGallery
-                          images={[cause.image]}
-                          videos={[]}
-                          alt={cause.title}
-                          className="w-full h-full"
-                        />
+                        <Link href={`/${locale}/money-pool/${cause.id}`} className="block w-full h-full">
+                          <MoneyPoolGallery
+                            images={[cause.image]}
+                            videos={[]}
+                            alt={cause.title}
+                            className="w-full h-full"
+                            disableModal={true}
+                            onClick={() => {}}
+                          />
+                        </Link>
                         {cause.urgent && (
-                          <div className="absolute top-3 left-3">
+                          <div className="absolute top-3 left-3 z-10">
                             <span className="bg-coral text-white px-2 py-1 rounded-full text-xs font-semibold font-inter">
                               {locale === 'fr' ? 'Urgent' : 'Urgent'}
                             </span>
                           </div>
                         )}
-                        <div className="absolute top-3 right-3">
+                        <div className="absolute top-3 right-3 z-10">
                           <span className="bg-white/90 text-night px-2 py-1 rounded-full text-xs font-semibold font-inter">
                             {cause.category}
                           </span>
@@ -181,23 +185,23 @@ export default function CausesSection({ locale }: CausesSectionProps) {
                 </div>
               ))}
             </motion.div>
+            
+            {/* Navigation Arrows - Positioned relative to carousel container */}
+            <button
+              onClick={prevSlide}
+              className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center bg-white/90 hover:bg-white shadow-lg rounded-full w-12 h-12 transition-all z-10"
+              aria-label={locale === 'fr' ? 'Précédent' : 'Previous'}
+            >
+              <ChevronLeftIcon className="h-6 w-6 text-night" />
+            </button>
+            <button
+              onClick={nextSlide}
+              className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center bg-white/90 hover:bg-white shadow-lg rounded-full w-12 h-12 transition-all z-10"
+              aria-label={locale === 'fr' ? 'Suivant' : 'Next'}
+            >
+              <ChevronRightIcon className="h-6 w-6 text-night" />
+            </button>
           </div>
-
-          {/* Navigation Arrows */}
-          <button
-            onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all z-10"
-            aria-label={locale === 'fr' ? 'Précédent' : 'Previous'}
-          >
-            <ChevronLeftIcon className="h-6 w-6 text-night" />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all z-10"
-            aria-label={locale === 'fr' ? 'Suivant' : 'Next'}
-          >
-            <ChevronRightIcon className="h-6 w-6 text-night" />
-          </button>
 
           {/* Dots Indicator */}
           <div className="flex justify-center mt-8 gap-2 mb-6">
