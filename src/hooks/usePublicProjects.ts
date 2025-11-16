@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { formatAmount } from '@/utils/formatAmount';
 
 export interface PublicProject {
   id: string;
@@ -110,8 +111,8 @@ export function usePublicProjects(locale: 'fr' | 'en' = 'fr'): UsePublicProjects
           progress: pool.settings.target_amount > 0 
             ? Math.round((pool.current_amount / pool.settings.target_amount) * 100) 
             : 0,
-          target: `${pool.settings.target_amount.toLocaleString('fr-FR')} ${pool.currency}`,
-          raised: `${pool.current_amount.toLocaleString('fr-FR')} ${pool.currency}`,
+          target: `${formatAmount(pool.settings.target_amount)} ${pool.currency}`,
+          raised: `${formatAmount(pool.current_amount)} ${pool.currency}`,
           category: locale === 'fr' ? 'Cagnotte' : 'Money Pool',
           urgent: false
         }));

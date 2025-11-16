@@ -25,6 +25,8 @@ import MoneyPoolGallery from '@/components/MoneyPoolGallery';
 import Link from 'next/link';
 import { APP_CONFIG } from '@/config/app';
 import { WaveIcon, OrangeMoneyIcon, CreditCardIcon } from '@/components/payment-icons';
+import { formatCurrency, formatAmount } from '@/utils/formatAmount';
+import ShareMenuWithQR from '@/components/ShareMenuWithQR';
 
 interface MoneyPool {
   id: string;
@@ -64,13 +66,6 @@ interface Contributor {
   anonymous: boolean;
   created_at: string;
 }
-
-// Helper function to display currency with amount
-const formatCurrency = (amount: number, currency: string): string => {
-  const formattedAmount = amount.toLocaleString('fr-FR');
-  if (currency === 'XOF') return `${formattedAmount} FCFA`;
-  return `${formattedAmount} ${currency}`;
-};
 
 // Helper function to display currency symbol/name only
 const getCurrencySymbol = (currency: string): string => {
@@ -549,7 +544,10 @@ export default function MoneyPoolDetailsPage() {
     }
   }, [contributionAmount, cocotiTipPercentage]);
 
-  // Fonction de partage - exactement comme dans cocoti-dash
+  // État pour le menu de partage
+  const [showShareMenu, setShowShareMenu] = useState(false);
+
+  // Fonction de partage - ouvre le menu de partage
   const handleShare = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -558,25 +556,7 @@ export default function MoneyPoolDetailsPage() {
       return;
     }
 
-    const shareUrl = `${APP_CONFIG.WEB_APP_URL}/${locale}/money-pool/${moneyPoolId}`;
-    
-    // Utiliser directement navigator.clipboard.writeText comme dans cocoti-dash
-    navigator.clipboard.writeText(shareUrl)
-      .then(() => {
-        setNotification({
-          type: 'success',
-          message: locale === 'fr' ? 'Lien copié' : 'Link copied'
-        });
-        setTimeout(() => setNotification(null), 3000);
-      })
-      .catch((err) => {
-        console.error('Share error:', err);
-        setNotification({
-          type: 'error',
-          message: locale === 'fr' ? 'Erreur lors du partage' : 'Error sharing'
-        });
-        setTimeout(() => setNotification(null), 3000);
-      });
+    setShowShareMenu(true);
   };
 
   const handleContribute = async () => {
@@ -614,7 +594,7 @@ export default function MoneyPoolDetailsPage() {
       if (moneyPool.settings.min_contribution && contributionAmount < moneyPool.settings.min_contribution) {
         setNotification({
           type: 'error',
-          message: `${t('minAmount')} ${moneyPool.settings.min_contribution.toLocaleString('fr-FR')} ${getCurrencySymbol(moneyPool.currency)}`
+          message: `${t('minAmount')} ${formatAmount(moneyPool.settings.min_contribution)} ${getCurrencySymbol(moneyPool.currency)}`
         });
         return;
       }
@@ -622,7 +602,7 @@ export default function MoneyPoolDetailsPage() {
       if (moneyPool.settings.max_contribution && contributionAmount > moneyPool.settings.max_contribution) {
         setNotification({
           type: 'error',
-          message: `${t('maxAmount')} ${moneyPool.settings.max_contribution.toLocaleString('fr-FR')} ${getCurrencySymbol(moneyPool.currency)}`
+          message: `${t('maxAmount')} ${formatAmount(moneyPool.settings.max_contribution)} ${getCurrencySymbol(moneyPool.currency)}`
         });
         return;
       }
@@ -1761,9 +1741,9 @@ export default function MoneyPoolDetailsPage() {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta text-lg font-semibold text-green-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     placeholder={
                       moneyPool.settings.min_contribution && moneyPool.settings.max_contribution
-                        ? `${moneyPool.settings.min_contribution.toLocaleString('fr-FR')} - ${moneyPool.settings.max_contribution.toLocaleString('fr-FR')}`
+                        ? `${formatAmount(moneyPool.settings.min_contribution)} - ${formatAmount(moneyPool.settings.max_contribution)}`
                         : moneyPool.settings.min_contribution
-                        ? `${moneyPool.settings.min_contribution.toLocaleString('fr-FR')}+`
+                        ? `${formatAmount(moneyPool.settings.min_contribution)}+`
                         : '0'
                     }
                   />
@@ -2190,6 +2170,17 @@ export default function MoneyPoolDetailsPage() {
             )}
           </motion.div>
         </div>
+      )}
+
+      {/* Share Menu with QR */}
+      {showShareMenu && moneyPool && (
+        <ShareMenuWithQR
+          shareUrl={`${APP_CONFIG.WEB_APP_URL}/${locale}/money-pool/${moneyPoolId}`}
+          title={moneyPool.name}
+          description={moneyPool.description}
+          locale={locale}
+          onClose={() => setShowShareMenu(false)}
+        />
       )}
     </div>
   );

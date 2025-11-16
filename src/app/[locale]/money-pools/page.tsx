@@ -15,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 import MoneyPoolGallery from '@/components/MoneyPoolGallery';
 import Link from 'next/link';
+import { formatCurrency } from '@/utils/formatAmount';
 
 interface PublicMoneyPool {
   id: string;
@@ -36,11 +37,6 @@ interface PublicMoneyPool {
   verified?: boolean;
   status?: string; // 'active', 'draft', 'archived', 'closed', 'cancelled', 'fulfilled'
 }
-
-const formatCurrency = (amount: number, currency: string): string => {
-  if (currency === 'XOF') return `${amount.toLocaleString('fr-FR')} FCFA`;
-  return `${amount.toLocaleString('fr-FR')} ${currency}`;
-};
 
 export default function MoneyPoolsListPage() {
   const params = useParams();

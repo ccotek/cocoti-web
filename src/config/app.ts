@@ -26,5 +26,8 @@ export const APP_CONFIG = {
   // URL de l'application web (cocoti-web) - pour référence interne et partage
   // Utilise l'URL publique configurée ou window.location.origin en développement
   WEB_APP_URL: getPublicWebUrl(),
+  // URLs pour les conditions d'utilisation et politique de confidentialité
+  TERMS_URL: process.env.NEXT_PUBLIC_TERMS_URL || 'https://cocoti.com/terms-of-service',
+  PRIVACY_URL: process.env.NEXT_PUBLIC_PRIVACY_URL || 'https://cocoti.com/privacy-policy',
 };
 

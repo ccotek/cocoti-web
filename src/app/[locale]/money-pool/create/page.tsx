@@ -41,12 +41,23 @@ export default function CreateMoneyPoolPage() {
   const router = useRouter();
   const locale = params.locale as 'fr' | 'en';
 
+  // Load translations once with useMemo to avoid hydration issues
+  const translations = useMemo(() => {
+    try {
+      const frMessages = require('@/i18n/messages/fr.json');
+      const enMessages = require('@/i18n/messages/en.json');
+      return {
+        fr: frMessages.moneyPool?.create || {},
+        en: enMessages.moneyPool?.create || {}
+      };
+    } catch (error) {
+      console.error('Error loading translations:', error);
+      return { fr: {}, en: {} };
+    }
+  }, []);
+
   // Helper function for translations
   const t = (key: string): string => {
-    const translations: Record<string, Record<string, string>> = {
-      fr: require('@/i18n/messages/fr.json').moneyPool.create || {},
-      en: require('@/i18n/messages/en.json').moneyPool.create || {}
-    };
     const keys = key.split('.');
     let value: any = translations[locale];
     for (const k of keys) {
@@ -89,6 +100,7 @@ export default function CreateMoneyPoolPage() {
   const [receivedToken, setReceivedToken] = useState<string | null>(null); // Token received from OTP authentication
   const [allowAnonymous, setAllowAnonymous] = useState(true); // Allow anonymous contributions by default
   const [showPublishWarning, setShowPublishWarning] = useState(false);
+  const [userIsAuthenticated, setUserIsAuthenticated] = useState(false); // Track if user is authenticated with valid token
 
   const [formData, setFormData] = useState<MoneyPoolFormData>({
     name: '',
@@ -105,6 +117,106 @@ export default function CreateMoneyPoolPage() {
     images: [],
     videos: []
   });
+
+  // Vérifier l'authentification au chargement de la page
+  // Si l'utilisateur vient de cocoti-dash, le token peut être passé en paramètre d'URL
+  // Sinon, on vérifie le localStorage ou on essaie de récupérer l'utilisateur via l'API
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      try {
+        // Récupérer l'URL de l'API
+        const API_URL = APP_CONFIG.API_URL;
+        
+        // 1. Vérifier si un token est passé en paramètre d'URL (redirection depuis cocoti-dash)
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('token');
+        
+        if (tokenFromUrl) {
+          // Token passé depuis cocoti-dash, le stocker dans localStorage
+          console.log('[CREATE] Token found in URL, storing in localStorage...');
+          setAuthToken(tokenFromUrl);
+          // Nettoyer l'URL pour ne pas exposer le token
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+        
+        // 2. Vérifier le localStorage (après avoir potentiellement stocké le token depuis l'URL)
+        let token = getAuthToken();
+        let isAuthenticated = false; // Variable locale pour suivre l'état d'authentification
+        
+        // 3. Si on a un token, vérifier qu'il est valide en appelant /auth/me
+        // C'est la priorité : si un token existe dans localStorage, on le vérifie d'abord
+        if (token) {
+          try {
+            console.log('[CREATE] Token found in localStorage, verifying validity...');
+            const response = await fetch(`${API_URL}/api/v1/auth/me`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            if (response.ok) {
+              const userData = await response.json();
+              console.log('[CREATE] Token is valid, user authenticated:', userData.user_id);
+              // Token valide, l'utilisateur peut créer directement
+              isAuthenticated = true;
+            } else if (response.status === 401) {
+              // Token invalide ou expiré, le supprimer
+              console.log('[CREATE] Token invalid or expired, clearing...');
+              clearAuthToken();
+              token = null; // Réinitialiser pour essayer les cookies
+              isAuthenticated = false;
+            } else {
+              // Autre erreur (500, etc.)
+              console.error('[CREATE] Error verifying token, status:', response.status);
+              isAuthenticated = false;
+            }
+          } catch (tokenError) {
+            console.error('[CREATE] Error verifying token:', tokenError);
+            isAuthenticated = false;
+          }
+        }
+        
+        // 4. Si pas de token valide, essayer de vérifier l'authentification via l'API avec cookies
+        // (peut fonctionner si l'utilisateur a une session cookie active depuis une autre source)
+        // Note: L'API actuelle nécessite un Bearer token, donc cette vérification ne fonctionnera probablement pas
+        // mais on la garde pour le futur si l'API supporte les cookies de session
+        if (!isAuthenticated) {
+          try {
+            console.log('[CREATE] No valid token found, checking for cookie session...');
+            const response = await fetch(`${API_URL}/api/v1/auth/me`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include', // Inclure les cookies si disponibles
+            });
+            
+            // Si l'API retourne un utilisateur (via cookie de session), on est connecté
+            if (response.ok) {
+              const userData = await response.json();
+              console.log('[CREATE] User authenticated via API (cookie session):', userData.user_id);
+              // L'utilisateur est connecté via cookie
+              isAuthenticated = true;
+            } else {
+              console.log('[CREATE] No cookie session found');
+            }
+          } catch (apiError) {
+            // Erreur silencieuse - l'utilisateur n'est probablement pas connecté
+            console.log('[CREATE] No authentication found via API (cookie session)');
+          }
+        }
+        
+        // Mettre à jour l'état avec le résultat de la vérification
+        setUserIsAuthenticated(isAuthenticated);
+      } catch (error) {
+        console.error('[CREATE] Error checking authentication:', error);
+      }
+    };
+
+    checkAuthentication();
+  }, []); // Se déclencher une seule fois au chargement
 
   // Auto-detect country and currency
   useEffect(() => {
@@ -539,14 +651,51 @@ export default function CreateMoneyPoolPage() {
     }
 
     // Check if user is already authenticated
-    // Use centralized token utility
+    // Use centralized token utility and check authentication state
     const token = getAuthToken();
     
     if (token) {
-      // User is already authenticated, create money pool directly
-      await submitForm(token);
+      // If we have a token but userIsAuthenticated is false, verify it now
+      if (!userIsAuthenticated) {
+        try {
+          const API_URL = APP_CONFIG.API_URL;
+          const response = await fetch(`${API_URL}/api/v1/auth/me`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            // Token is valid
+            setUserIsAuthenticated(true);
+            console.log('[CREATE] Token verified, user authenticated, creating money pool directly');
+            await submitForm(token);
+            return;
+          } else if (response.status === 401) {
+            // Token invalid, clear it
+            clearAuthToken();
+            setUserIsAuthenticated(false);
+            console.log('[CREATE] Token invalid, moving to verification step');
+            setCurrentStep('verification');
+            return;
+          }
+        } catch (error) {
+          console.error('[CREATE] Error verifying token:', error);
+          // On error, move to verification step
+          setCurrentStep('verification');
+          return;
+        }
+      } else {
+        // User is already authenticated with valid token, create money pool directly
+        console.log('[CREATE] User authenticated, creating money pool directly');
+        await submitForm(token);
+        return;
+      }
     } else {
       // User not authenticated, move to verification step
+      console.log('[CREATE] User not authenticated, moving to verification step');
       setCurrentStep('verification');
     }
   };
@@ -586,8 +735,9 @@ export default function CreateMoneyPoolPage() {
         setNeedsRegistration(false);
         // Store tokens if provided
         if (data.tokens) {
-          localStorage.setItem('cocoti_access_token', data.tokens.access_token);
+          setAuthToken(data.tokens.access_token);
           localStorage.setItem('cocoti_refresh_token', data.tokens.refresh_token);
+          setUserIsAuthenticated(true);
         }
         // Create money pool with OTP credentials
         await submitForm(undefined);
@@ -608,11 +758,12 @@ export default function CreateMoneyPoolPage() {
     setError('');
 
     // Check if user needs OTP authentication
-    // Use centralized token utility
+    // Use centralized token utility and check authentication state
     const token = getAuthToken();
     
-    if (token) {
-      // User is already authenticated, proceed directly with creation (no phone/OTP needed)
+    if (token && userIsAuthenticated) {
+      // User is already authenticated with valid token, proceed directly with creation (no phone/OTP needed)
+      console.log('[CREATE] User authenticated in verification step, creating money pool directly');
       await submitForm(token);
       return;
     }
@@ -683,10 +834,10 @@ export default function CreateMoneyPoolPage() {
         
         // Store tokens if provided
         if (registerData.tokens) {
-          localStorage.setItem('cocoti_access_token', registerData.tokens.access_token);
           localStorage.setItem('cocoti_refresh_token', registerData.tokens.refresh_token);
           setAuthToken(registerData.tokens.access_token);
           setReceivedToken(registerData.tokens.access_token);
+          setUserIsAuthenticated(true);
         }
         
         // User registered, proceed with money pool creation
@@ -880,6 +1031,7 @@ export default function CreateMoneyPoolPage() {
         console.log('[CREATE] Received access_token from API, saving...');
         setAuthToken(data.access_token);
         setReceivedToken(data.access_token); // Store in local state for immediate use
+        setUserIsAuthenticated(true);
         console.log('[CREATE] Token saved to state and localStorage');
       } else if (!data.access_token && !token) {
         console.warn('[CREATE] No access_token in response and no token provided');
@@ -1318,77 +1470,75 @@ export default function CreateMoneyPoolPage() {
                 </div>
               </div>
 
-              {/* Charter Acceptance */}
-              <div className="bg-gradient-to-br from-magenta/5 to-sunset/5 rounded-2xl p-6 border-2 border-cloud">
-                <div className="flex items-center gap-3">
-                  <div className="relative flex-shrink-0">
-                    <input
-                      type="checkbox"
-                      id="charter-accept"
-                      checked={charterAccepted}
-                      onChange={(e) => setCharterAccepted(e.target.checked)}
-                      className="sr-only"
-                      required
-                    />
-                    <label
-                      htmlFor="charter-accept"
-                      className={`flex items-center justify-center w-4 h-4 border-2 rounded cursor-pointer transition-all duration-200 hover:border-magenta focus-within:ring-2 focus-within:ring-magenta focus-within:ring-offset-1 ${
-                        charterAccepted
-                          ? 'bg-gradient-to-br from-magenta to-sunset border-transparent shadow-md shadow-magenta/30'
-                          : 'border-cloud'
-                      }`}
-                    >
-                      {charterAccepted && (
-                        <motion.svg
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                          className="w-2.5 h-2.5 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={3}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </motion.svg>
-                      )}
-                    </label>
-                  </div>
-                  <label htmlFor="charter-accept" className="text-sm text-night font-inter cursor-pointer flex-1 leading-relaxed">
-                    {t('charterAccept')}{' '}
-                    <a 
-                      href="https://cocoti.com/terms-of-service" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-magenta hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {t('charterTerms')}
-                    </a>
-                    {' '}{t('charterAnd')}{' '}
-                    <a 
-                      href="https://cocoti.com/privacy-policy" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-magenta hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {t('charterPrivacy')}
-                    </a>
-                  </label>
-                </div>
-              </div>
-
               {/* Error Message */}
               {error && (
                 <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 text-red-600 font-inter">
                   {error}
                 </div>
               )}
+
+              {/* Charter Acceptance */}
+              <div className="flex items-start gap-3">
+                <div className="relative flex-shrink-0 mt-0.5">
+                  <input
+                    type="checkbox"
+                    id="charter-accept"
+                    checked={charterAccepted}
+                    onChange={(e) => setCharterAccepted(e.target.checked)}
+                    className="sr-only"
+                    required
+                  />
+                  <label
+                    htmlFor="charter-accept"
+                    className={`flex items-center justify-center w-5 h-5 border-2 rounded cursor-pointer transition-all duration-200 hover:border-magenta focus-within:ring-2 focus-within:ring-magenta focus-within:ring-offset-1 ${
+                      charterAccepted
+                        ? 'bg-gradient-to-br from-magenta to-sunset border-transparent shadow-md shadow-magenta/30'
+                        : 'border-cloud bg-white'
+                    }`}
+                  >
+                    {charterAccepted && (
+                      <motion.svg
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        className="w-3 h-3 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={3}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </motion.svg>
+                    )}
+                  </label>
+                </div>
+                <label htmlFor="charter-accept" className="text-sm text-ink-muted cursor-pointer flex-1 leading-relaxed">
+                  {t('acceptTerms')}{' '}
+                  <a 
+                    href={APP_CONFIG.TERMS_URL} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-magenta hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {t('termsLink')}
+                  </a>{' '}
+                  {t('and')}{' '}
+                  <a 
+                    href={APP_CONFIG.PRIVACY_URL} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-magenta hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {t('privacyLink')}
+                  </a>
+                </label>
+              </div>
 
               {/* Submit Button */}
               <div className="flex gap-4 pt-4">
