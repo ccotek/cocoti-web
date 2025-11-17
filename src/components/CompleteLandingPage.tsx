@@ -100,8 +100,8 @@ export default function CompleteLandingPage() {
   };
 
   const pricing = {
-    title: t("pricing.title"),
-    plans: (Array.isArray(t("pricing.plans")) ? t("pricing.plans") : []) as Array<{
+    title: content?.pricing?.title || t("pricing.title"),
+    plans: (content?.pricing?.plans || (Array.isArray(t("pricing.plans")) ? t("pricing.plans") : [])) as Array<{
       name: string;
       price: string;
       period: string;
@@ -109,7 +109,15 @@ export default function CompleteLandingPage() {
       features: string[];
       cta: string;
       highlight?: boolean;
-    }>
+    }>,
+    comparisonTable: content?.pricing?.comparisonTable || (t("pricing.comparisonTable") as {
+      features: Array<{
+        label: string;
+        free: string;
+        premium: string;
+        community: string;
+      }>;
+    } | undefined)
   };
 
   const testimonials = {
@@ -166,7 +174,7 @@ export default function CompleteLandingPage() {
         <SolutionsSection solutions={solutions} />
         <HowSection how={how} />
         <WhySection why={why} />
-        <PricingSection pricing={pricing} />
+        <PricingSection pricing={pricing} locale={locale} />
         <TestimonialsSection testimonials={testimonials} />
         <FaqSection faq={faq} />
       </main>

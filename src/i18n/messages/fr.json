@@ -142,7 +142,7 @@
     ]
   },
   "pricing": {
-    "title": "Des tarifs pensés pour votre croissance.",
+    "title": "Choisissez votre plan.",
     "plans": [
       {
         "name": "Gratuit",
@@ -166,7 +166,7 @@
           "Automatisation avancée",
           "Support prioritaire"
         ],
-        "cta": "Choisir Premium",
+        "cta": "Commencer gratuitement",
         "highlight": true
       },
       {
@@ -179,9 +179,67 @@
           "Tontines publiques",
           "Analytics de base"
         ],
-        "cta": "Choisir Community"
+        "cta": "Bientôt disponible"
       }
-    ]
+    ],
+    "comparisonTable": {
+      "features": [
+        {
+          "label": "Cagnottes",
+          "free": "**Illimité**",
+          "premium": "**Illimité**",
+          "community": "**Illimité**"
+        },
+        {
+          "label": "Créer des projets",
+          "free": "Jusqu'à **1 projet actif**",
+          "premium": "Jusqu'à **10 projets actifs**",
+          "community": "**Illimité**"
+        },
+        {
+          "label": "Participer à des projets",
+          "free": "Jusqu'à **3 participations actives**",
+          "premium": "Jusqu'à **20 participations actives**",
+          "community": "**Illimité**"
+        },
+        {
+          "label": "Types de projets disponibles",
+          "free": "Cagnottes + Tontines",
+          "premium": "Tous projets",
+          "community": "Tous projets + options organisation"
+        },
+        {
+          "label": "Features disponibles",
+          "free": "Basiques",
+          "premium": "Avancées",
+          "community": "Complètes"
+        },
+        {
+          "label": "Visibilité des projets",
+          "free": "Privée uniquement",
+          "premium": "Privée & Publique",
+          "community": "Privée & Publique"
+        },
+        {
+          "label": "Administrateurs",
+          "free": "1 (le créateur)",
+          "premium": "1 + options avancées",
+          "community": "**Multi-admins**"
+        },
+        {
+          "label": "Multi-pays",
+          "free": "Limité",
+          "premium": "Étendu",
+          "community": "**Étendu**"
+        },
+        {
+          "label": "Support",
+          "free": "Standard",
+          "premium": "Prioritaire",
+          "community": "Dédié"
+        }
+      ]
+    }
   },
   "testimonials": {
     "title": "Ils font confiance à Cocoti.",

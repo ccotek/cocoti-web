@@ -58,6 +58,12 @@ type Plan = {
   cta: string;
   highlight?: boolean;
 };
+type ComparisonFeature = {
+  label: string;
+  free: string;
+  premium: string;
+  community: string;
+};
 type Testimonial = {
   name: string;
   role: string;
@@ -85,6 +91,7 @@ const valueIcons: Record<number, ComponentType<{ className?: string }>> = {
 };
 export default function LandingPage() {
   const t = useTranslations();
+  const locale = useLocale() as 'fr' | 'en';
 
   const navItems = t.raw("navigation.items") as NavItem[];
   const navCta = t("navigation.cta");
@@ -110,7 +117,13 @@ export default function LandingPage() {
     subtitle: string;
     values: ValueProp[];
   };
-  const pricing = t.raw("pricing") as { title: string; plans: Plan[] };
+  const pricing = t.raw("pricing") as { 
+    title: string; 
+    plans: Plan[];
+    comparisonTable?: {
+      features: ComparisonFeature[];
+    };
+  };
   const testimonials = t.raw("testimonials") as {
     title: string;
     subtitle: string;
@@ -188,7 +201,7 @@ export default function LandingPage() {
         <SolutionsSection solutions={solutions} />
         <HowSection how={how} />
         <WhySection why={why} />
-        <PricingSection pricing={pricing} />
+        <PricingSection pricing={pricing} locale={locale} />
         <TestimonialsSection testimonials={testimonials} />
         <FaqSection faq={faq} />
         <ContactSection

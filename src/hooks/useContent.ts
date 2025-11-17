@@ -53,6 +53,14 @@ export type ContentData = {
       cta: string;
       highlight?: boolean;
     }>;
+    comparisonTable?: {
+      features: Array<{
+        label: string;
+        free: string;
+        premium: string;
+        community: string;
+      }>;
+    };
   };
   testimonials: {
     title: string;
@@ -208,7 +216,8 @@ export function useContent(locale: 'fr' | 'en') {
           },
           pricing: {
             title: data.pricing?.title || '',
-            plans: data.pricing?.plans || []
+            plans: data.pricing?.plans || [],
+            comparisonTable: data.pricing?.comparisonTable || undefined
           },
           testimonials: {
             title: data.testimonials?.title || '',

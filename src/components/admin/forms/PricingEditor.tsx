@@ -20,12 +20,28 @@ interface PricingPlan {
   highlight?: boolean;
 }
 
+interface ComparisonFeature {
+  label: string;
+  free: string;
+  premium: string;
+  community: string;
+}
+
 interface PricingEditorProps {
   pricing: {
     title: string;
     plans: PricingPlan[];
+    comparisonTable?: {
+      features: ComparisonFeature[];
+    };
   };
-  onUpdate: (pricing: { title: string; plans: PricingPlan[] }) => Promise<{ success: boolean; error?: string }>;
+  onUpdate: (pricing: { 
+    title: string; 
+    plans: PricingPlan[];
+    comparisonTable?: {
+      features: ComparisonFeature[];
+    };
+  }) => Promise<{ success: boolean; error?: string }>;
   locale: 'fr' | 'en';
 }
 
@@ -116,6 +132,42 @@ export default function PricingEditor({ pricing, onUpdate, locale }: PricingEdit
     }));
   };
 
+  // Gestion du tableau de comparaison
+  const handleComparisonFeatureChange = (index: number, field: keyof ComparisonFeature, value: string) => {
+    setLocalPricing(prev => ({
+      ...prev,
+      comparisonTable: {
+        features: (prev.comparisonTable?.features || []).map((feature, i) =>
+          i === index ? { ...feature, [field]: value } : feature
+        )
+      }
+    }));
+  };
+
+  const addComparisonFeature = () => {
+    const newFeature: ComparisonFeature = {
+      label: locale === 'fr' ? 'Nouvelle fonctionnalité' : 'New feature',
+      free: '',
+      premium: '',
+      community: ''
+    };
+    setLocalPricing(prev => ({
+      ...prev,
+      comparisonTable: {
+        features: [...(prev.comparisonTable?.features || []), newFeature]
+      }
+    }));
+  };
+
+  const removeComparisonFeature = (index: number) => {
+    setLocalPricing(prev => ({
+      ...prev,
+      comparisonTable: {
+        features: (prev.comparisonTable?.features || []).filter((_, i) => i !== index)
+      }
+    }));
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     setError(null);
@@ -155,6 +207,97 @@ export default function PricingEditor({ pricing, onUpdate, locale }: PricingEdit
             placeholder={locale === 'fr' ? 'Ex: Des tarifs pensés pour votre croissance' : 'Ex: Pricing built for growth'}
           />
         </label>
+      </div>
+
+      {/* Tableau de comparaison */}
+      <div className="space-y-6 bg-ivory p-6 rounded-lg border border-cloud">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-night">
+            {locale === 'fr' ? 'Tableau de comparaison' : 'Comparison Table'}
+          </h3>
+          <button
+            onClick={addComparisonFeature}
+            className="flex items-center space-x-2 px-4 py-2 bg-magenta text-white rounded-lg hover:bg-magenta/90 transition-colors"
+          >
+            <PlusIcon className="h-4 w-4" />
+            <span>{locale === 'fr' ? 'Ajouter une ligne' : 'Add Row'}</span>
+          </button>
+        </div>
+
+        {localPricing.comparisonTable?.features && localPricing.comparisonTable.features.length > 0 ? (
+          <div className="space-y-4">
+            {localPricing.comparisonTable.features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white border border-cloud rounded-lg p-4"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-medium text-night">
+                    {locale === 'fr' ? 'Ligne' : 'Row'} {index + 1}
+                  </h4>
+                  <button
+                    onClick={() => removeComparisonFeature(index)}
+                    className="p-1 text-coral hover:bg-coral/10 rounded-lg transition-colors"
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-night mb-1">
+                      {locale === 'fr' ? 'Label' : 'Label'}
+                    </label>
+                    <input
+                      type="text"
+                      value={feature.label}
+                      onChange={(e) => handleComparisonFeatureChange(index, 'label', e.target.value)}
+                      className="w-full px-3 py-2 border border-cloud rounded-lg focus:ring-2 focus:ring-magenta focus:border-transparent text-sm"
+                      placeholder={locale === 'fr' ? 'Ex: Créer des projets' : 'Ex: Create projects'}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-night mb-1">Free</label>
+                    <input
+                      type="text"
+                      value={feature.free}
+                      onChange={(e) => handleComparisonFeatureChange(index, 'free', e.target.value)}
+                      className="w-full px-3 py-2 border border-cloud rounded-lg focus:ring-2 focus:ring-magenta focus:border-transparent text-sm"
+                      placeholder={locale === 'fr' ? 'Ex: Jusqu\'à 1 projet' : 'Ex: Up to 1 project'}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-night mb-1">Premium</label>
+                    <input
+                      type="text"
+                      value={feature.premium}
+                      onChange={(e) => handleComparisonFeatureChange(index, 'premium', e.target.value)}
+                      className="w-full px-3 py-2 border border-cloud rounded-lg focus:ring-2 focus:ring-magenta focus:border-transparent text-sm"
+                      placeholder={locale === 'fr' ? 'Ex: Jusqu\'à 10 projets' : 'Ex: Up to 10 projects'}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-night mb-1">Community</label>
+                    <input
+                      type="text"
+                      value={feature.community}
+                      onChange={(e) => handleComparisonFeatureChange(index, 'community', e.target.value)}
+                      className="w-full px-3 py-2 border border-cloud rounded-lg focus:ring-2 focus:ring-magenta focus:border-transparent text-sm"
+                      placeholder={locale === 'fr' ? 'Ex: Illimité' : 'Ex: Unlimited'}
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-ink-muted text-sm">
+            {locale === 'fr' 
+              ? 'Aucune ligne dans le tableau de comparaison. Cliquez sur "Ajouter une ligne" pour commencer.' 
+              : 'No rows in comparison table. Click "Add Row" to get started.'}
+          </div>
+        )}
       </div>
 
       {/* Plans */}

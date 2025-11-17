@@ -142,7 +142,7 @@
     ]
   },
   "pricing": {
-    "title": "Pricing built for growth.",
+    "title": "Choose the plan that fits you.",
     "plans": [
       {
         "name": "Free",
@@ -166,7 +166,7 @@
           "Advanced automation",
           "Priority support"
         ],
-        "cta": "Choose Premium",
+        "cta": "Start for free",
         "highlight": true
       },
       {
@@ -179,9 +179,67 @@
           "Public tontines",
           "Basic analytics"
         ],
-        "cta": "Choose Community"
+        "cta": "Not Available yet"
       }
-    ]
+    ],
+    "comparisonTable": {
+      "features": [
+        {
+          "label": "Money pools",
+          "free": "**Unlimited**",
+          "premium": "**Unlimited**",
+          "community": "**Unlimited**"
+        },
+        {
+          "label": "Create projects",
+          "free": "Up to **1 active project**",
+          "premium": "Up to **10 active projects**",
+          "community": "**Unlimited**"
+        },
+        {
+          "label": "Participate in projects",
+          "free": "Up to **3 active participations**",
+          "premium": "Up to **20 active participations**",
+          "community": "**Unlimited**"
+        },
+        {
+          "label": "Available project types",
+          "free": "Money pools + Tontines",
+          "premium": "All projects",
+          "community": "All projects + organization options"
+        },
+        {
+          "label": "Available features",
+          "free": "Basic",
+          "premium": "Advanced",
+          "community": "Complete"
+        },
+        {
+          "label": "Project visibility",
+          "free": "Private only",
+          "premium": "Private & Public",
+          "community": "Private & Public"
+        },
+        {
+          "label": "Administrators",
+          "free": "1 (the creator)",
+          "premium": "1 + advanced options",
+          "community": "**Multi-admins**"
+        },
+        {
+          "label": "Multi-country",
+          "free": "Limited",
+          "premium": "Extended",
+          "community": "**Extended**"
+        },
+        {
+          "label": "Support",
+          "free": "Standard",
+          "premium": "Priority",
+          "community": "Dedicated"
+        }
+      ]
+    }
   },
   "testimonials": {
     "title": "Communities thriving with Cocoti.",

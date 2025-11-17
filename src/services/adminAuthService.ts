@@ -57,7 +57,11 @@ class AdminAuthService {
 
   async login(credentials: AdminLoginRequest): Promise<AdminLoginResponse> {
     try {
-      const response = await fetch(`${ADMIN_API_CONFIG.BASE_URL}${ADMIN_API_ENDPOINTS.AUTH.LOGIN}`, {
+      const url = `${ADMIN_API_CONFIG.BASE_URL}${ADMIN_API_ENDPOINTS.AUTH.LOGIN}`;
+      console.log('[AdminAuth] Login URL:', url);
+      console.log('[AdminAuth] Credentials:', { email: credentials.email, password: '***' });
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,9 +70,40 @@ class AdminAuthService {
         credentials: 'include', // Inclure les cookies
       });
 
+      console.log('[AdminAuth] Response status:', response.status);
+      console.log('[AdminAuth] Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Erreur ${response.status}: ${response.statusText}`);
+        let errorData: any = {};
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            errorData = await response.json();
+          } catch (e) {
+            console.error('[AdminAuth] Error parsing JSON:', e);
+          }
+        } else {
+          const text = await response.text();
+          console.error('[AdminAuth] Non-JSON error response:', text);
+          errorData = { detail: text || `Erreur ${response.status}: ${response.statusText}` };
+        }
+        
+        console.error('[AdminAuth] Error data:', errorData);
+        
+        // Messages d'erreur plus explicites
+        let errorMessage = errorData.detail || errorData.message;
+        if (response.status === 404) {
+          errorMessage = `Endpoint non trouvé. Vérifiez que l'API backend est démarrée sur ${ADMIN_API_CONFIG.BASE_URL}`;
+        } else if (response.status === 401) {
+          errorMessage = errorMessage || 'Email ou mot de passe incorrect';
+        } else if (response.status === 500) {
+          errorMessage = errorMessage || 'Erreur serveur. Veuillez réessayer plus tard.';
+        } else if (!errorMessage) {
+          errorMessage = `Erreur ${response.status}: ${response.statusText}`;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
