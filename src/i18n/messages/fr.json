@@ -397,7 +397,8 @@
       "title": "Cookies de préférences",
       "description": "Mémorisent vos choix pour personnaliser votre expérience."
     },
-    "saveChoices": "Sauvegarder mes choix"
+    "saveChoices": "Sauvegarder mes choix",
+    "manageCookies": "Gérer les cookies"
   },
   "causes": {
     "enabled": true,

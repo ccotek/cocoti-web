@@ -1,6 +1,8 @@
 "use client";
 
 import { SocialIcon, socialColors } from "../admin/SocialIcons";
+import { usePathname } from "next/navigation";
+import { translate } from "@/utils/translations";
 
 type FooterSectionProps = {
   footer: {
@@ -28,6 +30,11 @@ export default function FooterSection({ footer }: FooterSectionProps) {
   const socialLinks = footer?.socialLinks || [];
   const company = footer?.company || "";
   const copyright = footer?.copyright || "";
+
+  // Détecter la locale pour les traductions
+  const pathname = usePathname();
+  const locale = pathname.startsWith('/en') ? 'en' : 'fr';
+  const t = (key: string) => translate(key, locale);
 
 
   return (
@@ -80,6 +87,17 @@ export default function FooterSection({ footer }: FooterSectionProps) {
                       </a>
                     </li>
                   ))}
+                  {/* Lien pour gérer les cookies */}
+                  <li>
+                    <button
+                      onClick={() => {
+                        window.dispatchEvent(new CustomEvent('open-cookie-settings'));
+                      }}
+                      className="text-sm text-ink-muted transition hover:text-night"
+                    >
+                      {t("cookies.manageCookies")}
+                    </button>
+                  </li>
                 </ul>
           </div>
         </div>

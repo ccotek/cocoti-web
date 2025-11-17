@@ -30,11 +30,42 @@ export default function CookieBanner() {
   const t = (key: string) => translate(key, locale);
 
   useEffect(() => {
-    // Vérifier si l'utilisateur a déjà fait un choix
+    // Charger les préférences existantes si disponibles
     const cookieConsent = localStorage.getItem('cookie-consent');
+    if (cookieConsent) {
+      try {
+        const savedPreferences = JSON.parse(cookieConsent);
+        setPreferences(savedPreferences);
+      } catch (error) {
+        console.error('Error loading cookie preferences:', error);
+      }
+    }
+
+    // Vérifier si l'utilisateur a déjà fait un choix
     if (!cookieConsent) {
       setIsVisible(true);
     }
+
+    // Écouter les événements pour rouvrir le banner
+    const handleOpenCookieSettings = () => {
+      // Recharger les préférences depuis localStorage
+      const currentConsent = localStorage.getItem('cookie-consent');
+      if (currentConsent) {
+        try {
+          const savedPreferences = JSON.parse(currentConsent);
+          setPreferences(savedPreferences);
+        } catch (error) {
+          console.error('Error loading cookie preferences:', error);
+        }
+      }
+      setIsVisible(true);
+      setShowSettings(true); // Ouvrir directement les paramètres
+    };
+
+    window.addEventListener('open-cookie-settings', handleOpenCookieSettings);
+    return () => {
+      window.removeEventListener('open-cookie-settings', handleOpenCookieSettings);
+    };
   }, []);
 
   const handleAcceptAll = () => {
@@ -48,6 +79,8 @@ export default function CookieBanner() {
     localStorage.setItem('cookie-consent', JSON.stringify(allAccepted));
     localStorage.setItem('cookie-consent-date', new Date().toISOString());
     setIsVisible(false);
+    // Déclencher un événement personnalisé pour recharger les scripts
+    window.dispatchEvent(new CustomEvent('cookie-consent-updated', { detail: allAccepted }));
   };
 
   const handleRejectAll = () => {
@@ -61,6 +94,8 @@ export default function CookieBanner() {
     localStorage.setItem('cookie-consent', JSON.stringify(onlyNecessary));
     localStorage.setItem('cookie-consent-date', new Date().toISOString());
     setIsVisible(false);
+    // Déclencher un événement personnalisé pour recharger les scripts
+    window.dispatchEvent(new CustomEvent('cookie-consent-updated', { detail: onlyNecessary }));
   };
 
   const handleSavePreferences = () => {
@@ -68,6 +103,8 @@ export default function CookieBanner() {
     localStorage.setItem('cookie-consent-date', new Date().toISOString());
     setIsVisible(false);
     setShowSettings(false);
+    // Déclencher un événement personnalisé pour recharger les scripts
+    window.dispatchEvent(new CustomEvent('cookie-consent-updated', { detail: preferences }));
   };
 
   const handlePreferenceChange = (key: keyof CookiePreferences) => {

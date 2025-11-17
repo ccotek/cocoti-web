@@ -420,7 +420,8 @@
       "title": "Preference Cookies",
       "description": "Remember your choices to personalize your experience."
     },
-    "saveChoices": "Save my choices"
+    "saveChoices": "Save my choices",
+    "manageCookies": "Manage cookies"
   },
   "causes": {
     "enabled": true,

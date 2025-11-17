@@ -218,7 +218,8 @@ const frMessages = {
       "title": "Cookies de préférences",
       "description": "Mémorisent vos choix pour personnaliser votre expérience."
     },
-    "saveChoices": "Sauvegarder mes choix"
+    "saveChoices": "Sauvegarder mes choix",
+    "manageCookies": "Gérer les cookies"
   },
   "causes": {
     "title": "Configuration du Carousel des Cagnottes",
@@ -466,7 +467,8 @@ const enMessages = {
       "title": "Preference Cookies",
       "description": "Remember your choices to personalize your experience."
     },
-    "saveChoices": "Save my choices"
+    "saveChoices": "Save my choices",
+    "manageCookies": "Manage cookies"
   },
   "causes": {
     "title": "Money Pool Carousel Configuration",

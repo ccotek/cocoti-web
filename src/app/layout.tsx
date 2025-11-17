@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import CookieBanner from "@/components/CookieBanner";
 import WhatsAppButtonBasic from "@/components/WhatsAppButtonBasic";
+import ScriptLoader from "@/components/ScriptLoader";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default function RootLayout({
         {children}
         <CookieBanner />
         <WhatsAppButtonBasic />
+        <ScriptLoader />
       </body>
     </html>
   );
