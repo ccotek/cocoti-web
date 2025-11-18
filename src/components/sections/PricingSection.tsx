@@ -120,11 +120,26 @@ export default function PricingSection({ pricing, locale = 'fr' }: PricingSectio
                       else if (planIndex === 1) featureValue = feature.premium;
                       else featureValue = feature.community;
 
-                      // Vérifier si la feature est incluse (pas "Limité", "Non", etc.)
-                      const isIncluded = !featureValue.toLowerCase().includes('limité') && 
-                                        !featureValue.toLowerCase().includes('non') &&
-                                        !featureValue.toLowerCase().includes('uniquement') &&
-                                        featureValue.trim() !== '';
+                      // Vérifier si la feature est incluse (pas "Non disponible", "Non inclus", etc.)
+                      // Utiliser des regex pour matcher des mots complets, pas des sous-chaînes
+                      const lowerValue = featureValue.toLowerCase().trim();
+                      
+                      // Patterns d'exclusion : valeurs qui indiquent que la feature n'est PAS disponible
+                      const exclusionPatterns = [
+                        /^non\s+(disponible|inclus|incluse|disponibles|incluses|supporté|supportée)$/i, // "Non disponible", "Non inclus"
+                        /^non$/i, // Juste "Non"
+                        /^n\/a$/i, // "N/A"
+                        /^aucun$/i, // "Aucun"
+                        /^aucune$/i, // "Aucune"
+                        /^pas\s+(disponible|inclus|incluse)$/i, // "Pas disponible", "Pas inclus"
+                      ];
+                      
+                      // Vérifier si la valeur correspond à un pattern d'exclusion
+                      const isExcluded = exclusionPatterns.some(pattern => pattern.test(lowerValue)) || lowerValue === '';
+                      
+                      // Si la valeur contient "uniquement" mais n'est pas une exclusion explicite,
+                      // c'est une limitation mais la feature est disponible (ex: "Privée uniquement")
+                      const isIncluded = !isExcluded;
 
                       return (
                         <div key={featureIndex} className="flex items-start gap-3">
