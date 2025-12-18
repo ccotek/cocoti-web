@@ -28,18 +28,7 @@ export default function CompleteLandingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Utiliser le hook useContent pour charger depuis l'API
-  let content, loading, error;
-  try {
-    const result = useContent(locale);
-    content = result.content;
-    loading = result.loading;
-    error = result.error;
-  } catch (hookError) {
-    console.error('Erreur dans le hook useContent:', hookError);
-    content = null;
-    loading = false;
-    error = 'Erreur dans le hook useContent';
-  }
+  const { content, loading, error } = useContent(locale);
 
   // Fonction de traduction simplifiée
   const t = (key: string) => translate(key, locale, content);
@@ -170,7 +159,7 @@ export default function CompleteLandingPage() {
 
       <main>
         <HeroSection hero={hero} />
-        <CausesSection locale={locale} />
+        <CausesSection locale={locale} apps={hero.apps} />
         <SolutionsSection solutions={solutions} />
         <HowSection how={how} />
         <WhySection why={why} />
@@ -181,59 +170,10 @@ export default function CompleteLandingPage() {
 
       <FooterSection footer={footer} />
 
-      {/* Bouton flottant pour créer une cagnotte */}
+      {/* Bouton flottant pour le téléchargement mobile */}
       <SimpleFloatingButton locale={locale} apps={hero.apps} />
 
       {/* Modal de contact - version simplifiée pour l'instant */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-night/50 p-4 backdrop-blur">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-2xl font-semibold text-night">Contactez-nous</h3>
-                <p className="mt-2 text-sm text-ink-muted">
-                  Parlez-nous de votre communauté et de vos projets, nous vous répondons sous 24h.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleCloseModal}
-                className="rounded-full border border-cloud p-2"
-                aria-label={t("accessibility.closeModal")}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="mt-6 text-center">
-              <p className="text-sm text-ink-muted">
-                Pour l'instant, contactez-nous directement par email ou WhatsApp.
-              </p>
-              <div className="mt-4 flex gap-4">
-                <a
-                  href="mailto:hello@cocoti.africa"
-                  className="rounded-full bg-magenta px-6 py-3 text-sm font-semibold text-white"
-                >
-                  Envoyer un email
-                </a>
-                <a
-                  href="https://wa.me/221771234567"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-full border border-magenta px-6 py-3 text-sm font-semibold text-magenta"
-                >
-                  WhatsApp
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Bouton WhatsApp flottant */}
-      <WhatsAppButtonSimple
-        phoneNumber="+221771234567"
-        message="Bonjour ! Je suis intéressé(e) par Cocoti. Pouvez-vous m'en dire plus ?"
-      />
     </div>
   );
 }

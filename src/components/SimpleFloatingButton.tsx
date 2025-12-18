@@ -1,9 +1,7 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import Link from "next/link";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { getAppStoreLink } from "@/utils/device";
 
@@ -12,49 +10,43 @@ type SimpleFloatingButtonProps = {
   apps?: Array<{ store: string; label: string; href: string }>;
 };
 
-export default function SimpleFloatingButton({ locale, apps = [] }: SimpleFloatingButtonProps) {
+export default function SimpleFloatingButton({ apps = [] }: SimpleFloatingButtonProps) {
   const [downloadUrl, setDownloadUrl] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     setDownloadUrl(getAppStoreLink(apps));
   }, [apps]);
+
+  if (!isMounted) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999] md:hidden">
       {/* Bouton principal de téléchargement */}
       <a
-        href={downloadUrl}
-        className="w-16 h-16 bg-gradient-to-r from-sunset to-magenta rounded-full shadow-2xl hover:shadow-3xl transition-all border-2 border-white flex items-center justify-center group"
+        href={downloadUrl || "#"}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="relative flex h-16 w-16 items-center justify-center rounded-full border-2 border-white bg-gradient-to-r from-sunset to-magenta shadow-2xl transition-all hover:shadow-3xl"
       >
-        {/* Animation de mise en évidence périodique */}
+        {/* Halo d'animation */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-sunset to-magenta rounded-full -z-10"
+          className="absolute inset-0 rounded-full bg-gradient-to-r from-sunset to-magenta"
+          style={{ zIndex: -1 }}
           animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.8, 0.4, 0.8],
+            scale: [1, 1.4, 1],
+            opacity: [0.5, 0, 0.5],
           }}
           transition={{
             duration: 2,
             repeat: Infinity,
-            repeatDelay: 8, // Pause de 8 secondes entre chaque animation
+            repeatDelay: 5,
             ease: "easeInOut"
           }}
         />
 
-        {/* Animation de pulsation continue */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-sunset to-magenta rounded-full -z-10"
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.6, 0.2, 0.6],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        <ArrowDownTrayIcon className="h-8 w-8 text-white drop-shadow-lg" />
+        <ArrowDownTrayIcon className="relative z-10 h-8 w-8 text-white drop-shadow-lg" />
       </a>
     </div>
   );

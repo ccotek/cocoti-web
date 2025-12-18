@@ -4,7 +4,7 @@
     "description": "Cocoti makes it simple to run digital tontines, solidarity funds and collective projects with a smooth, secure experience."
   },
   "navigation": {
-    "cta": "Download the app",
+    "cta": "Download app",
     "items": [
       {
         "id": "solutions",
@@ -429,8 +429,8 @@
     "rotationSpeed": 5,
     "maxProjects": 6,
     "selectedProjects": [],
-    "title": "Projects that change everything...",
-    "subtitle": "Join thousands of people transforming their communities through collective solidarity."
+    "title": "Support projects that matter",
+    "subtitle": "With just one tap, join initiatives and track the impact of your generosity in real time."
   },
   "admin": {
     "title": "Cocoti Administration",

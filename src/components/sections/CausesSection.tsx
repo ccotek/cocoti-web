@@ -1,27 +1,34 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { HeartIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { usePublicProjects, PublicProject } from "@/hooks/usePublicProjects";
-import { useCausesCarouselConfig } from "@/hooks/useCausesCarouselConfig";
-import MoneyPoolGallery from "@/components/MoneyPoolGallery";
-
-// Utiliser le type PublicProject du hook
-type Cause = PublicProject;
+import { motion } from 'framer-motion';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  SparklesIcon
+} from '@heroicons/react/24/outline';
+import { useState, useEffect } from 'react';
+import { usePublicProjects } from '@/hooks/usePublicProjects';
+import { useCausesCarouselConfig } from '@/hooks/useCausesCarouselConfig';
+import MoneyPoolCard from '@/components/MoneyPoolCard';
+import { getAppStoreLink } from '@/utils/device';
 
 type CausesSectionProps = {
   locale: 'fr' | 'en';
+  apps?: Array<{ store: string; href: string }>;
 };
 
-export default function CausesSection({ locale }: CausesSectionProps) {
+export default function CausesSection({ locale, apps = [] }: CausesSectionProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { projects, loading, error, hasApiUrl } = usePublicProjects(locale);
+  const [appStoreLink, setAppStoreLink] = useState('#');
+  const { projects, loading, error } = usePublicProjects(locale);
   const { config: carouselConfig } = useCausesCarouselConfig(locale);
 
+  // Déterminer le lien du store côté client
+  useEffect(() => {
+    setAppStoreLink(getAppStoreLink(apps));
+  }, [apps]);
 
-  // Auto-rotation des causes - optimisé pour éviter les re-renders
+  // Auto-rotation des causes - uniquement pour desktop
   useEffect(() => {
     if (projects.length > 0 && carouselConfig.autoRotate) {
       const interval = setInterval(() => {
@@ -51,29 +58,19 @@ export default function CausesSection({ locale }: CausesSectionProps) {
     setCurrentIndex(index);
   };
 
-  // Ne pas afficher la section si désactivée dans le CMS
-  if (!carouselConfig.enabled) {
+  if (!carouselConfig.enabled || (!loading && projects.length === 0) || error) {
     return null;
   }
 
-  // Ne pas afficher la section si pas de données
-  // Si en erreur ou vide, simplement ne rien afficher
-  if ((!loading && projects.length === 0) || error) {
-    return null;
-  }
-  
-  // Si en train de charger et qu'il y aura des données, afficher un loader
-  // Sinon ne rien afficher
   if (loading && projects.length === 0) {
-    return null; // Pas de loader si on ne sait pas encore s'il y aura des données
+    return null;
   }
-
 
   return (
-    <section className="section-padding bg-white">
+    <section className="section-padding overflow-hidden bg-white">
       <div className="container">
-        <motion.div 
-          className="mb-12"
+        <motion.div
+          className="mb-10 md:mb-12"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -88,149 +85,71 @@ export default function CausesSection({ locale }: CausesSectionProps) {
         </motion.div>
 
         <div className="relative">
-          {/* Carousel Container */}
-          <div className="overflow-hidden rounded-3xl relative">
+          {/* Mobile Snap Scroll Container */}
+          <div className="md:hidden flex overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-8 -mx-4 px-4 gap-4">
+            {projects.map((cause) => (
+              <div key={cause.id} className="min-w-[85vw] snap-center">
+                <MoneyPoolCard
+                  {...cause}
+                  locale={locale}
+                  layout="vertical"
+                  currency="XAF"
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Classic Carousel */}
+          <div className="hidden md:block overflow-hidden rounded-[2.5rem] relative">
             <motion.div
               className="flex transition-transform duration-500 ease-in-out"
               animate={{ x: `-${currentIndex * 100}%` }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
             >
-              {projects.map((cause, index) => (
-                        <div key={cause.id} className="w-full flex-shrink-0 px-4">
-                          <motion.div
-                            className="bg-white rounded-2xl border border-cloud shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: index * 0.1 }}
-                          >
-                            <div className="flex h-56">
-                      {/* Image Section - Left */}
-                      <div className="relative w-1/3 flex-shrink-0">
-                        <Link href={`/${locale}/money-pool/${cause.id}`} className="block w-full h-full">
-                          <MoneyPoolGallery
-                            images={[cause.image]}
-                            videos={[]}
-                            alt={cause.title}
-                            className="w-full h-full"
-                            disableModal={true}
-                            onClick={() => {}}
-                          />
-                        </Link>
-                        {cause.urgent && (
-                          <div className="absolute top-3 left-3 z-10">
-                            <span className="bg-coral text-white px-2 py-1 rounded-full text-xs font-semibold font-inter">
-                              {locale === 'fr' ? 'Urgent' : 'Urgent'}
-                            </span>
-                          </div>
-                        )}
-                        <div className="absolute top-3 right-3 z-10">
-                          <span className="bg-white/90 text-night px-2 py-1 rounded-full text-xs font-semibold font-inter">
-                            {cause.category}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Content Section - Right */}
-                      <div className="flex-1 p-6 flex flex-col">
-                        {/* Content Section with fixed height */}
-                        <div className="flex-1 flex flex-col">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-bold text-night mb-2 font-inter line-clamp-1">
-                              {cause.title}
-                            </h3>
-                            <p className="text-sm text-ink-muted mb-4 line-clamp-2 font-inter">
-                              {cause.description}
-                            </p>
-                          </div>
-
-                          {/* Progress Section - Fixed at bottom */}
-                          <div className="space-y-3 mt-auto">
-                            <div className="flex justify-between items-center text-xs font-inter">
-                              <span className="text-ink-muted">
-                                {locale === 'fr' ? 'Collecté' : 'Raised'}
-                              </span>
-                              <span className="font-semibold text-night">
-                                {cause.raised} / {cause.target}
-                              </span>
-                            </div>
-                            
-                            <div className="w-full bg-cloud rounded-full h-1.5">
-                              <motion.div
-                                className="bg-gradient-to-r from-sunset to-magenta h-1.5 rounded-full"
-                                initial={{ width: 0 }}
-                                whileInView={{ width: `${cause.progress}%` }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 1, delay: 0.5 }}
-                              />
-                            </div>
-
-                            <div className="flex items-center justify-between font-inter">
-                              <span className="text-xs text-ink-muted">
-                                {cause.progress}% {locale === 'fr' ? 'atteint' : 'reached'}
-                              </span>
-                              <a 
-                                href={`/${locale}/money-pool/${cause.id}`}
-                                className="flex items-center gap-1 bg-gradient-to-r from-sunset to-magenta text-white px-4 py-2 rounded-full text-xs font-semibold hover:shadow-lg transition-all"
-                              >
-                                <HeartIcon className="h-3 w-3" />
-                                {locale === 'fr' ? 'Soutenir' : 'Support'}
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
+              {projects.map((cause) => (
+                <div key={cause.id} className="w-full flex-shrink-0 px-4">
+                  <MoneyPoolCard
+                    {...cause}
+                    locale={locale}
+                    layout="horizontal"
+                    currency="XAF"
+                  />
                 </div>
               ))}
             </motion.div>
-            
-            {/* Navigation Arrows - Positioned relative to carousel container */}
+
+            {/* Navigation Arrows - Desktop Only */}
             <button
               onClick={prevSlide}
-              className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center bg-white/90 hover:bg-white shadow-lg rounded-full w-12 h-12 transition-all z-10"
+              className="absolute left-8 top-1/2 -translate-y-1/2 flex items-center justify-center bg-white/90 hover:bg-white shadow-xl rounded-full w-14 h-14 transition-all z-10 border border-cloud"
               aria-label={locale === 'fr' ? 'Précédent' : 'Previous'}
             >
               <ChevronLeftIcon className="h-6 w-6 text-night" />
             </button>
             <button
               onClick={nextSlide}
-              className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center bg-white/90 hover:bg-white shadow-lg rounded-full w-12 h-12 transition-all z-10"
+              className="absolute right-8 top-1/2 -translate-y-1/2 flex items-center justify-center bg-white/90 hover:bg-white shadow-xl rounded-full w-14 h-14 transition-all z-10 border border-cloud"
               aria-label={locale === 'fr' ? 'Suivant' : 'Next'}
             >
               <ChevronRightIcon className="h-6 w-6 text-night" />
             </button>
           </div>
 
-          {/* Dots Indicator */}
-          <div className="flex justify-center mt-8 gap-2 mb-6">
+          {/* Dots Indicator - Responsive sizing */}
+          <div className="flex justify-center mt-4 md:mt-8 gap-3">
             {projects.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all ${
-                  index === currentIndex
-                    ? 'bg-magenta scale-110'
-                    : 'bg-cloud hover:bg-magenta/50'
-                }`}
+                className={`transition-all duration-300 ${index === currentIndex
+                  ? 'w-10 h-2.5 bg-magenta rounded-full'
+                  : 'w-2.5 h-2.5 bg-cloud rounded-full hover:bg-magenta/30'
+                  }`}
                 aria-label={`${locale === 'fr' ? 'Aller à la slide' : 'Go to slide'} ${index + 1}`}
               />
             ))}
           </div>
-
-          {/* View All Button */}
-          <div className="flex justify-center mt-6">
-            <Link 
-              href={`/${locale}/money-pools`}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-magenta to-sunset text-white rounded-2xl font-semibold hover:shadow-glow transition-all font-inter"
-            >
-              {locale === 'fr' ? 'Voir toutes les cagnottes' : 'View all money pools'}
-              <ChevronRightIcon className="h-5 w-5" />
-            </Link>
-          </div>
         </div>
-
       </div>
     </section>
   );
