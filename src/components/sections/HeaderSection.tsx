@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bars3BottomRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { translate } from "@/utils/translations";
+import { getAppStoreLink } from "@/utils/device";
 
 type HeaderSectionProps = {
   navItems: Array<{
@@ -13,11 +14,16 @@ type HeaderSectionProps = {
   navCta: string;
   locale: 'fr' | 'en';
   onLocaleChange: (locale: 'fr' | 'en') => void;
-  onLoginClick: () => void;
+  apps?: Array<{ store: string; label: string; href: string }>;
 };
 
-export default function HeaderSection({ navItems, navCta, locale, onLocaleChange, onLoginClick }: HeaderSectionProps) {
+export default function HeaderSection({ navItems, navCta, locale, onLocaleChange, apps = [] }: HeaderSectionProps) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [appStoreLink, setAppStoreLink] = useState("");
+
+  useEffect(() => {
+    setAppStoreLink(getAppStoreLink(apps));
+  }, [apps]);
 
   return (
     <>
@@ -59,10 +65,10 @@ export default function HeaderSection({ navItems, navCta, locale, onLocaleChange
               </button>
             </div>
             <a
-              href={`${process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://app.cocoti.sn'}/${locale}`}
+              href={appStoreLink || "#"}
               className="rounded-full bg-gradient-to-r from-sunset to-magenta px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-magenta/20 transition hover:shadow-xl"
             >
-              {locale === 'fr' ? 'Se connecter' : 'Login'}
+              {navCta}
             </a>
           </div>
 
@@ -122,11 +128,11 @@ export default function HeaderSection({ navItems, navCta, locale, onLocaleChange
                 </button>
               </div>
               <a
-                href={`${process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://app.cocoti.sn'}/${locale}`}
+                href={appStoreLink || "#"}
                 onClick={() => setShowMobileMenu(false)}
                 className="rounded-full bg-gradient-to-r from-sunset to-magenta px-5 py-3 text-center text-sm font-semibold text-white shadow-lg"
               >
-                {locale === 'fr' ? 'Se connecter' : 'Login'}
+                {navCta}
               </a>
             </div>
           </motion.div>

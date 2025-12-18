@@ -67,8 +67,8 @@ export default function CompleteLandingPage() {
     { id: 'pricing', label: 'Tarifs' },
   ];
   const navCta = t("navigation.cta");
-  
-  
+
+
   const hero = {
     badge: content?.hero?.badge || t("hero.badge"),
     title: content?.hero?.title || t("hero.title"),
@@ -110,7 +110,7 @@ export default function CompleteLandingPage() {
       cta: string;
       highlight?: boolean;
     }>,
-    comparisonTable: content?.pricing?.comparisonTable || (t("pricing.comparisonTable") as {
+    comparisonTable: content?.pricing?.comparisonTable || (t("pricing.comparisonTable") as any as {
       features: Array<{
         label: string;
         free: string;
@@ -165,7 +165,7 @@ export default function CompleteLandingPage() {
         navCta={navCta}
         locale={locale}
         onLocaleChange={handleLocaleChange}
-        onLoginClick={() => window.open(`${process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://app.cocoti.sn'}/${locale}`, '_blank')}
+        apps={hero.apps}
       />
 
       <main>
@@ -174,7 +174,7 @@ export default function CompleteLandingPage() {
         <SolutionsSection solutions={solutions} />
         <HowSection how={how} />
         <WhySection why={why} />
-        <PricingSection pricing={pricing} locale={locale} />
+        <PricingSection pricing={{ ...pricing, apps: hero.apps }} locale={locale} />
         <TestimonialsSection testimonials={testimonials} />
         <FaqSection faq={faq} />
       </main>
@@ -182,7 +182,7 @@ export default function CompleteLandingPage() {
       <FooterSection footer={footer} />
 
       {/* Bouton flottant pour créer une cagnotte */}
-      <SimpleFloatingButton locale={locale} />
+      <SimpleFloatingButton locale={locale} apps={hero.apps} />
 
       {/* Modal de contact - version simplifiée pour l'instant */}
       {isModalOpen && (
@@ -230,7 +230,7 @@ export default function CompleteLandingPage() {
       )}
 
       {/* Bouton WhatsApp flottant */}
-      <WhatsAppButtonSimple 
+      <WhatsAppButtonSimple
         phoneNumber="+221771234567"
         message="Bonjour ! Je suis intéressé(e) par Cocoti. Pouvez-vous m'en dire plus ?"
       />
