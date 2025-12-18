@@ -3,19 +3,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { 
+import {
   MagnifyingGlassIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
-  HeartIcon,
   HomeIcon,
   ChevronRightIcon,
-  PlusIcon,
-  ShieldCheckIcon
+  PlusIcon
 } from '@heroicons/react/24/outline';
-import MoneyPoolGallery from '@/components/MoneyPoolGallery';
 import Link from 'next/link';
 import { formatCurrency } from '@/utils/formatAmount';
+import MoneyPoolCard from '@/components/MoneyPoolCard';
 
 interface PublicMoneyPool {
   id: string;
@@ -41,7 +39,7 @@ interface PublicMoneyPool {
 export default function MoneyPoolsListPage() {
   const params = useParams();
   const locale = params.locale as 'fr' | 'en';
-  
+
   const [moneyPools, setMoneyPools] = useState<PublicMoneyPool[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,15 +60,15 @@ export default function MoneyPoolsListPage() {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Build URL - fetch more to ensure we get both active and archived
         const params = new URLSearchParams({
           limit: fetchLimit.toString(),
           page: '1' // Always fetch from page 1, we'll paginate client-side
         });
-        
+
         const url = `${API_URL}/api/v1/money-pools/public?${params.toString()}`;
-        
+
         const response = await fetch(url, {
           method: 'GET',
           headers: {
@@ -79,13 +77,13 @@ export default function MoneyPoolsListPage() {
           mode: 'cors',
           credentials: 'omit',
         });
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch money pools: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         // Handle both array format (legacy) and object format (new with pagination)
         let pools: PublicMoneyPool[];
         if (Array.isArray(data)) {
@@ -95,7 +93,7 @@ export default function MoneyPoolsListPage() {
           pools = data.data || data.results || [];
           setTotal(data.total || pools.length);
         }
-        
+
         // Map and validate pools data from API
         const mappedPools: PublicMoneyPool[] = pools.map((pool: any) => {
           const status = pool.status || 'active';
@@ -120,7 +118,7 @@ export default function MoneyPoolsListPage() {
             status: status
           };
         }).filter(pool => pool.id && pool.name); // Filter out invalid pools
-        
+
         setMoneyPools(mappedPools);
         setLoading(false);
       } catch (err) {
@@ -138,16 +136,16 @@ export default function MoneyPoolsListPage() {
   // Then paginate each group separately
   const { activePools, archivedPools, paginatedActivePools, paginatedArchivedPools } = useMemo(() => {
     let filtered = moneyPools;
-    
+
     // Apply search filter if needed
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(pool => 
+      filtered = filtered.filter(pool =>
         pool.name.toLowerCase().includes(query) ||
         pool.description.toLowerCase().includes(query)
       );
     }
-    
+
     // Separate by status (normalize to lowercase for comparison)
     // Active pools only
     const active = filtered.filter(pool => {
@@ -159,20 +157,20 @@ export default function MoneyPoolsListPage() {
       const status = (pool.status || '').toLowerCase();
       return status === 'archived' || status === 'closed';
     });
-    
-    
+
+
     // Paginate active pools (always show first page of active)
     const activeStart = 0;
     const activeEnd = activeStart + limit;
     const paginatedActive = active.slice(activeStart, activeEnd);
-    
+
     // Paginate archived pools (always show first page of archived)
     const archivedStart = 0;
     const archivedEnd = archivedStart + limit;
     const paginatedArchived = archived.slice(archivedStart, archivedEnd);
-    
-    return { 
-      activePools: active, 
+
+    return {
+      activePools: active,
       archivedPools: archived,
       paginatedActivePools: paginatedActive,
       paginatedArchivedPools: paginatedArchived
@@ -187,7 +185,7 @@ export default function MoneyPoolsListPage() {
       <div className="bg-white border-b border-cloud">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <nav className="flex items-center gap-2 text-sm">
-            <Link 
+            <Link
               href={`/${locale}`}
               className="text-ink-muted hover:text-magenta transition-colors flex items-center gap-1 font-inter"
             >
@@ -216,8 +214,8 @@ export default function MoneyPoolsListPage() {
                   {locale === 'fr' ? 'Toutes les cagnottes' : 'All Money Pools'}
                 </h1>
                 <p className="mt-2 text-lg text-ink-muted font-inter">
-                  {locale === 'fr' 
-                    ? 'Découvrez et soutenez les projets solidaires de la communauté' 
+                  {locale === 'fr'
+                    ? 'Découvrez et soutenez les projets solidaires de la communauté'
                     : 'Discover and support community solidarity projects'}
                 </p>
               </div>
@@ -268,7 +266,7 @@ export default function MoneyPoolsListPage() {
         {!loading && !error && paginatedActivePools.length === 0 && archivedPools.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-600 text-lg">
-              {searchQuery 
+              {searchQuery
                 ? (locale === 'fr' ? 'Aucune cagnotte trouvée pour votre recherche.' : 'No money pools found for your search.')
                 : (locale === 'fr' ? 'Aucune cagnotte publique disponible.' : 'No public money pools available.')
               }
@@ -284,91 +282,37 @@ export default function MoneyPoolsListPage() {
                 <h2 className="text-2xl font-bold text-night mb-6 font-inter">
                   {locale === 'fr' ? 'Cagnottes actives' : 'Active Money Pools'}
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
                   {activePools.map((pool, index) => {
                     const progress = pool.settings.target_amount > 0
                       ? Math.round((pool.current_amount / pool.settings.target_amount) * 100)
                       : 0;
-                    
+
                     return (
                       <motion.div
                         key={pool.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05, duration: 0.5 }}
-                        whileHover={{ y: -4 }}
                       >
-                        <Link href={`/${locale}/money-pool/${pool.id}`}>
-                          <div className="bg-white rounded-3xl shadow-sm border border-cloud hover:shadow-glow transition-all cursor-pointer h-full flex flex-col group relative">
-                            {/* Badge vérifié - Coin supérieur droit de la carte */}
-                            {pool.verified && (
-                              <div className="absolute top-3 right-3 bg-green-500 rounded-full p-2 shadow-lg z-30 border-2 border-white" title={locale === 'fr' ? 'Cagnotte vérifiée' : 'Verified money pool'}>
-                                <ShieldCheckIcon className="h-5 w-5 text-white" />
-                              </div>
-                            )}
-                            {/* Image */}
-                            <div className="relative h-56 overflow-hidden bg-gradient-to-br from-magenta/10 to-sunset/10">
-                              <MoneyPoolGallery
-                                images={pool.images || []}
-                                videos={pool.videos || []}
-                                alt={pool.name}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                              {/* Badge type */}
-                              <div className="absolute top-4 left-4">
-                                <span className="bg-white/95 backdrop-blur-sm text-magenta px-3 py-1 rounded-full text-xs font-semibold font-inter shadow-sm">
-                                  {locale === 'fr' ? 'Cagnotte' : 'Money Pool'}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Content */}
-                            <div className="p-6 flex-1 flex flex-col">
-                              <h3 className="text-xl font-bold text-night mb-2 line-clamp-2 font-inter group-hover:text-magenta transition-colors">
-                                {pool.name}
-                              </h3>
-                              <p className="text-sm text-ink-muted mb-4 line-clamp-3 flex-1 font-inter">
-                                {pool.description.length > 150 
-                                  ? `${pool.description.substring(0, 150)}...` 
-                                  : pool.description}
-                              </p>
-
-                              {/* Progress */}
-                              <div className="mb-4">
-                                <div className="flex justify-between text-xs text-night mb-2 font-semibold font-inter">
-                                  <span>{locale === 'fr' ? 'Collecté' : 'Raised'}</span>
-                                  <span className="text-magenta">{progress}%</span>
-                                </div>
-                                <div className="w-full bg-cloud rounded-full h-3 overflow-hidden">
-                                  <motion.div
-                                    className="bg-gradient-to-r from-magenta via-sunset to-coral h-3 rounded-full"
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${Math.min(progress, 100)}%` }}
-                                    transition={{ delay: index * 0.1 + 0.3, duration: 0.8, ease: "easeOut" }}
-                                  />
-                                </div>
-                                <div className="flex justify-between text-xs text-ink-muted mt-2 font-inter">
-                                  <span className="font-semibold">{formatCurrency(pool.current_amount, pool.currency)}</span>
-                                  <span>{formatCurrency(pool.settings.target_amount, pool.currency)}</span>
-                                </div>
-                              </div>
-
-                              {/* Stats */}
-                              <div className="flex items-center justify-between text-sm pt-4 border-t border-cloud">
-                                <div className="flex items-center gap-2 text-ink-muted font-inter">
-                                  <HeartIcon className="h-4 w-4 text-magenta" />
-                                  <span>
-                                    {pool.current_participants_count} {locale === 'fr' ? 'contributeurs' : 'contributors'}
-                                  </span>
-                                </div>
-                                <span className="text-magenta font-semibold flex items-center gap-1 group-hover:gap-2 transition-all font-inter">
-                                  {locale === 'fr' ? 'Voir' : 'View'}
-                                  <ChevronRightIcon className="h-4 w-4" />
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </Link>
+                        <MoneyPoolCard
+                          id={pool.id}
+                          title={pool.name}
+                          description={pool.description}
+                          image={pool.images?.[0] || ""}
+                          images={pool.images}
+                          videos={pool.videos}
+                          progress={progress}
+                          target={pool.settings.target_amount}
+                          raised={pool.current_amount}
+                          currency={pool.currency}
+                          category={locale === 'fr' ? 'Cagnotte' : 'Money Pool'}
+                          verified={pool.verified}
+                          locale={locale}
+                          participantsCount={pool.current_participants_count}
+                          status="active"
+                          layout="vertical"
+                        />
                       </motion.div>
                     );
                   })}
@@ -378,10 +322,10 @@ export default function MoneyPoolsListPage() {
 
             {/* Separator between Active and Archived */}
             {paginatedActivePools.length > 0 && archivedPools.length > 0 && (
-              <div className="my-12 flex items-center gap-4">
+              <div className="my-16 flex items-center gap-4">
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cloud to-transparent"></div>
-                <div className="px-4 py-2 bg-cloud/50 rounded-full">
-                  <span className="text-sm font-semibold text-ink-muted font-inter">
+                <div className="px-6 py-2.5 bg-cloud/30 rounded-full border border-cloud/50 backdrop-blur-sm">
+                  <span className="text-sm font-bold text-ink-muted uppercase tracking-widest font-inter">
                     {locale === 'fr' ? 'Historique' : 'History'}
                   </span>
                 </div>
@@ -392,10 +336,10 @@ export default function MoneyPoolsListPage() {
             {/* Archived Pools Section */}
             {archivedPools.length > 0 && (
               <div className="mt-12">
-                <h2 className="text-2xl font-bold text-night mb-6 font-inter opacity-75">
+                <h2 className="text-2xl font-bold text-night mb-8 font-inter opacity-75">
                   {locale === 'fr' ? 'Cagnottes archivées' : 'Archived Money Pools'}
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
                   {paginatedArchivedPools.map((pool, index) => {
                     const progress = pool.settings.target_amount > 0
                       ? Math.round((pool.current_amount / pool.settings.target_amount) * 100)
@@ -408,80 +352,24 @@ export default function MoneyPoolsListPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05, duration: 0.5 }}
                       >
-                        <Link href={`/${locale}/money-pool/${pool.id}`}>
-                          <div className="bg-white rounded-3xl shadow-sm border border-cloud opacity-75 h-full flex flex-col group cursor-pointer hover:opacity-90 transition-opacity relative">
-                            {/* Badge vérifié - Coin supérieur droit de la carte */}
-                            {pool.verified && (
-                              <div className="absolute top-3 right-3 bg-green-500 rounded-full p-2 shadow-lg z-30 border-2 border-white" title={locale === 'fr' ? 'Cagnotte vérifiée' : 'Verified money pool'}>
-                                <ShieldCheckIcon className="h-5 w-5 text-white" />
-                              </div>
-                            )}
-                            {/* Image */}
-                            <div className="relative h-56 overflow-hidden bg-gradient-to-br from-magenta/10 to-sunset/10">
-                              <MoneyPoolGallery
-                                images={pool.images || []}
-                                videos={pool.videos || []}
-                                alt={pool.name}
-                                className="w-full h-full object-cover"
-                              />
-                              {/* Badge statut */}
-                              <div className="absolute top-4 left-4">
-                                <span className="bg-gray-500/95 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-semibold font-inter shadow-sm">
-                                  {pool.status?.toLowerCase() === 'closed' 
-                                    ? (locale === 'fr' ? 'Clôturée' : 'Closed')
-                                    : (locale === 'fr' ? 'Archivée' : 'Archived')}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Content */}
-                            <div className="p-6 flex-1 flex flex-col">
-                              <h3 className="text-xl font-bold text-night mb-2 line-clamp-2 font-inter group-hover:text-magenta transition-colors">
-                                {pool.name}
-                              </h3>
-                              <p className="text-sm text-ink-muted mb-4 line-clamp-3 flex-1 font-inter">
-                                {pool.description.length > 150 
-                                  ? `${pool.description.substring(0, 150)}...` 
-                                  : pool.description}
-                              </p>
-
-                              {/* Progress */}
-                              <div className="mb-4">
-                                <div className="flex justify-between text-xs text-night mb-2 font-semibold font-inter">
-                                  <span>{locale === 'fr' ? 'Collecté' : 'Raised'}</span>
-                                  <span className="text-magenta">{progress}%</span>
-                                </div>
-                                <div className="w-full bg-cloud rounded-full h-3 overflow-hidden">
-                                  <motion.div
-                                    className="bg-gradient-to-r from-magenta via-sunset to-coral h-3 rounded-full"
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${Math.min(progress, 100)}%` }}
-                                    transition={{ delay: index * 0.1 + 0.3, duration: 0.8, ease: "easeOut" }}
-                                  />
-                                </div>
-                                <div className="flex justify-between text-xs text-ink-muted mt-2 font-inter">
-                                  <span className="font-semibold">{formatCurrency(pool.current_amount, pool.currency)}</span>
-                                  <span>{formatCurrency(pool.settings.target_amount, pool.currency)}</span>
-                                </div>
-                              </div>
-
-                              {/* Stats */}
-                              <div className="flex items-center justify-between text-sm pt-4 border-t border-cloud">
-                                <div className="flex items-center gap-2 text-ink-muted font-inter">
-                                  <HeartIcon className="h-4 w-4 text-magenta" />
-                                  <span>
-                                    {pool.current_participants_count} {locale === 'fr' ? 'contributeurs' : 'contributors'}
-                                  </span>
-                                </div>
-                                <span className="text-gray-400 font-semibold flex items-center gap-1 font-inter">
-                                  {pool.status?.toLowerCase() === 'closed' 
-                                    ? (locale === 'fr' ? 'Clôturée' : 'Closed')
-                                    : (locale === 'fr' ? 'Archivée' : 'Archived')}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </Link>
+                        <MoneyPoolCard
+                          id={pool.id}
+                          title={pool.name}
+                          description={pool.description}
+                          image={pool.images?.[0] || ""}
+                          images={pool.images}
+                          videos={pool.videos}
+                          progress={progress}
+                          target={pool.settings.target_amount}
+                          raised={pool.current_amount}
+                          currency={pool.currency}
+                          category={locale === 'fr' ? 'Cagnotte' : 'Money Pool'}
+                          verified={pool.verified}
+                          locale={locale}
+                          participantsCount={pool.current_participants_count}
+                          status={pool.status || "archived"}
+                          layout="vertical"
+                        />
                       </motion.div>
                     );
                   })}
@@ -491,7 +379,7 @@ export default function MoneyPoolsListPage() {
 
             {/* Pagination */}
             {!searchQuery && totalPages > 1 && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="flex items-center justify-center gap-3 mt-12"
@@ -504,11 +392,11 @@ export default function MoneyPoolsListPage() {
                   <ArrowLeftIcon className="h-4 w-4" />
                   {locale === 'fr' ? 'Précédent' : 'Previous'}
                 </button>
-                
+
                 <span className="px-6 py-3 bg-white border-2 border-cloud rounded-2xl text-night font-semibold font-inter">
                   {locale === 'fr' ? 'Page' : 'Page'} {page} {locale === 'fr' ? 'sur' : 'of'} {totalPages}
                 </span>
-                
+
                 <button
                   onClick={() => setPage(p => p + 1)}
                   disabled={page >= totalPages || moneyPools.length < limit}
