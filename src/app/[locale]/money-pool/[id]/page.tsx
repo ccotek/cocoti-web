@@ -3,7 +3,7 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { 
+import {
   HeartIcon,
   UsersIcon,
   ClockIcon,
@@ -18,7 +18,7 @@ import {
   ShieldCheckIcon,
   ShareIcon
 } from '@heroicons/react/24/outline';
-import { 
+import {
   HeartIcon as HeartIconSolid
 } from '@heroicons/react/24/solid';
 import MoneyPoolGallery from '@/components/MoneyPoolGallery';
@@ -82,16 +82,16 @@ export default function MoneyPoolDetailsPage() {
   const router = useRouter();
   const moneyPoolId = params.id as string;
   const locale = params.locale as string;
-  
+
   // Vérifier s'il y a un paiement en attente de vérification (stocké dans sessionStorage)
   // Plus besoin de nettoyer l'URL car PayDunya utilise maintenant des URLs propres
-  
+
   // API URL configuration (same as money-pools list page)
   const API_URL = useMemo(() => {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     return baseUrl.endsWith('/api/v1') ? baseUrl.replace('/api/v1', '') : baseUrl;
   }, []);
-  
+
   // Helper function for translations using JSON files
   const t = (key: string): string => {
     try {
@@ -99,25 +99,25 @@ export default function MoneyPoolDetailsPage() {
         fr: require('@/i18n/messages/fr.json').moneyPool || {},
         en: require('@/i18n/messages/en.json').moneyPool || {}
       };
-      
+
       // Handle nested keys like "paymentInfo.title"
       const keys = key.split('.');
       let value: any = translations[locale];
-      
+
       for (const k of keys) {
         value = value?.[k];
         if (value === undefined || value === null) {
           break;
         }
       }
-      
+
       return typeof value === 'string' ? value : key;
     } catch (error) {
       console.error('Error loading translations:', error);
       return key;
     }
   };
-  
+
   const [moneyPool, setMoneyPool] = useState<MoneyPool | null>(null);
   const [contributors, setContributors] = useState<Contributor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -157,141 +157,141 @@ export default function MoneyPoolDetailsPage() {
   const [selectedCallingCode, setSelectedCallingCode] = useState<string>('+221'); // +221 par défaut
 
 
-      // Charger la liste des pays actifs avec indicatifs téléphoniques
-      useEffect(() => {
-        const fetchCountries = async () => {
-          try {
-            const response = await fetch(`${API_URL}/api/v1/geography/countries/public?language=${locale}`);
-            if (response.ok) {
-              const data = await response.json();
-              if (data.success && data.countries) {
-                setCountries(data.countries);
-                // Définir le pays par défaut (Sénégal)
-                const defaultCountry = data.countries.find((c: any) => c.code === 'SN');
-                if (defaultCountry) {
-                  setSelectedCountryCode(defaultCountry.code);
-                  setSelectedCallingCode(defaultCountry.calling_code || '+221');
-                }
-              }
+  // Charger la liste des pays actifs avec indicatifs téléphoniques
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/v1/geography/countries/public?language=${locale}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.countries) {
+            setCountries(data.countries);
+            // Définir le pays par défaut (Sénégal)
+            const defaultCountry = data.countries.find((c: any) => c.code === 'SN');
+            if (defaultCountry) {
+              setSelectedCountryCode(defaultCountry.code);
+              setSelectedCallingCode(defaultCountry.calling_code || '+221');
             }
-          } catch (error) {
-            console.error('Error fetching countries:', error);
           }
-        };
-        fetchCountries();
-      }, [API_URL, locale]);
-
-      useEffect(() => {
-        const fetchMoneyPool = async () => {
-          try {
-            setLoading(true);
-            setError(null);
-            // Fetch money pool details
-            const response = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}`);
-            
-            if (!response.ok) {
-              let errorMessage = '';
-              let errorData: any = null;
-              let rawText = '';
-              
-              // Gérer les différents cas d'erreur
-              if (response.status === 404) {
-                errorMessage = t('notFoundDescription');
-              } else {
-                // Cloner la réponse pour pouvoir lire le texte ET le JSON si nécessaire
-                const clonedResponse = response.clone();
-                
-                // D'abord, lire le texte brut pour voir ce que le serveur retourne
-                try {
-                  rawText = await clonedResponse.text();
-                } catch (textError) {
-                  // Ignore text read errors
-                }
-                
-                // Essayer de parser la réponse JSON
-                try {
-                  if (rawText && rawText.trim()) {
-                    errorData = JSON.parse(rawText);
-                  } else {
-                    errorData = {};
-                  }
-                  
-                  // Extraire le message d'erreur
-                  if (errorData && typeof errorData === 'object') {
-                    errorMessage = errorData.detail || errorData.message || errorData.error || errorData.msg || '';
-                    
-                    // Si le message est "Internal server error", essayer d'obtenir plus de détails
-                    if (errorMessage === 'Internal server error' || errorMessage === '') {
-                      // Vérifier s'il y a d'autres champs dans errorData
-                      const errorKeys = Object.keys(errorData);
-                      if (errorKeys.length > 0) {
-                        errorMessage = `Erreur serveur: ${JSON.stringify(errorData)}`;
-                      } else {
-                        errorMessage = 'Erreur serveur interne. Veuillez vérifier les logs du serveur.';
-                      }
-                    }
-                  }
-                  
-                  // Si aucun message n'a été trouvé dans le JSON, utiliser le texte brut ou le statut HTTP
-                  if (!errorMessage || errorMessage.trim() === '') {
-                    if (rawText && rawText.trim()) {
-                      errorMessage = rawText;
-                    } else {
-                      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-                    }
-                  }
-                  
-                } catch (jsonError) {
-                  // Si le parsing JSON échoue, utiliser le texte brut
-                  errorMessage = rawText || `HTTP ${response.status}: ${response.statusText}`;
-                }
-              }
-              
-              throw new Error(errorMessage || `Erreur serveur (${response.status})`);
-            }
-            
-            const data = await response.json();
-            
-            // Ensure verified is a boolean - normalize it properly
-            // Handle all possible types: boolean, string, number, null, undefined
-            const verifiedValue = data.verified;
-            let normalizedVerified = false;
-            if (verifiedValue === true || verifiedValue === 'true' || verifiedValue === 1 || verifiedValue === '1') {
-              normalizedVerified = true;
-            } else if (verifiedValue === false || verifiedValue === 'false' || verifiedValue === 0 || verifiedValue === '0' || verifiedValue === null || verifiedValue === undefined) {
-              normalizedVerified = false;
-            } else {
-              // Default to false for any other value
-              normalizedVerified = false;
-            }
-            
-            data.verified = normalizedVerified;
-            setMoneyPool(data);
-        
-            // Fetch contributions
-            try {
-              const contribResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
-              if (contribResponse.ok) {
-                const contribData = await contribResponse.json();
-                setContributors(contribData.contributions || []);
-              }
-            } catch (contribErr) {
-              console.error('Error fetching contributions:', contribErr);
-              setContributors([]);
-            }
-            
-            setLoading(false);
-          } catch (err) {
-            console.error('Error fetching money pool:', err);
-            setError(err instanceof Error ? err.message : String(err));
-            setLoading(false);
-          }
-        };
-
-        if (moneyPoolId) {
-          fetchMoneyPool();
         }
-      }, [moneyPoolId, locale]);
+      } catch (error) {
+        console.error('Error fetching countries:', error);
+      }
+    };
+    fetchCountries();
+  }, [API_URL, locale]);
+
+  useEffect(() => {
+    const fetchMoneyPool = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // Fetch money pool details
+        const response = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}`);
+
+        if (!response.ok) {
+          let errorMessage = '';
+          let errorData: any = null;
+          let rawText = '';
+
+          // Gérer les différents cas d'erreur
+          if (response.status === 404) {
+            errorMessage = t('notFoundDescription');
+          } else {
+            // Cloner la réponse pour pouvoir lire le texte ET le JSON si nécessaire
+            const clonedResponse = response.clone();
+
+            // D'abord, lire le texte brut pour voir ce que le serveur retourne
+            try {
+              rawText = await clonedResponse.text();
+            } catch (textError) {
+              // Ignore text read errors
+            }
+
+            // Essayer de parser la réponse JSON
+            try {
+              if (rawText && rawText.trim()) {
+                errorData = JSON.parse(rawText);
+              } else {
+                errorData = {};
+              }
+
+              // Extraire le message d'erreur
+              if (errorData && typeof errorData === 'object') {
+                errorMessage = errorData.detail || errorData.message || errorData.error || errorData.msg || '';
+
+                // Si le message est "Internal server error", essayer d'obtenir plus de détails
+                if (errorMessage === 'Internal server error' || errorMessage === '') {
+                  // Vérifier s'il y a d'autres champs dans errorData
+                  const errorKeys = Object.keys(errorData);
+                  if (errorKeys.length > 0) {
+                    errorMessage = `Erreur serveur: ${JSON.stringify(errorData)}`;
+                  } else {
+                    errorMessage = 'Erreur serveur interne. Veuillez vérifier les logs du serveur.';
+                  }
+                }
+              }
+
+              // Si aucun message n'a été trouvé dans le JSON, utiliser le texte brut ou le statut HTTP
+              if (!errorMessage || errorMessage.trim() === '') {
+                if (rawText && rawText.trim()) {
+                  errorMessage = rawText;
+                } else {
+                  errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                }
+              }
+
+            } catch (jsonError) {
+              // Si le parsing JSON échoue, utiliser le texte brut
+              errorMessage = rawText || `HTTP ${response.status}: ${response.statusText}`;
+            }
+          }
+
+          throw new Error(errorMessage || `Erreur serveur (${response.status})`);
+        }
+
+        const data = await response.json();
+
+        // Ensure verified is a boolean - normalize it properly
+        // Handle all possible types: boolean, string, number, null, undefined
+        const verifiedValue = data.verified;
+        let normalizedVerified = false;
+        if (verifiedValue === true || verifiedValue === 'true' || verifiedValue === 1 || verifiedValue === '1') {
+          normalizedVerified = true;
+        } else if (verifiedValue === false || verifiedValue === 'false' || verifiedValue === 0 || verifiedValue === '0' || verifiedValue === null || verifiedValue === undefined) {
+          normalizedVerified = false;
+        } else {
+          // Default to false for any other value
+          normalizedVerified = false;
+        }
+
+        data.verified = normalizedVerified;
+        setMoneyPool(data);
+
+        // Fetch contributions
+        try {
+          const contribResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
+          if (contribResponse.ok) {
+            const contribData = await contribResponse.json();
+            setContributors(contribData.contributions || []);
+          }
+        } catch (contribErr) {
+          console.error('Error fetching contributions:', contribErr);
+          setContributors([]);
+        }
+
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching money pool:', err);
+        setError(err instanceof Error ? err.message : String(err));
+        setLoading(false);
+      }
+    };
+
+    if (moneyPoolId) {
+      fetchMoneyPool();
+    }
+  }, [moneyPoolId, locale]);
 
   // Stocker le money_pool_id et locale dans sessionStorage avant d'initier le paiement
   // Cela permettra à la page intermédiaire de savoir où rediriger
@@ -320,7 +320,7 @@ export default function MoneyPoolDetailsPage() {
           if (data.contributionAmount) setContributionAmount(data.contributionAmount);
           if (data.message !== undefined) setMessage(data.message);
           if (data.anonymous !== undefined) setAnonymous(data.anonymous);
-          
+
           console.log('[CONTRIBUTION] Restored form data from sessionStorage');
         } catch (error) {
           console.error('[CONTRIBUTION] Error restoring form data:', error);
@@ -328,31 +328,31 @@ export default function MoneyPoolDetailsPage() {
       }
     }
   }, [showContributeModal, contributionStep]);
-  
+
   // Vérifier le statut du paiement après retour de PayDunya
   // Cette partie s'exécute après le nettoyage de l'URL (si nécessaire)
   useEffect(() => {
     const checkPaymentStatus = async () => {
       if (typeof window === 'undefined') return;
-      
+
       // Récupérer l'invoice_token depuis sessionStorage (stocké avant nettoyage ou lors de l'initiation)
       let invoiceToken = sessionStorage.getItem('pending_payment_token');
-      
+
       // Si pas d'invoice_token, ne rien faire
       if (!invoiceToken) {
         return;
       }
-      
+
       console.log('[PAYMENT CHECK] Checking payment status for invoice_token:', invoiceToken);
-      
+
       // Vérifier que l'URL est bien propre (sans paramètres)
       if (window.location.search) {
         console.warn('[PAYMENT CHECK] URL still has params, this should not happen:', window.location.search);
       }
-      
+
       // Créer une clé unique pour ce paiement
       const paymentKey = `token_${invoiceToken}`;
-      
+
       // Vérifier si ce paiement a déjà été traité (dans cette session)
       if (paymentProcessedRef.current.has(paymentKey)) {
         console.log('[PAYMENT CHECK] Payment already processed in this session, skipping...', paymentKey);
@@ -360,42 +360,42 @@ export default function MoneyPoolDetailsPage() {
         sessionStorage.removeItem('pending_payment_token');
         return;
       }
-      
+
       // Marquer comme en cours de traitement
       paymentProcessedRef.current.add(paymentKey);
-      
+
       // Vérifier le statut du paiement via l'API
       try {
         const { getAuthToken } = await import('@/utils/tokenStorage');
         const token = getAuthToken();
-        
+
         const headers: HeadersInit = {
           'Content-Type': 'application/json',
           'Accept-Language': locale || 'fr',
         };
-        
+
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
         }
-        
+
         // Vérifier le statut du paiement via l'API
         const statusResponse = await fetch(`${API_URL}/api/v1/payments/paydunya/status/${invoiceToken}`, {
           method: 'GET',
           headers
         });
-        
+
         if (statusResponse.ok) {
           const statusData = await statusResponse.json();
           console.log('[PAYMENT CHECK] Payment status from API:', statusData);
-          
+
           if (statusData.status === 'completed' || statusData.status === 'success') {
             // Afficher la boîte de dialogue de remerciement au lieu d'une simple notification
             setShowThankYouDialog(true);
-            
+
             // Nettoyer l'erreur de paiement et les données du formulaire sauvegardées après succès
             setPaymentError({ type: null });
             sessionStorage.removeItem('pending_contribution_data');
-            
+
             // Recharger les données
             try {
               const poolResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}`);
@@ -403,7 +403,7 @@ export default function MoneyPoolDetailsPage() {
                 const poolData = await poolResponse.json();
                 setMoneyPool(poolData);
               }
-              
+
               const contribResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
               if (contribResponse.ok) {
                 const contribData = await contribResponse.json();
@@ -419,7 +419,7 @@ export default function MoneyPoolDetailsPage() {
             setShowContributeModal(true);
             setPaymentProcessing(false);
             setIsContributing(false);
-            
+
             // Définir l'erreur de paiement pour l'afficher dans le formulaire
             setPaymentError({
               type: statusData.status === 'cancelled' ? 'cancelled' : 'failed'
@@ -428,7 +428,7 @@ export default function MoneyPoolDetailsPage() {
         } else {
           console.error('[PAYMENT CHECK] Failed to check payment status:', statusResponse.status);
         }
-        
+
         // Nettoyer sessionStorage après vérification
         sessionStorage.removeItem('pending_payment_token');
       } catch (error) {
@@ -436,16 +436,16 @@ export default function MoneyPoolDetailsPage() {
         // Nettoyer sessionStorage même en cas d'erreur
         sessionStorage.removeItem('pending_payment_token');
       }
-      
+
       console.log('[PAYMENT CHECK] Payment status check completed');
     };
-    
+
     // Vérifier immédiatement si on a des paramètres de paiement dans l'URL
     // Utiliser un timeout court pour s'assurer que le composant est monté
     const timeoutId = setTimeout(() => {
       checkPaymentStatus();
     }, 50);
-    
+
     return () => {
       clearTimeout(timeoutId);
     };
@@ -460,10 +460,10 @@ export default function MoneyPoolDetailsPage() {
       try {
         const { getAuthToken, isAuthenticated } = await import('@/utils/tokenStorage');
         const token = getAuthToken();
-        
+
         if (token && isAuthenticated()) {
           setIsLoggedIn(true);
-          
+
           // Récupérer les infos utilisateur depuis l'API
           const response = await fetch(`${API_URL}/api/v1/auth/me`, {
             method: 'GET',
@@ -472,7 +472,7 @@ export default function MoneyPoolDetailsPage() {
               'Content-Type': 'application/json',
             },
           });
-          
+
           if (response.ok) {
             const userData = await response.json();
             // Concaténer first_name et last_name pour créer le full_name
@@ -491,7 +491,7 @@ export default function MoneyPoolDetailsPage() {
         setUserFullName(null);
       }
     };
-    
+
     fetchUserInfo();
   }, [API_URL]); // Ne dépend que de API_URL, pas de anonymous
 
@@ -503,7 +503,7 @@ export default function MoneyPoolDetailsPage() {
   useEffect(() => {
     const fetchTipConfig = async () => {
       if (!moneyPool) return;
-      
+
       try {
         const countryCode = moneyPool.country || 'SN';
         const response = await fetch(
@@ -551,7 +551,7 @@ export default function MoneyPoolDetailsPage() {
   const handleShare = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!moneyPool) {
       return;
     }
@@ -572,7 +572,7 @@ export default function MoneyPoolDetailsPage() {
     if (moneyPool.status === 'archived' || moneyPool.status === 'closed') {
       setNotification({
         type: 'error',
-        message: moneyPool.status === 'closed' 
+        message: moneyPool.status === 'closed'
           ? (locale === 'fr' ? 'Cette cagnotte est clôturée et n\'accepte plus de contributions.' : 'This money pool is closed and no longer accepts contributions.')
           : t('archivedFundsCollected')
       });
@@ -683,19 +683,19 @@ export default function MoneyPoolDetailsPage() {
     console.log('[PAYDUNYA SDK] handlePayDunyaPayment called');
     console.log('[PAYDUNYA SDK] Payment data:', paymentData);
     console.log('[PAYDUNYA SDK] PayDunyaCheckout available?', !!(window as any).PayDunyaCheckout);
-    
+
     if ((window as any).PayDunyaCheckout) {
       const PayDunyaCheckout = (window as any).PayDunyaCheckout;
-      
+
       console.log('[PAYDUNYA SDK] Configuring PayDunya Checkout for SoftPay...');
-      
+
       try {
         // Configurer PayDunya SoftPay (intégration transparente)
         // Note: Les URLs de retour sont configurées dans l'invoice côté backend
         // PayDunya devrait utiliser ces URLs, mais on peut aussi les configurer côté SDK si nécessaire
         const returnUrl = `/${locale}/payment/return?money_pool_id=${moneyPoolId}&locale=${locale}`;
         const cancelUrl = `/${locale}/payment/return?money_pool_id=${moneyPoolId}&locale=${locale}&cancelled=true`;
-        
+
         PayDunyaCheckout.config({
           public_key: paymentData.public_key,
           invoice_token: paymentData.invoice_token,
@@ -708,24 +708,24 @@ export default function MoneyPoolDetailsPage() {
           return_url: returnUrl,
           cancel_url: cancelUrl
         });
-        
+
         console.log('[PAYDUNYA SDK] PayDunya Checkout configured successfully');
-        
+
         // Ouvrir le modal de paiement (transparent, sans mentionner PayDunya)
         console.log('[PAYDUNYA SDK] Opening PayDunya Checkout modal (SoftPay mode)...');
         PayDunyaCheckout.open();
-        
+
         // Écouter les événements PayDunya
         PayDunyaCheckout.on('success', () => {
           console.log('[PAYDUNYA SDK] Payment success event received');
-          
+
           // Récupérer l'invoice_token depuis sessionStorage
           const invoiceToken = sessionStorage.getItem('pending_payment_token');
           console.log('[PAYDUNYA SDK] Invoice token from sessionStorage:', invoiceToken);
-          
+
           // Fermer le modal de contribution
           setShowContributeModal(false);
-          
+
           // Vérifier le statut via l'API et recharger les données
           if (invoiceToken) {
             // Vérifier le statut via l'API
@@ -733,44 +733,44 @@ export default function MoneyPoolDetailsPage() {
               try {
                 const { getAuthToken } = await import('@/utils/tokenStorage');
                 const token = getAuthToken();
-                
+
                 const headers: HeadersInit = {
                   'Content-Type': 'application/json',
                   'Accept-Language': locale || 'fr',
                 };
-                
+
                 if (token) {
                   headers['Authorization'] = `Bearer ${token}`;
                 }
-                
+
                 const statusResponse = await fetch(`${API_URL}/api/v1/payments/paydunya/status/${invoiceToken}`, {
                   method: 'GET',
                   headers
                 });
-                
+
                 if (statusResponse.ok) {
                   const statusData = await statusResponse.json();
                   console.log('[PAYDUNYA SDK] Payment status from API:', statusData);
-                  
+
                   // Recharger les données
                   const poolResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}`);
                   if (poolResponse.ok) {
                     const poolData = await poolResponse.json();
                     setMoneyPool(poolData);
                   }
-                  
+
                   const contribResponse = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/contributions?limit=20&page=1`);
                   if (contribResponse.ok) {
                     const contribData = await contribResponse.json();
                     setContributors(contribData.contributions || []);
                   }
-                  
-                      // Afficher la boîte de dialogue de remerciement
-                      setShowThankYouDialog(true);
-                      
-                      // Nettoyer l'erreur de paiement et les données du formulaire sauvegardées après succès
-                      setPaymentError({ type: null });
-                      sessionStorage.removeItem('pending_contribution_data');
+
+                  // Afficher la boîte de dialogue de remerciement
+                  setShowThankYouDialog(true);
+
+                  // Nettoyer l'erreur de paiement et les données du formulaire sauvegardées après succès
+                  setPaymentError({ type: null });
+                  sessionStorage.removeItem('pending_contribution_data');
                 } else {
                   console.error('[PAYDUNYA SDK] Failed to check payment status:', statusResponse.status);
                   // Recharger quand même la page
@@ -782,7 +782,7 @@ export default function MoneyPoolDetailsPage() {
                 window.location.reload();
               }
             };
-            
+
             checkStatus();
           } else {
             // Pas de token, recharger la page
@@ -790,66 +790,66 @@ export default function MoneyPoolDetailsPage() {
             window.location.reload();
           }
         });
-        
-            PayDunyaCheckout.on('cancel', () => {
-              console.log('[PAYDUNYA SDK] Payment cancel event received');
-              
-              // Ne pas fermer le modal, revenir à l'étape 2 avec les informations déjà remplies
-              setContributionStep(2);
-              setShowContributeModal(true);
-              setPaymentProcessing(false);
-              setIsContributing(false);
-              
-              // Définir l'erreur de paiement pour l'afficher dans le formulaire
-              setPaymentError({ type: 'cancelled' });
-              
-              // Récupérer l'invoice_token depuis sessionStorage
-              const invoiceToken = sessionStorage.getItem('pending_payment_token');
-              console.log('[PAYDUNYA SDK] Invoice token from sessionStorage (cancel):', invoiceToken);
-              
-              // Vérifier le statut via l'API
-              if (invoiceToken) {
-                const checkStatus = async () => {
-                  try {
-                    const { getAuthToken } = await import('@/utils/tokenStorage');
-                    const token = getAuthToken();
-                    
-                    const headers: HeadersInit = {
-                      'Content-Type': 'application/json',
-                      'Accept-Language': locale || 'fr',
-                    };
-                    
-                    if (token) {
-                      headers['Authorization'] = `Bearer ${token}`;
-                    }
-                    
-                    const statusResponse = await fetch(`${API_URL}/api/v1/payments/paydunya/status/${invoiceToken}`, {
-                      method: 'GET',
-                      headers
-                    });
-                    
-                    if (statusResponse.ok) {
-                      const statusData = await statusResponse.json();
-                      console.log('[PAYDUNYA SDK] Payment status from API (cancel):', statusData);
-                    }
-                  } catch (error) {
-                    console.error('[PAYDUNYA SDK] Error checking payment status (cancel):', error);
-                  }
-                };
-                
-                checkStatus();
-              }
-            });
-        
-        PayDunyaCheckout.on('error', (error: any) => {
-          console.error('[PAYDUNYA SDK] Payment error event received:', error);
-          
+
+        PayDunyaCheckout.on('cancel', () => {
+          console.log('[PAYDUNYA SDK] Payment cancel event received');
+
           // Ne pas fermer le modal, revenir à l'étape 2 avec les informations déjà remplies
           setContributionStep(2);
           setShowContributeModal(true);
           setPaymentProcessing(false);
           setIsContributing(false);
-          
+
+          // Définir l'erreur de paiement pour l'afficher dans le formulaire
+          setPaymentError({ type: 'cancelled' });
+
+          // Récupérer l'invoice_token depuis sessionStorage
+          const invoiceToken = sessionStorage.getItem('pending_payment_token');
+          console.log('[PAYDUNYA SDK] Invoice token from sessionStorage (cancel):', invoiceToken);
+
+          // Vérifier le statut via l'API
+          if (invoiceToken) {
+            const checkStatus = async () => {
+              try {
+                const { getAuthToken } = await import('@/utils/tokenStorage');
+                const token = getAuthToken();
+
+                const headers: HeadersInit = {
+                  'Content-Type': 'application/json',
+                  'Accept-Language': locale || 'fr',
+                };
+
+                if (token) {
+                  headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const statusResponse = await fetch(`${API_URL}/api/v1/payments/paydunya/status/${invoiceToken}`, {
+                  method: 'GET',
+                  headers
+                });
+
+                if (statusResponse.ok) {
+                  const statusData = await statusResponse.json();
+                  console.log('[PAYDUNYA SDK] Payment status from API (cancel):', statusData);
+                }
+              } catch (error) {
+                console.error('[PAYDUNYA SDK] Error checking payment status (cancel):', error);
+              }
+            };
+
+            checkStatus();
+          }
+        });
+
+        PayDunyaCheckout.on('error', (error: any) => {
+          console.error('[PAYDUNYA SDK] Payment error event received:', error);
+
+          // Ne pas fermer le modal, revenir à l'étape 2 avec les informations déjà remplies
+          setContributionStep(2);
+          setShowContributeModal(true);
+          setPaymentProcessing(false);
+          setIsContributing(false);
+
           // Définir l'erreur de paiement pour l'afficher dans le formulaire
           setPaymentError({ type: 'failed' });
         });
@@ -860,7 +860,7 @@ export default function MoneyPoolDetailsPage() {
         setShowContributeModal(true);
         setPaymentProcessing(false);
         setIsContributing(false);
-        
+
         // Définir l'erreur de paiement pour l'afficher dans le formulaire
         setPaymentError({ type: 'failed' });
       }
@@ -871,7 +871,7 @@ export default function MoneyPoolDetailsPage() {
       setShowContributeModal(true);
       setPaymentProcessing(false);
       setIsContributing(false);
-      
+
       // Définir l'erreur de paiement pour l'afficher dans le formulaire
       setPaymentError({ type: 'failed' });
     }
@@ -884,13 +884,13 @@ export default function MoneyPoolDetailsPage() {
       // Calculer le montant total (contribution + pourboire Cocoti)
       const totalAmount = contributionAmount + cocotiTip;
       setIsContributing(true);
-      
+
       setPaymentProcessing(true);
-      
+
       // Get auth token if user is logged in
       const { getAuthToken } = await import('@/utils/tokenStorage');
       const token = getAuthToken();
-      
+
       // Créer la contribution ET initier le paiement PayDunya en une seule requête
       // Formater le numéro de téléphone avec l'indicatif
       let formattedPhone: string | undefined = undefined;
@@ -904,13 +904,13 @@ export default function MoneyPoolDetailsPage() {
           formattedPhone = cleanedPhone.startsWith('+') ? cleanedPhone : `+${cleanedPhone}`;
         }
       }
-      
+
       console.log('[CONTRIBUTION] Payment phone formatting:', {
         original: paymentPhone,
         callingCode: selectedCallingCode,
         formatted: formattedPhone
       });
-      
+
       const requestBody: any = {
         amount: contributionAmount,
         currency: moneyPool?.currency || 'XOF',
@@ -924,9 +924,9 @@ export default function MoneyPoolDetailsPage() {
         payment_method: paymentMethod, // Méthode de paiement choisie
         initiate_payment: true  // Initier le paiement PayDunya après création de la contribution
       };
-      
+
       console.log('[CONTRIBUTION] Request body:', JSON.stringify(requestBody, null, 2));
-      
+
       // Stocker les informations du formulaire dans sessionStorage pour les restaurer en cas d'annulation
       sessionStorage.setItem('pending_contribution_data', JSON.stringify({
         paymentFullName,
@@ -941,17 +941,17 @@ export default function MoneyPoolDetailsPage() {
         message,
         anonymous
       }));
-      
+
       // Use the same token for the participation request
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
         'Accept-Language': locale || 'fr',
       };
-      
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      
+
       const response = await fetch(`${API_URL}/api/v1/money-pools/${moneyPoolId}/participate`, {
         method: 'POST',
         headers,
@@ -963,12 +963,12 @@ export default function MoneyPoolDetailsPage() {
       if (!response.ok) {
         throw new Error(data.detail || 'Failed to contribute');
       }
-      
+
       console.log('[CONTRIBUTION] Response data:', JSON.stringify(data, null, 2));
       console.log('[CONTRIBUTION] Payment initiated?', data.payment_initiated);
       console.log('[CONTRIBUTION] Payment data exists?', !!data.payment);
       console.log('[CONTRIBUTION] Payment error?', data.payment_error);
-      
+
       // Vérifier si le paiement a été initié
       if (data.payment_initiated === false || data.payment_error) {
         // Le paiement n'a pas été initié - revenir à l'étape 2 avec les informations déjà remplies
@@ -976,12 +976,12 @@ export default function MoneyPoolDetailsPage() {
         setShowContributeModal(true);
         setPaymentProcessing(false);
         setIsContributing(false);
-        
+
         // Définir l'erreur de paiement pour l'afficher dans le formulaire
         setPaymentError({ type: 'failed' });
         return; // Ne pas fermer le modal, laisser l'utilisateur réessayer
       }
-      
+
       // Si PayDunya SoftPay a été initié, utiliser l'URL de checkout
       if (data.payment) {
         // Stocker l'invoice_token dans sessionStorage pour vérification après paiement
@@ -991,7 +991,7 @@ export default function MoneyPoolDetailsPage() {
           invoice_token: invoiceToken,
           payment_data: data.payment
         });
-        
+
         if (invoiceToken) {
           sessionStorage.setItem('pending_payment_token', invoiceToken);
           console.log('[CONTRIBUTION] Stored invoice_token in sessionStorage:', invoiceToken);
@@ -999,16 +999,16 @@ export default function MoneyPoolDetailsPage() {
         } else {
           console.error('[CONTRIBUTION] No invoice_token in payment response!', data.payment);
         }
-        
+
         // PayDunya renvoie payment_data (pour SDK) ET payment_url (pour redirection fallback)
         const paymentData = data.payment.payment_data;
         const paymentUrl = data.payment.payment_url || data.payment.checkout_url || (paymentData?.checkout_url);
-        
+
         // Pour SoftPay, on essaie d'abord le SDK, puis on fait fallback vers redirection
         // Si on a payment_data, essayer d'utiliser le SDK (si disponible)
         if (paymentData) {
           console.log('[CONTRIBUTION] PayDunya payment_data received, attempting to use SDK');
-          
+
           // Pour SoftPay, on utilise le SDK PayDunya directement dans la page (intégration transparente)
           // Charger le SDK PayDunya dynamiquement
           try {
@@ -1028,7 +1028,7 @@ export default function MoneyPoolDetailsPage() {
                 const checkInterval = setInterval(() => {
                   attempts++;
                   console.log(`[CONTRIBUTION] Checking for PayDunyaCheckout from existing script (attempt ${attempts}/${maxAttempts})...`);
-                  
+
                   if ((window as any).PayDunyaCheckout) {
                     console.log('[CONTRIBUTION] PayDunyaCheckout is now available from existing script');
                     clearInterval(checkInterval);
@@ -1038,7 +1038,7 @@ export default function MoneyPoolDetailsPage() {
                     clearInterval(checkInterval);
                     setNotification({
                       type: 'error',
-                      message: locale === 'fr' 
+                      message: locale === 'fr'
                         ? 'Erreur : Le système de paiement n\'a pas pu être chargé. Veuillez rafraîchir la page et réessayer.'
                         : 'Error: Payment system could not be loaded. Please refresh the page and try again.'
                     });
@@ -1048,14 +1048,14 @@ export default function MoneyPoolDetailsPage() {
                 }, 200);
                 return; // Ne pas créer un nouveau script
               }
-              
+
               // Créer un script pour charger le SDK PayDunya
               console.log('[CONTRIBUTION] Creating new script to load PayDunya SDK from https://cdn.paydunya.com/checkout.js');
               const script = document.createElement('script');
               script.src = 'https://cdn.paydunya.com/checkout.js';
               script.async = true;
               script.id = 'paydunya-checkout-script';
-              
+
               script.onload = () => {
                 console.log('[CONTRIBUTION] PayDunya SDK script loaded successfully');
                 // Attendre que le SDK soit complètement initialisé
@@ -1065,7 +1065,7 @@ export default function MoneyPoolDetailsPage() {
                 const checkInterval = setInterval(() => {
                   attempts++;
                   console.log(`[CONTRIBUTION] Checking for PayDunyaCheckout (attempt ${attempts}/${maxAttempts})...`);
-                  
+
                   if ((window as any).PayDunyaCheckout) {
                     console.log('[CONTRIBUTION] PayDunyaCheckout is now available, calling handlePayDunyaPayment');
                     clearInterval(checkInterval);
@@ -1082,7 +1082,7 @@ export default function MoneyPoolDetailsPage() {
                     // Pas de fallback disponible
                     setNotification({
                       type: 'error',
-                      message: locale === 'fr' 
+                      message: locale === 'fr'
                         ? 'Erreur : Le système de paiement n\'a pas pu être chargé. Veuillez rafraîchir la page et réessayer.'
                         : 'Error: Payment system could not be loaded. Please refresh the page and try again.'
                     });
@@ -1091,7 +1091,7 @@ export default function MoneyPoolDetailsPage() {
                   }
                 }, 200); // Vérifier toutes les 200ms
               };
-              
+
               script.onerror = (error) => {
                 console.error('[CONTRIBUTION] PayDunya SDK script failed to load:', error);
                 // Fallback : utiliser l'URL de checkout si disponible
@@ -1105,14 +1105,14 @@ export default function MoneyPoolDetailsPage() {
                 setShowContributeModal(true);
                 setPaymentProcessing(false);
                 setIsContributing(false);
-                
+
                 // Définir l'erreur de paiement pour l'afficher dans le formulaire
                 setPaymentError({ type: 'failed' });
               }
-              
+
               document.head.appendChild(script);
             }
-            
+
             return; // Ne pas fermer le modal, attendre le résultat du paiement
           } catch (error) {
             console.error('[CONTRIBUTION] Error loading PayDunya SDK:', error);
@@ -1127,7 +1127,7 @@ export default function MoneyPoolDetailsPage() {
             setShowContributeModal(true);
             setPaymentProcessing(false);
             setIsContributing(false);
-            
+
             // Définir l'erreur de paiement pour l'afficher dans le formulaire
             setPaymentError({ type: 'failed' });
           }
@@ -1144,22 +1144,22 @@ export default function MoneyPoolDetailsPage() {
           setShowContributeModal(true);
           setPaymentProcessing(false);
           setIsContributing(false);
-          
+
           // Définir l'erreur de paiement pour l'afficher dans le formulaire
           setPaymentError({ type: 'failed' });
           return; // Ne pas fermer le modal
         }
       }
-      
+
     } catch (err) {
       console.error('Error contributing:', err);
-      
+
       // Revenir à l'étape 2 avec les informations déjà remplies
       setContributionStep(2);
       setShowContributeModal(true);
       setPaymentProcessing(false);
       setIsContributing(false);
-      
+
       // Définir l'erreur de paiement pour l'afficher dans le formulaire
       setPaymentError({ type: 'failed' });
     } finally {
@@ -1206,8 +1206,8 @@ export default function MoneyPoolDetailsPage() {
   }
 
   // Calculate progress once we have moneyPool data
-  const progress = moneyPool ? (moneyPool.settings.target_amount > 0 
-    ? Math.round((moneyPool.current_amount / moneyPool.settings.target_amount) * 100) 
+  const progress = moneyPool ? (moneyPool.settings.target_amount > 0
+    ? Math.round((moneyPool.current_amount / moneyPool.settings.target_amount) * 100)
     : 0) : 0;
 
   return (
@@ -1234,7 +1234,7 @@ export default function MoneyPoolDetailsPage() {
 
       {/* Boîte de dialogue de remerciement */}
       {showThankYouDialog && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
           onClick={() => setShowThankYouDialog(false)}
         >
@@ -1289,18 +1289,11 @@ export default function MoneyPoolDetailsPage() {
       <div className="bg-white border-b border-cloud">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <nav className="flex items-center gap-2 text-sm">
-            <Link 
+            <Link
               href={`/${locale}`}
               className="text-ink-muted hover:text-magenta transition-colors flex items-center gap-1 font-inter"
             >
               <span>{t('home')}</span>
-            </Link>
-            <ChevronRightIcon className="h-4 w-4 text-cloud" />
-            <Link 
-              href={`/${locale}/money-pools`}
-              className="text-ink-muted hover:text-magenta transition-colors font-inter"
-            >
-              {t('moneyPools')}
             </Link>
             <ChevronRightIcon className="h-4 w-4 text-cloud" />
             <span className="text-night font-semibold line-clamp-1 font-inter">
@@ -1312,7 +1305,7 @@ export default function MoneyPoolDetailsPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         {/* Page Title */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
@@ -1322,7 +1315,7 @@ export default function MoneyPoolDetailsPage() {
 
         {/* Stats Section - Mobile First (visible on mobile, hidden on desktop - will be in sidebar on desktop) */}
         <div className="lg:hidden mb-6">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -1347,7 +1340,7 @@ export default function MoneyPoolDetailsPage() {
                 <span className="text-night text-sm font-semibold font-inter">{t('progress')}</span>
                 <span className="text-2xl font-bold text-magenta font-inter">{progress}%</span>
               </div>
-              
+
               <div className="w-full bg-cloud rounded-full h-3 overflow-hidden">
                 <motion.div
                   className="bg-gradient-to-r from-magenta via-sunset to-coral h-3 rounded-full"
@@ -1391,9 +1384,9 @@ export default function MoneyPoolDetailsPage() {
             >
               <HeartIconSolid className="h-5 w-5" />
               {moneyPool.status === 'archived' || moneyPool.status === 'closed'
-                ? (moneyPool.status === 'closed' 
-                    ? (locale === 'fr' ? 'Cagnotte clôturée' : 'Money pool closed')
-                    : t('poolArchived'))
+                ? (moneyPool.status === 'closed'
+                  ? (locale === 'fr' ? 'Cagnotte clôturée' : 'Money pool closed')
+                  : t('poolArchived'))
                 : t('contribute')
               }
             </button>
@@ -1416,7 +1409,7 @@ export default function MoneyPoolDetailsPage() {
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6 lg:space-y-8">
             {/* Images Gallery */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -1431,7 +1424,7 @@ export default function MoneyPoolDetailsPage() {
             </motion.div>
 
             {/* Description */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -1447,7 +1440,7 @@ export default function MoneyPoolDetailsPage() {
             </motion.div>
 
             {/* Contributors Section */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -1462,12 +1455,12 @@ export default function MoneyPoolDetailsPage() {
                   {contributors.length}
                 </span>
               </h2>
-              
+
               <div className="space-y-4">
                 {contributors.length > 0 ? (
                   contributors.map((contributor, index) => (
-                    <motion.div 
-                      key={index} 
+                    <motion.div
+                      key={index}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.3 + index * 0.05 }}
@@ -1524,7 +1517,7 @@ export default function MoneyPoolDetailsPage() {
           {/* Right Column - Sidebar (Desktop only) */}
           <div className="hidden lg:block space-y-6">
             {/* Progress Card */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
@@ -1549,7 +1542,7 @@ export default function MoneyPoolDetailsPage() {
                   <span className="text-night text-sm font-semibold font-inter">{t('progress')}</span>
                   <span className="text-2xl font-bold text-magenta font-inter">{progress}%</span>
                 </div>
-                
+
                 <div className="w-full bg-cloud rounded-full h-3 overflow-hidden mb-3">
                   <motion.div
                     className="bg-gradient-to-r from-magenta via-sunset to-coral h-3 rounded-full"
@@ -1587,7 +1580,7 @@ export default function MoneyPoolDetailsPage() {
                     <ClockIcon className="h-6 w-6 text-ink-muted" />
                   </div>
                   <p className="text-xl font-bold text-night font-inter">
-                    {moneyPool.end_date 
+                    {moneyPool.end_date
                       ? new Date(moneyPool.end_date).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                       : '∞'
                     }
@@ -1604,9 +1597,9 @@ export default function MoneyPoolDetailsPage() {
               >
                 <HeartIconSolid className="h-5 w-5" />
                 {moneyPool.status === 'archived' || moneyPool.status === 'closed'
-                  ? (moneyPool.status === 'closed' 
-                      ? (locale === 'fr' ? 'Cagnotte clôturée' : 'Money pool closed')
-                      : t('poolArchived'))
+                  ? (moneyPool.status === 'closed'
+                    ? (locale === 'fr' ? 'Cagnotte clôturée' : 'Money pool closed')
+                    : t('poolArchived'))
                   : t('contribute')
                 }
               </button>
@@ -1626,39 +1619,35 @@ export default function MoneyPoolDetailsPage() {
               <div className="mt-6 space-y-3 text-sm">
                 {/* Status: Active, Closed or Archived */}
                 <div className="flex items-center text-ink-muted font-inter">
-                  <div className={`p-1.5 rounded-lg mr-2 ${
-                    moneyPool.status === 'active' 
-                      ? 'bg-gradient-to-br from-green-400/20 to-green-500/20' 
-                      : 'bg-gradient-to-br from-gray-400/20 to-gray-500/20'
-                  }`}>
-                    <CheckBadgeIcon className={`h-4 w-4 ${
-                      moneyPool.status === 'active' ? 'text-green-500' : 'text-gray-500'
-                    }`} />
+                  <div className={`p-1.5 rounded-lg mr-2 ${moneyPool.status === 'active'
+                    ? 'bg-gradient-to-br from-green-400/20 to-green-500/20'
+                    : 'bg-gradient-to-br from-gray-400/20 to-gray-500/20'
+                    }`}>
+                    <CheckBadgeIcon className={`h-4 w-4 ${moneyPool.status === 'active' ? 'text-green-500' : 'text-gray-500'
+                      }`} />
                   </div>
                   <span>
-                    {moneyPool.status === 'active' 
-                      ? t('active') 
+                    {moneyPool.status === 'active'
+                      ? t('active')
                       : moneyPool.status === 'closed'
-                      ? (locale === 'fr' ? 'Clôturée' : 'Closed')
-                      : t('archived')
+                        ? (locale === 'fr' ? 'Clôturée' : 'Closed')
+                        : t('archived')
                     }
                   </span>
                 </div>
-                
+
                 {/* Verified Status - Always show */}
                 <div className="flex items-center text-ink-muted font-inter">
-                  <div className={`p-1.5 rounded-lg mr-2 ${
-                    moneyPool.verified === true 
-                      ? 'bg-green-500/20' 
-                      : 'bg-gray-300/20'
-                  }`}>
-                    <ShieldCheckIcon className={`h-4 w-4 ${
-                      moneyPool.verified === true ? 'text-green-500' : 'text-gray-400'
-                    }`} />
+                  <div className={`p-1.5 rounded-lg mr-2 ${moneyPool.verified === true
+                    ? 'bg-green-500/20'
+                    : 'bg-gray-300/20'
+                    }`}>
+                    <ShieldCheckIcon className={`h-4 w-4 ${moneyPool.verified === true ? 'text-green-500' : 'text-gray-400'
+                      }`} />
                   </div>
                   <span>{moneyPool.verified === true ? t('verified') : t('notVerified')}</span>
                 </div>
-                
+
                 {/* Anonymous Allowed */}
                 <div className="flex items-center text-ink-muted font-inter">
                   <div className="p-1.5 bg-cloud/50 rounded-lg mr-2">
@@ -1698,7 +1687,7 @@ export default function MoneyPoolDetailsPage() {
                   ✕
                 </button>
               </div>
-              
+
               {/* Indicateur de progression */}
               <div className="flex items-center gap-2 mb-4">
                 <div className={`flex-1 h-2 rounded-full ${contributionStep >= 1 ? 'bg-gradient-to-r from-magenta to-sunset' : 'bg-gray-200'}`}></div>
@@ -1717,159 +1706,159 @@ export default function MoneyPoolDetailsPage() {
             {contributionStep === 1 ? (
               /* ÉTAPE 1 : Formulaire de contribution */
               <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('amount')} ({getCurrencySymbol(moneyPool.currency)})
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min={moneyPool.settings.min_contribution || 0}
-                    max={moneyPool.settings.max_contribution || undefined}
-                    value={contributionAmount || ''}
-                    onChange={(e) => {
-                      const newAmount = parseFloat(e.target.value) || 0;
-                      setContributionAmount(newAmount);
-                      // Recalculer le pourboire automatiquement
-                      if (newAmount > 0) {
-                        const calculatedTip = Math.round(newAmount * (cocotiTipPercentage / 100));
-                        setCocotiTip(calculatedTip);
-                      } else {
-                        setCocotiTip(0);
-                      }
-                    }}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta text-lg font-semibold text-green-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    placeholder={
-                      moneyPool.settings.min_contribution && moneyPool.settings.max_contribution
-                        ? `${formatAmount(moneyPool.settings.min_contribution)} - ${formatAmount(moneyPool.settings.max_contribution)}`
-                        : moneyPool.settings.min_contribution
-                        ? `${formatAmount(moneyPool.settings.min_contribution)}+`
-                        : '0'
-                    }
-                  />
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-600 font-semibold">
-                    {getCurrencySymbol(moneyPool.currency)}
-                  </div>
-                </div>
-                
-                {/* Indicateur discret des frais de service Cocoti */}
-                {contributionAmount > 0 && cocotiTip > 0 && (
-                  <div className="mt-2 flex items-center justify-between text-xs text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <span>+ {formatCurrency(cocotiTip, moneyPool.currency)}</span>
-                      <span className="text-gray-500">{t('cocotiServiceFees')}</span>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowTipModify(!showTipModify)}
-                      className="text-magenta hover:text-magenta/80 underline text-xs transition-colors"
-                    >
-                      {showTipModify ? t('hideDetails') : t('adjustSupport')}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Section de modification du pourboire - très discrète */}
-              {showTipModify && contributionAmount > 0 && (
-                <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    {t('tipExplanation')}
-                  </p>
-                  
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min={contributionAmount > 0 ? Math.round(contributionAmount * (cocotiTipMin / 100)) : 0}
-                        value={cocotiTip || ''}
-                        onChange={(e) => {
-                          const newTip = parseFloat(e.target.value) || 0;
-                          const minTip = contributionAmount > 0 ? Math.round(contributionAmount * (cocotiTipMin / 100)) : 0;
-                          const validatedTip = Math.max(newTip, minTip);
-                          setCocotiTip(validatedTip);
-                          if (contributionAmount > 0) {
-                            const percentage = Math.round((validatedTip / contributionAmount) * 100 * 10) / 10;
-                            setCocotiTipPercentage(percentage);
-                          }
-                        }}
-                        className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-magenta focus:border-magenta"
-                      />
-                    </div>
-                    
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('amount')} ({getCurrencySymbol(moneyPool.currency)})
+                  </label>
+                  <div className="relative">
                     <input
-                      type="range"
-                      min={cocotiTipMin}
-                      max={cocotiTipMax}
-                      step="0.1"
-                      value={cocotiTipPercentage}
+                      type="number"
+                      min={moneyPool.settings.min_contribution || 0}
+                      max={moneyPool.settings.max_contribution || undefined}
+                      value={contributionAmount || ''}
                       onChange={(e) => {
-                        const newPercentage = parseFloat(e.target.value);
-                        setCocotiTipPercentage(newPercentage);
-                        if (contributionAmount > 0) {
-                          setCocotiTip(Math.round(contributionAmount * (newPercentage / 100)));
+                        const newAmount = parseFloat(e.target.value) || 0;
+                        setContributionAmount(newAmount);
+                        // Recalculer le pourboire automatiquement
+                        if (newAmount > 0) {
+                          const calculatedTip = Math.round(newAmount * (cocotiTipPercentage / 100));
+                          setCocotiTip(calculatedTip);
+                        } else {
+                          setCocotiTip(0);
                         }
                       }}
-                      className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                      style={{
-                        background: `linear-gradient(to right, #ff3a81 0%, #ff3a81 ${((cocotiTipPercentage - cocotiTipMin) / (cocotiTipMax - cocotiTipMin)) * 100}%, #e5e7eb ${((cocotiTipPercentage - cocotiTipMin) / (cocotiTipMax - cocotiTipMin)) * 100}%, #e5e7eb 100%)`
-                      }}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta text-lg font-semibold text-green-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      placeholder={
+                        moneyPool.settings.min_contribution && moneyPool.settings.max_contribution
+                          ? `${formatAmount(moneyPool.settings.min_contribution)} - ${formatAmount(moneyPool.settings.max_contribution)}`
+                          : moneyPool.settings.min_contribution
+                            ? `${formatAmount(moneyPool.settings.min_contribution)}+`
+                            : '0'
+                      }
                     />
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-600 font-semibold">
+                      {getCurrencySymbol(moneyPool.currency)}
+                    </div>
                   </div>
+
+                  {/* Indicateur discret des frais de service Cocoti */}
+                  {contributionAmount > 0 && cocotiTip > 0 && (
+                    <div className="mt-2 flex items-center justify-between text-xs text-gray-400">
+                      <span className="flex items-center gap-1">
+                        <span>+ {formatCurrency(cocotiTip, moneyPool.currency)}</span>
+                        <span className="text-gray-500">{t('cocotiServiceFees')}</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowTipModify(!showTipModify)}
+                        className="text-magenta hover:text-magenta/80 underline text-xs transition-colors"
+                      >
+                        {showTipModify ? t('hideDetails') : t('adjustSupport')}
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {/* Le nom complet n'est plus demandé dans l'étape 1 */}
+                {/* Section de modification du pourboire - très discrète */}
+                {showTipModify && contributionAmount > 0 && (
+                  <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      {t('tipExplanation')}
+                    </p>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('message')} ({t('optional')})
-                </label>
-                <textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta"
-                  rows={3}
-                  placeholder={t('messagePlaceholder')}
-                />
-              </div>
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min={contributionAmount > 0 ? Math.round(contributionAmount * (cocotiTipMin / 100)) : 0}
+                          value={cocotiTip || ''}
+                          onChange={(e) => {
+                            const newTip = parseFloat(e.target.value) || 0;
+                            const minTip = contributionAmount > 0 ? Math.round(contributionAmount * (cocotiTipMin / 100)) : 0;
+                            const validatedTip = Math.max(newTip, minTip);
+                            setCocotiTip(validatedTip);
+                            if (contributionAmount > 0) {
+                              const percentage = Math.round((validatedTip / contributionAmount) * 100 * 10) / 10;
+                              setCocotiTipPercentage(percentage);
+                            }
+                          }}
+                          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-magenta focus:border-magenta"
+                        />
+                      </div>
 
-              {/* Option anonyme - seulement si autorisée */}
-              {moneyPool?.settings?.allow_anonymous !== false && (
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="anonymous"
-                    checked={anonymous}
-                    onChange={(e) => {
-                      setAnonymous(e.target.checked);
-                      // La logique de sauvegarde/restauration est gérée par le useEffect
-                    }}
-                    className="mr-2 h-4 w-4 text-magenta focus:ring-magenta border-gray-300 rounded"
-                  />
-                  <label htmlFor="anonymous" className="text-sm text-gray-700">
-                    {t('contributeAnonymously')}
+                      <input
+                        type="range"
+                        min={cocotiTipMin}
+                        max={cocotiTipMax}
+                        step="0.1"
+                        value={cocotiTipPercentage}
+                        onChange={(e) => {
+                          const newPercentage = parseFloat(e.target.value);
+                          setCocotiTipPercentage(newPercentage);
+                          if (contributionAmount > 0) {
+                            setCocotiTip(Math.round(contributionAmount * (newPercentage / 100)));
+                          }
+                        }}
+                        className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        style={{
+                          background: `linear-gradient(to right, #ff3a81 0%, #ff3a81 ${((cocotiTipPercentage - cocotiTipMin) / (cocotiTipMax - cocotiTipMin)) * 100}%, #e5e7eb ${((cocotiTipPercentage - cocotiTipMin) / (cocotiTipMax - cocotiTipMin)) * 100}%, #e5e7eb 100%)`
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Le nom complet n'est plus demandé dans l'étape 1 */}
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('message')} ({t('optional')})
                   </label>
+                  <textarea
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta"
+                    rows={3}
+                    placeholder={t('messagePlaceholder')}
+                  />
                 </div>
-              )}
-              
-              {/* Message si anonyme désactivé */}
-              {moneyPool?.settings?.allow_anonymous === false && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
-                  {t('anonymousNotAllowed')}
-                </div>
-              )}
 
-              <div className="pt-4">
-                <button
-                  onClick={handleContribute}
-                  disabled={contributionAmount <= 0 || isContributing}
-                  className="w-full px-4 py-2 bg-gradient-to-r from-magenta to-sunset text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {t('continue')}
-                </button>
+                {/* Option anonyme - seulement si autorisée */}
+                {moneyPool?.settings?.allow_anonymous !== false && (
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="anonymous"
+                      checked={anonymous}
+                      onChange={(e) => {
+                        setAnonymous(e.target.checked);
+                        // La logique de sauvegarde/restauration est gérée par le useEffect
+                      }}
+                      className="mr-2 h-4 w-4 text-magenta focus:ring-magenta border-gray-300 rounded"
+                    />
+                    <label htmlFor="anonymous" className="text-sm text-gray-700">
+                      {t('contributeAnonymously')}
+                    </label>
+                  </div>
+                )}
+
+                {/* Message si anonyme désactivé */}
+                {moneyPool?.settings?.allow_anonymous === false && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                    {t('anonymousNotAllowed')}
+                  </div>
+                )}
+
+                <div className="pt-4">
+                  <button
+                    onClick={handleContribute}
+                    disabled={contributionAmount <= 0 || isContributing}
+                    className="w-full px-4 py-2 bg-gradient-to-r from-magenta to-sunset text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {t('continue')}
+                  </button>
+                </div>
               </div>
-            </div>
             ) : (
               /* ÉTAPE 2 : Informations de paiement */
               <div className="space-y-4">
@@ -1882,13 +1871,13 @@ export default function MoneyPoolDetailsPage() {
                       </svg>
                       <div className="flex-1">
                         <h4 className="font-semibold text-red-800 mb-1">
-                          {paymentError.type === 'cancelled' 
+                          {paymentError.type === 'cancelled'
                             ? (locale === 'fr' ? 'Paiement annulé' : 'Payment cancelled')
                             : (locale === 'fr' ? 'Paiement refusé' : 'Payment refused')
                           }
                         </h4>
                         <p className="text-sm text-red-700 mb-3">
-                          {locale === 'fr' 
+                          {locale === 'fr'
                             ? 'Votre paiement n\'a pas pu être effectué. Vous pouvez réessayer avec les mêmes informations ou choisir une autre méthode de paiement.'
                             : 'Your payment could not be processed. You can try again with the same information or choose another payment method.'
                           }
@@ -1963,11 +1952,10 @@ export default function MoneyPoolDetailsPage() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('wave')}
-                      className={`flex-1 p-2 border-2 rounded-lg transition-all flex items-center justify-center aspect-square ${
-                        paymentMethod === 'wave'
-                          ? 'border-magenta bg-magenta/5'
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
+                      className={`flex-1 p-2 border-2 rounded-lg transition-all flex items-center justify-center aspect-square ${paymentMethod === 'wave'
+                        ? 'border-magenta bg-magenta/5'
+                        : 'border-gray-300 hover:border-gray-400'
+                        }`}
                       title="Wave"
                     >
                       <WaveIcon className="w-full h-full object-contain" />
@@ -1977,11 +1965,10 @@ export default function MoneyPoolDetailsPage() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('orange_money')}
-                      className={`flex-1 p-2 border-2 rounded-lg transition-all flex items-center justify-center aspect-square ${
-                        paymentMethod === 'orange_money'
-                          ? 'border-magenta bg-magenta/5'
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
+                      className={`flex-1 p-2 border-2 rounded-lg transition-all flex items-center justify-center aspect-square ${paymentMethod === 'orange_money'
+                        ? 'border-magenta bg-magenta/5'
+                        : 'border-gray-300 hover:border-gray-400'
+                        }`}
                       title="Orange Money"
                     >
                       <OrangeMoneyIcon className="w-full h-full object-contain" />
@@ -1991,11 +1978,10 @@ export default function MoneyPoolDetailsPage() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('card')}
-                      className={`flex-1 p-2 border-2 rounded-lg transition-all flex items-center justify-center aspect-square ${
-                        paymentMethod === 'card'
-                          ? 'border-magenta bg-magenta/5'
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
+                      className={`flex-1 p-2 border-2 rounded-lg transition-all flex items-center justify-center aspect-square ${paymentMethod === 'card'
+                        ? 'border-magenta bg-magenta/5'
+                        : 'border-gray-300 hover:border-gray-400'
+                        }`}
                       title={locale === 'fr' ? 'Carte bancaire' : 'Credit/Debit Card'}
                     >
                       <CreditCardIcon className="w-full h-full object-contain" />
@@ -2061,7 +2047,7 @@ export default function MoneyPoolDetailsPage() {
                     <h4 className="text-sm font-semibold text-gray-700">
                       {locale === 'fr' ? 'Informations de la carte bancaire' : 'Card information'}
                     </h4>
-                    
+
                     {/* Numéro de carte */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -2142,9 +2128,9 @@ export default function MoneyPoolDetailsPage() {
                   <button
                     onClick={handleContribute}
                     disabled={
-                      !paymentFullName.trim() || 
-                      !paymentMethod || 
-                      paymentProcessing || 
+                      !paymentFullName.trim() ||
+                      !paymentMethod ||
+                      paymentProcessing ||
                       isContributing ||
                       (paymentMethod === 'wave' && !paymentPhone.trim()) ||
                       (paymentMethod === 'orange_money' && !paymentPhone.trim()) ||
