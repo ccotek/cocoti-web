@@ -46,17 +46,16 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
     <section id="testimonials" className="section-padding">
       <div className="container grid gap-10 md:grid-cols-[1fr_1.2fr] md:items-center">
         <motion.div className="space-y-4" {...fadeInUp}>
-          <h2 className="text-3xl font-bold sm:text-4xl">{testimonials.title}</h2>
-          <p className="text-lg text-ink-muted">{testimonials.subtitle}</p>
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight">{testimonials.title}</h2>
+          <p className="text-base md:text-lg text-ink-muted leading-relaxed">{testimonials.subtitle}</p>
           <div className="flex gap-3">
             {items && Array.isArray(items) && items.map((_, indicatorIndex) => (
               <button
                 key={indicatorIndex}
                 type="button"
                 onClick={() => setIndex(indicatorIndex)}
-                className={`h-2 w-8 rounded-full transition ${
-                  indicatorIndex === index ? "bg-magenta" : "bg-cloud"
-                }`}
+                className={`h-2 w-8 rounded-full transition ${indicatorIndex === index ? "bg-magenta" : "bg-cloud"
+                  }`}
                 aria-label={`Afficher le témoignage ${indicatorIndex + 1}`}
               />
             ))}
@@ -68,23 +67,23 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
               key={items[index].name}
               className="group relative rounded-3xl border border-cloud bg-white/95 p-8 shadow-2xl backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-3xl"
               initial={{ opacity: 0, x: 40, scale: 0.95 }}
-              animate={{ 
-                opacity: 1, 
-                x: 0, 
+              animate={{
+                opacity: 1,
+                x: 0,
                 scale: 1,
                 y: [0, -2, 0],
-                transition: { 
+                transition: {
                   duration: 0.5,
-                  y: { 
-                    duration: 4, 
-                    repeat: Infinity, 
-                    ease: "easeInOut" 
+                  y: {
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut"
                   }
                 }
               }}
               exit={{ opacity: 0, x: -40, scale: 0.95 }}
               transition={{ duration: 0.5 }}
-              whileHover={{ 
+              whileHover={{
                 scale: 1.02,
                 rotateY: 2,
                 transition: { duration: 0.3 }
@@ -93,17 +92,17 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
               <div className="flex items-center gap-4">
                 <motion.div
                   className="relative"
-                  whileHover={{ 
+                  whileHover={{
                     scale: 1.1,
                     rotate: 5,
                     transition: { duration: 0.3 }
                   }}
-                  animate={{ 
+                  animate={{
                     rotate: [0, 2, -2, 0],
-                    transition: { 
-                      duration: 3, 
-                      repeat: Infinity, 
-                      ease: "easeInOut" 
+                    transition: {
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut"
                     }
                   }}
                 >

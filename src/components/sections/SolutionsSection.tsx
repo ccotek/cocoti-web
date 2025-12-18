@@ -49,22 +49,29 @@ export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
 
   // Handle auto-scroll on mobile when activeId changes
   useEffect(() => {
-    if (activeId && itemRefs.current[activeId] && tabsContainerRef.current) {
-      const container = tabsContainerRef.current;
-      const element = itemRefs.current[activeId];
+    const handleAutoScroll = () => {
+      if (activeId && itemRefs.current[activeId] && tabsContainerRef.current) {
+        const isMobile = window.innerWidth < 1024; // Tailwind lg breakpoint
+        if (!isMobile) return;
 
-      // Only scroll if the element is not fully visible horizontally
-      const containerRect = container.getBoundingClientRect();
-      const elementRect = element!.getBoundingClientRect();
+        const container = tabsContainerRef.current;
+        const element = itemRefs.current[activeId]!;
 
-      if (elementRect.left < containerRect.left || elementRect.right > containerRect.right) {
-        element!.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'center'
+        const containerWidth = container.offsetWidth;
+        const elementOffsetLeft = element.offsetLeft;
+        const elementWidth = element.offsetWidth;
+
+        // Calculate the scroll position to center the element
+        const targetScrollLeft = elementOffsetLeft - (containerWidth / 2) + (elementWidth / 2);
+
+        container.scrollTo({
+          left: targetScrollLeft,
+          behavior: 'smooth'
         });
       }
-    }
+    };
+
+    handleAutoScroll();
   }, [activeId]);
 
   useEffect(() => {
@@ -124,12 +131,12 @@ export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-3xl mb-12 lg:mb-16 text-center lg:text-left mx-auto lg:mx-0"
+          className="max-w-3xl mb-12 lg:mb-16 text-left"
         >
-          <h2 className="text-3xl md:text-5xl font-black text-night mb-6 leading-tight">
+          <h2 className="text-2xl md:text-3xl lg:text-5xl font-semibold text-night mb-6 leading-tight">
             {solutions.title}
           </h2>
-          <p className="text-lg md:text-xl text-ink-muted leading-relaxed max-w-2xl mx-auto lg:mx-0">
+          <p className="text-base md:text-lg lg:text-xl text-ink-muted leading-relaxed max-w-2xl">
             {solutions.subtitle}
           </p>
         </motion.div>
@@ -188,7 +195,7 @@ export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
           </div>
 
           {/* Details Column */}
-          <div className="flex-1 w-full min-h-[400px] lg:min-h-0 relative">
+          <div className="flex-1 w-full min-h-[350px] lg:min-h-0 relative">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeId}
@@ -196,23 +203,23 @@ export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
-                className="lg:absolute lg:inset-0 bg-white rounded-[2.5rem] p-8 lg:p-16 border border-sunset/5 shadow-2xl shadow-sunset/[0.02] overflow-hidden group min-h-[400px] flex flex-col justify-center"
+                className="lg:absolute lg:inset-0 bg-white rounded-[2.5rem] p-8 lg:p-16 border border-sunset/5 shadow-2xl shadow-sunset/[0.02] overflow-hidden group min-h-[350px] flex flex-col justify-center"
               >
                 {/* Background Icon Detail */}
                 <div className="absolute -top-16 -right-16 opacity-[0.03] transition-transform duration-1000 group-hover:scale-105 pointer-events-none z-0">
                   <ActiveIcon className="w-[300px] lg:w-[500px] h-[300px] lg:h-[500px]" />
                 </div>
 
-                <div className="relative z-20 space-y-8 lg:space-y-10 text-center lg:text-left">
+                <div className="relative z-20 space-y-6 lg:space-y-10 text-center lg:text-left">
                   <div className="w-fit mx-auto lg:mx-0 p-5 lg:p-6 rounded-[2rem] lg:rounded-[2.5rem] bg-gradient-to-br from-magenta/10 to-sunset/10 border border-magenta/20 shadow-inner">
-                    <ActiveIcon className="h-12 w-12 lg:h-16 lg:w-16 text-magenta" />
+                    <ActiveIcon className="h-10 w-10 lg:h-16 lg:w-16 text-magenta" />
                   </div>
 
                   <div className="space-y-4 lg:space-y-6">
-                    <h3 className="text-3xl lg:text-5xl font-black text-night tracking-tight">
+                    <h3 className="text-2xl md:text-3xl lg:text-5xl font-black text-night tracking-tight">
                       {activeSolution?.title}
                     </h3>
-                    <p className="text-lg lg:text-2xl text-ink-muted leading-relaxed font-inter max-w-2xl mx-auto lg:mx-0">
+                    <p className="text-base md:text-lg lg:text-2xl text-ink-muted leading-relaxed font-inter max-w-2xl mx-auto lg:mx-0">
                       {activeSolution?.description}
                     </p>
                   </div>

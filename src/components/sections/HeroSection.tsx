@@ -68,12 +68,12 @@ export default function HeroSection({ hero }: HeroSectionProps) {
             {hero.badge}
           </span>
           <motion.h1
-            className="text-4xl font-bold leading-tight sm:text-5xl"
+            className="text-3xl md:text-4xl lg:text-6xl font-semibold leading-tight tracking-tight"
             {...fadeInUp}
           >
             {hero.title}
           </motion.h1>
-          <motion.p className="text-lg text-ink-muted" {...fadeInUp} transition={{ delay: 0.1 }}>
+          <motion.p className="text-base md:text-lg lg:text-xl text-ink-muted leading-relaxed" {...fadeInUp} transition={{ delay: 0.1 }}>
             {hero.subtitle}
           </motion.p>
           <motion.div className="flex flex-wrap items-center gap-4" {...fadeInUp} transition={{ delay: 0.2 }}>
