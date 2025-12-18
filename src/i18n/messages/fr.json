@@ -81,14 +81,14 @@
     "subtitle": "Centralisez vos projets en un seul espace sécurisé et animé en temps réel.",
     "items": [
       {
-        "id": "tontines",
-        "title": "Tontines digitales",
-        "description": "Planifiez les tours, automatisez les rappels et versements, suivez la caisse minute par minute."
+        "id": "cagnottes",
+        "title": "Cagnotte solidaire",
+        "description": "Lancez un appel à contribution pour vos proches, associations ou événements, avec une transparence totale."
       },
       {
-        "id": "cagnottes",
-        "title": "Cagnottes solidaires",
-        "description": "Lancez un appel à contribution pour vos proches, associations ou événements, avec une transparence totale."
+        "id": "tontines",
+        "title": "Tontine digitale",
+        "description": "Planifiez les tours, automatisez les rappels et versements, suivez la caisse minute par minute."
       },
       {
         "id": "crowdfunding",
@@ -97,8 +97,13 @@
       },
       {
         "id": "group-buys",
-        "title": "Achats groupés & paiements échelonnés",
-        "description": "Négociez les meilleurs tarifs et étalez les paiements pour vos achats collectifs."
+        "title": "Achat groupé",
+        "description": "Négociez les meilleurs tarifs en vous regroupant pour vos achats collectifs."
+      },
+      {
+        "id": "installments",
+        "title": "Paiement échelonné",
+        "description": "Étalez vos paiements en toute sérénité pour vos projets et achats importants."
       }
     ]
   },
@@ -703,7 +708,6 @@
       "activationQuestion": "Souhaitez-vous la publier maintenant ?",
       "publishNow": "Publier maintenant",
       "publishNowDescription": "Visible et peut recevoir des contributions immédiatement",
-      "publishWarningTitle": "Attention : Publication de la cagnotte",
       "publishWarningMessage": "Pour des raisons éthiques et de transparence, après publication, vous ne pourrez plus modifier les informations de la cagnotte (nom, description, montant cible, dates, etc.). Cette mesure garantit la confiance des contributeurs envers votre projet. Seuls certains paramètres pourront être ajustés. Êtes-vous sûr de vouloir publier maintenant ?",
       "publishConfirm": "Oui, publier",
       "keepDraft": "Garder en brouillon",

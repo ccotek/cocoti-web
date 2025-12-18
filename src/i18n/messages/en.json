@@ -81,14 +81,14 @@
     "subtitle": "Bring every community project together in a secure, real-time workspace.",
     "items": [
       {
-        "id": "tontines",
-        "title": "Digital tontines",
-        "description": "Schedule rounds, automate reminders and payouts, monitor the cash stack minute by minute."
+        "id": "cagnottes",
+        "title": "Solidarity fund",
+        "description": "Launch contribution drives for family, associations or special events with full transparency."
       },
       {
-        "id": "cagnottes",
-        "title": "Solidarity funds",
-        "description": "Launch contribution drives for family, associations or special events with full transparency."
+        "id": "tontines",
+        "title": "Digital tontine",
+        "description": "Schedule rounds, automate reminders and payouts, monitor the cash stack minute by minute."
       },
       {
         "id": "crowdfunding",
@@ -97,8 +97,13 @@
       },
       {
         "id": "group-buys",
-        "title": "Group buying & installments",
-        "description": "Negotiate better deals and spread payments smoothly for every collective buy."
+        "title": "Group buy",
+        "description": "Negotiate the best prices by banding together for your collective purchases."
+      },
+      {
+        "id": "installments",
+        "title": "Installment payment",
+        "description": "Spread your payments smoothly for your major projects and purchases."
       }
     ]
   },
