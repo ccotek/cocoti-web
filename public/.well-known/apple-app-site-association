@@ -1,0 +1,22 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAMID.sn.cocoti.app",
+        "paths": [
+          "/money-pool/*",
+          "/fr/money-pool/*",
+          "/en/money-pool/*",
+          "/tontine/*",
+          "/fr/tontine/*",
+          "/en/tontine/*"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["TEAMID.sn.cocoti.app"]
+  }
+}
+

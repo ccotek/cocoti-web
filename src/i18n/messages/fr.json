@@ -739,8 +739,9 @@
       "errors": {
         "selectCountryPhone": "Veuillez sélectionner un pays et saisir votre numéro de téléphone",
         "nameRequired": "Le nom de la cagnotte est requis",
+        "nameMaxLength": "Le titre est trop long",
         "descriptionRequired": "La description est requise",
-        "descriptionMinLength": "La description doit contenir au moins 300 caractères",
+        "descriptionMinLength": "La description est trop courte",
         "targetAmountRequired": "Le montant cible doit être supérieur à 0",
         "charterRequired": "Vous devez accepter la charte pour continuer",
         "otpInvalid": "Veuillez saisir un code OTP valide (6 chiffres)",

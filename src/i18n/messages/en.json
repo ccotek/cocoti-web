@@ -762,8 +762,9 @@
       "errors": {
         "selectCountryPhone": "Please select a country and enter your phone number",
         "nameRequired": "Money pool name is required",
+        "nameMaxLength": "Title is too long",
         "descriptionRequired": "Description is required",
-        "descriptionMinLength": "Description must contain at least 300 characters",
+        "descriptionMinLength": "Description is too short",
         "targetAmountRequired": "Target amount must be greater than 0",
         "charterRequired": "You must accept the charter to continue",
         "otpInvalid": "Please enter a valid OTP code (6 digits)",

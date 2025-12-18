@@ -620,11 +620,15 @@ export default function CreateMoneyPoolPage() {
       setError(t('errors.nameRequired'));
       return false;
     }
+    if (formData.name.trim().length > 60) {
+      setError(t('errors.nameMaxLength'));
+      return false;
+    }
     if (!formData.description.trim()) {
       setError(t('errors.descriptionRequired'));
       return false;
     }
-    if (formData.description.trim().length < 300) {
+    if (formData.description.trim().length < 80) {
       setError(t('errors.descriptionMinLength'));
       return false;
     }
@@ -940,6 +944,14 @@ export default function CreateMoneyPoolPage() {
     setError('');
 
     try {
+      const cleanedImages = (formData.images || []).filter((img: string) => img.trim());
+      const coverImage = cleanedImages[0];
+      if (!coverImage) {
+        throw new Error(locale === 'fr'
+          ? "Veuillez ajouter au moins une image (elle servira d'image de couverture)."
+          : "Please add at least one image (it will be used as the cover image).");
+      }
+
       let requestBody: any = {
         name: formData.name.trim(),
         description: formData.description.trim(),
@@ -967,6 +979,7 @@ export default function CreateMoneyPoolPage() {
         },
         currency: formData.currency,
         country: formData.country,
+        cover_image: coverImage,
         // For public money pools, don't send max_participants
         max_participants: formData.visibility === 'public' 
           ? undefined 
@@ -975,7 +988,8 @@ export default function CreateMoneyPoolPage() {
             : undefined), // Unlimited by default
         start_date: formData.start_date || undefined,
         end_date: formData.end_date || undefined,
-        images: formData.images.filter(img => img.trim()),
+        // Keep additional images for description (excluding cover)
+        images: cleanedImages.slice(1),
         videos: formData.videos.filter(vid => vid.trim())
       };
 
@@ -1181,8 +1195,8 @@ export default function CreateMoneyPoolPage() {
               <div>
                 <label className="block text-sm font-semibold text-night mb-2 font-inter">
                   {t('description')}
-                  <span className={`text-xs ml-2 font-normal ${formData.description.length < 300 ? 'text-red-500' : 'text-ink-muted'}`}>
-                    ({formData.description.length}/300 {t('descriptionMinChars')})
+                  <span className={`text-xs ml-2 font-normal ${formData.description.length < 80 ? 'text-red-500' : 'text-ink-muted'}`}>
+                    ({formData.description.length} {t('descriptionMinChars')})
                   </span>
                 </label>
                 <textarea
@@ -1191,13 +1205,13 @@ export default function CreateMoneyPoolPage() {
                   onChange={handleInputChange}
                   required
                   rows={6}
-                  minLength={300}
+                  minLength={80}
                   className="w-full px-4 py-3 border-2 border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-transparent transition-all font-inter"
                   placeholder={t('descriptionPlaceholder')}
                 />
-                {formData.description.length > 0 && formData.description.length < 300 && (
+                {formData.description.length > 0 && formData.description.length < 80 && (
                   <p className="mt-1 text-xs text-red-500 font-inter">
-                    {`${300 - formData.description.length} ${t('descriptionMissing')}`}
+                    {`${80 - formData.description.length} ${t('descriptionMissing')}`}
                   </p>
                 )}
               </div>
