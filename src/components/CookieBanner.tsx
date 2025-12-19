@@ -22,10 +22,10 @@ export default function CookieBanner() {
     marketing: false,
     preferences: false,
   });
-  
+
   const pathname = usePathname();
   const locale = pathname.startsWith('/en') ? 'en' : 'fr';
-  
+
   // Fonction de traduction
   const t = (key: string) => translate(key, locale);
 
@@ -47,7 +47,10 @@ export default function CookieBanner() {
     }
 
     // Écouter les événements pour rouvrir le banner
-    const handleOpenCookieSettings = () => {
+    const handleOpenCookieSettings = (e: Event) => {
+      // Prévenir d'éventuels doubles déclenchements
+      e.stopPropagation();
+
       // Recharger les préférences depuis localStorage
       const currentConsent = localStorage.getItem('cookie-consent');
       if (currentConsent) {
@@ -161,7 +164,7 @@ export default function CookieBanner() {
                   </a>
                 </div>
               </div>
-              
+
               <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
                 <button
                   onClick={handleRejectAll}
@@ -190,8 +193,16 @@ export default function CookieBanner() {
                   </h3>
                 </div>
                 <button
-                  onClick={() => setShowSettings(false)}
+                  onClick={() => {
+                    const hasConsent = localStorage.getItem('cookie-consent');
+                    if (hasConsent) {
+                      setIsVisible(false);
+                    } else {
+                      setShowSettings(false);
+                    }
+                  }}
                   className="p-2 text-ink-muted hover:text-night transition-colors"
+                  aria-label={t("accessibility.closeModal")}
                 >
                   <XMarkIcon className="w-5 h-5" />
                 </button>
@@ -224,9 +235,8 @@ export default function CookieBanner() {
                   <div className="ml-4">
                     <button
                       onClick={() => handlePreferenceChange('analytics')}
-                      className={`w-12 h-6 rounded-full flex items-center transition-colors ${
-                        preferences.analytics ? 'bg-magenta justify-end' : 'bg-cloud justify-start'
-                      }`}
+                      className={`w-12 h-6 rounded-full flex items-center transition-colors ${preferences.analytics ? 'bg-magenta justify-end' : 'bg-cloud justify-start'
+                        }`}
                     >
                       <div className="w-4 h-4 bg-white rounded-full mx-1"></div>
                     </button>
@@ -244,9 +254,8 @@ export default function CookieBanner() {
                   <div className="ml-4">
                     <button
                       onClick={() => handlePreferenceChange('marketing')}
-                      className={`w-12 h-6 rounded-full flex items-center transition-colors ${
-                        preferences.marketing ? 'bg-magenta justify-end' : 'bg-cloud justify-start'
-                      }`}
+                      className={`w-12 h-6 rounded-full flex items-center transition-colors ${preferences.marketing ? 'bg-magenta justify-end' : 'bg-cloud justify-start'
+                        }`}
                     >
                       <div className="w-4 h-4 bg-white rounded-full mx-1"></div>
                     </button>
@@ -264,9 +273,8 @@ export default function CookieBanner() {
                   <div className="ml-4">
                     <button
                       onClick={() => handlePreferenceChange('preferences')}
-                      className={`w-12 h-6 rounded-full flex items-center transition-colors ${
-                        preferences.preferences ? 'bg-magenta justify-end' : 'bg-cloud justify-start'
-                      }`}
+                      className={`w-12 h-6 rounded-full flex items-center transition-colors ${preferences.preferences ? 'bg-magenta justify-end' : 'bg-cloud justify-start'
+                        }`}
                     >
                       <div className="w-4 h-4 bg-white rounded-full mx-1"></div>
                     </button>

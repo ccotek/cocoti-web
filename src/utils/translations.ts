@@ -277,19 +277,15 @@ const enMessages = {
     "items": [
       {
         "id": "causes",
-        "label": "Impact"
+        "label": "Our impact"
       },
       {
         "id": "solutions",
-        "label": "Solutions"
+        "label": "Our solutions"
       },
       {
-        "id": "fonctions",
-        "label": "How it works"
-      },
-      {
-        "id": "temoignages",
-        "label": "Testimonials"
+        "id": "why",
+        "label": "Why choose us?"
       },
       {
         "id": "faq",

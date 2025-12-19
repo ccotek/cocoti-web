@@ -125,7 +125,7 @@ export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
   const ActiveIcon = activeSolution ? solutionIcons[activeSolution.id] || SparklesIcon : SparklesIcon;
 
   return (
-    <section className="section-padding bg-sunset/[0.02] overflow-hidden">
+    <section className="section-padding bg-sand overflow-hidden">
       <div className="container">
         <motion.div
           id="solutions"

@@ -56,7 +56,7 @@ export default function HeroSection({ hero }: HeroSectionProps) {
   }, []);
 
   return (
-    <section id="hero" className="relative overflow-hidden bg-ivory">
+    <section id="hero" className="relative overflow-hidden bg-sand">
       <div className="absolute inset-0" aria-hidden>
         <div className="pointer-events-none absolute -top-32 right-[-10%] h-96 w-96 rounded-full bg-gradient-to-br from-sunset/50 to-magenta/30 blur-3xl" />
         <div className="pointer-events-none absolute bottom-[-20%] left-[-10%] h-96 w-96 rounded-full bg-sunset/20 blur-3xl" />

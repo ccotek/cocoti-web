@@ -67,7 +67,7 @@ export default function CausesSection({ locale, apps = [] }: CausesSectionProps)
   }
 
   return (
-    <section className="section-padding overflow-hidden bg-white">
+    <section className="section-padding overflow-hidden bg-sand">
       <div className="container">
         <motion.div
           id="causes"
