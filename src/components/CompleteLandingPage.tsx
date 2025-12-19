@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useContent } from "@/hooks/useContent";
+import { usePublicProjects } from "@/hooks/usePublicProjects";
 
 // Import de l'utilitaire de traduction
 import { translate } from "@/utils/translations";
@@ -12,10 +13,7 @@ import HeaderSection from "./sections/HeaderSection";
 import HeroSection from "./sections/HeroSection";
 import CausesSection from "./sections/CausesSection";
 import SolutionsSection from "./sections/SolutionsSection";
-import HowSection from "./sections/HowSection";
 import WhySection from "./sections/WhySection";
-import PricingSection from "./sections/PricingSection";
-import TestimonialsSection from "./sections/TestimonialsSection";
 import FaqSection from "./sections/FaqSection";
 import FooterSection from "./sections/FooterSection";
 import WhatsAppButtonSimple from "./WhatsAppButtonSimple";
@@ -29,6 +27,7 @@ export default function CompleteLandingPage() {
 
   // Utiliser le hook useContent pour charger depuis l'API
   const { content, loading, error } = useContent(locale);
+  const { projects } = usePublicProjects(locale);
 
   // Fonction de traduction simplifiée
   const t = (key: string) => translate(key, locale, content);
@@ -48,13 +47,19 @@ export default function CompleteLandingPage() {
 
 
   // Extraire les données des traductions
-  const navItemsRaw = t("navigation.items");
-  const navItems = Array.isArray(navItemsRaw) ? navItemsRaw : [
-    { id: 'solutions', label: 'Solutions' },
-    { id: 'how', label: 'Comment ça marche' },
-    { id: 'why', label: 'Pourquoi nous' },
-    { id: 'pricing', label: 'Tarifs' },
-  ];
+  const navItemsRaw = t("navigation.items") as unknown as Array<{ id: string; label: string }>;
+  const navItems = (Array.isArray(navItemsRaw) ? navItemsRaw : [
+    { id: 'causes', label: 'Notre impact' },
+    { id: 'solutions', label: 'Nos solutions' },
+    { id: 'why', label: 'Pourquoi nous choisir ?' },
+    { id: 'faq', label: 'FAQ' },
+  ]).filter(item => {
+    // Si l'item est 'causes' (Impact), on ne l'affiche que s'il y a des projets
+    if (item.id === 'causes') {
+      return projects && projects.length > 0;
+    }
+    return true;
+  });
   const navCta = t("navigation.cta");
 
 
@@ -85,31 +90,12 @@ export default function CompleteLandingPage() {
   const why = {
     title: t("why.title"),
     subtitle: t("why.subtitle"),
+    valuesSubtitle: t("why.valuesSubtitle"),
     values: (Array.isArray(t("why.values")) ? t("why.values") : []) as Array<{ title: string; description: string }>
   };
 
-  const pricing = {
-    title: content?.pricing?.title || t("pricing.title"),
-    plans: (content?.pricing?.plans || (Array.isArray(t("pricing.plans")) ? t("pricing.plans") : [])) as Array<{
-      name: string;
-      price: string;
-      period: string;
-      description: string;
-      features: string[];
-      cta: string;
-      highlight?: boolean;
-    }>,
-    comparisonTable: content?.pricing?.comparisonTable || (t("pricing.comparisonTable") as any as {
-      features: Array<{
-        label: string;
-        free: string;
-        premium: string;
-        community: string;
-      }>;
-    } | undefined)
-  };
-
   const testimonials = {
+    badge: t("testimonials.badge"),
     title: t("testimonials.title"),
     subtitle: t("testimonials.subtitle"),
     items: Array.isArray(t("testimonials.items")) ? (t("testimonials.items") as unknown as Array<{
@@ -122,6 +108,7 @@ export default function CompleteLandingPage() {
 
   const faq = {
     title: t("faq.title"),
+    subtitle: t("faq.subtitle"),
     items: (Array.isArray(t("faq.items")) ? t("faq.items") : []) as Array<{ question: string; answer: string }>,
     cta: {
       title: t("faq.cta.title"),
@@ -145,6 +132,14 @@ export default function CompleteLandingPage() {
     quickLinks: content?.footer?.quickLinks || (Array.isArray(t("footer.quickLinks")) ? t("footer.quickLinks") : []) as Array<{ label: string; href: string }>
   };
 
+  // Synchroniser quickLinks avec navItems pour le footer (optionnel, mais cohérent)
+  if (!content?.footer?.quickLinks) {
+    footer.quickLinks = navItems.map(item => ({
+      label: item.label,
+      href: `#${item.id}`
+    }));
+  }
+
 
 
   return (
@@ -161,10 +156,7 @@ export default function CompleteLandingPage() {
         <HeroSection hero={hero} />
         <CausesSection locale={locale} apps={hero.apps} />
         <SolutionsSection solutions={solutions} />
-        <HowSection how={how} />
-        <WhySection why={why} />
-        <PricingSection pricing={{ ...pricing, apps: hero.apps }} locale={locale} />
-        <TestimonialsSection testimonials={testimonials} />
+        <WhySection why={why} how={how} testimonials={testimonials} />
         <FaqSection faq={faq} />
       </main>
 

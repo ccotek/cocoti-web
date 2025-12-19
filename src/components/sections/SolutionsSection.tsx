@@ -125,14 +125,18 @@ export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
   const ActiveIcon = activeSolution ? solutionIcons[activeSolution.id] || SparklesIcon : SparklesIcon;
 
   return (
-    <section id="solutions" className="section-padding bg-sunset/[0.02] overflow-hidden">
-      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="section-padding bg-sunset/[0.02] overflow-hidden">
+      <div className="container">
         <motion.div
+          id="solutions"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-3xl mb-12 lg:mb-16 text-left"
+          className="max-w-3xl mb-12 lg:mb-16 text-left scroll-mt-[100px]"
         >
+          <span className="inline-block px-4 py-1.5 rounded-full bg-magenta/10 text-magenta text-xs font-bold uppercase tracking-widest mb-6">
+            Votre allié quotidien
+          </span>
           <h2 className="text-3xl md:text-5xl font-bold text-night mb-6 leading-tight">
             {solutions.title}
           </h2>

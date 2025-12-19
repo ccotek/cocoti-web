@@ -70,16 +70,20 @@ export default function CausesSection({ locale, apps = [] }: CausesSectionProps)
     <section className="section-padding overflow-hidden bg-white">
       <div className="container">
         <motion.div
-          className="mb-10 md:mb-12"
+          id="causes"
+          className="mb-10 md:mb-12 scroll-mt-[100px]"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-night mb-4 font-inter tracking-tight">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-magenta/10 text-magenta text-xs font-bold uppercase tracking-widest mb-6">
+            Causes actuelles
+          </span>
+          <h2 className="text-3xl md:text-5xl font-bold text-night mb-6 leading-tight tracking-tight">
             {carouselConfig.title}
           </h2>
-          <p className="text-lg text-ink-muted max-w-2xl font-inter">
+          <p className="text-lg md:text-xl text-ink-muted max-w-2xl leading-relaxed">
             {carouselConfig.subtitle}
           </p>
         </motion.div>

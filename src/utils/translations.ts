@@ -18,16 +18,16 @@ const frMessages = {
     "cta": "Télécharger l'app",
     "items": [
       {
+        "id": "causes",
+        "label": "Notre impact"
+      },
+      {
         "id": "solutions",
         "label": "Nos solutions"
       },
       {
-        "id": "how",
-        "label": "Comment ça marche"
-      },
-      {
-        "id": "pricing",
-        "label": "Tarifs"
+        "id": "why",
+        "label": "Pourquoi nous choisir ?"
       },
       {
         "id": "faq",
@@ -97,16 +97,25 @@ const frMessages = {
     "subtitle": "Gérez vos projets financiers en groupe avec des outils adaptés à vos besoins."
   },
   "how": {
-    "title": "Comment ça marche",
-    "subtitle": "Trois étapes simples pour lancer votre projet collectif."
+    "steps": [
+      {
+        "title": "Téléchargez l'app",
+        "description": "Votre aventure commence ici. Installez Cocoti sur votre smartphone et créez votre profil en quelques secondes."
+      },
+      {
+        "title": "Créez votre réseau",
+        "description": "Invitez vos proches et bâtissez votre cercle de confiance en un clic. Cagnotte ou projet solidaire : initiez l'action avec ceux qui comptent vraiment."
+      },
+      {
+        "title": "Épargnez ensemble",
+        "description": "Suivez vos progrès en temps réel, automatisez vos versements et réalisez vos objectifs sereinement."
+      }
+    ]
   },
   "why": {
-    "title": "Pourquoi choisir Cocoti",
-    "subtitle": "Des fonctionnalités pensées pour la solidarité africaine."
-  },
-  "pricing": {
-    "title": "Tarifs transparents",
-    "subtitle": "Choisissez le plan qui correspond à vos besoins."
+    "title": "Pourquoi nous choisir ?",
+    "subtitle": "Un processus simple et fiable.",
+    "valuesSubtitle": "L'alliance de la tradition et de l'innovation."
   },
   "testimonials": {
     "title": "Ils nous font confiance",
@@ -153,31 +162,31 @@ const frMessages = {
         "title": "FAQ",
         "description": "Questions fréquentes"
       },
-        "footer": {
-          "title": "Footer",
-          "description": "Modifier les liens et informations du pied de page"
-        },
-        "whatsapp": {
-          "title": "WhatsApp",
-          "description": "Configurer le numéro et message WhatsApp"
-        },
-        "legal": {
-          "title": "Mentions Légales",
-          "description": "Gérer les informations légales et mentions obligatoires"
-        },
-        "causes": {
-          "title": "Carousel des Cagnottes",
-          "description": "Gérer l'affichage et la sélection des projets en vedette"
-        }
+      "footer": {
+        "title": "Footer",
+        "description": "Modifier les liens et informations du pied de page"
       },
       "whatsapp": {
-        "title": "Configuration WhatsApp",
-        "numberLabel": "Numéro WhatsApp",
-        "numberPlaceholder": "Ex: +221771234567",
-        "numberHelp": "Format international avec le code pays (ex: +221 pour le Sénégal)",
-        "messageLabel": "Message par défaut",
-        "messagePlaceholder": "Message qui sera pré-rempli dans WhatsApp",
-        "messageHelp": "Ce message apparaîtra automatiquement quand les utilisateurs cliquent sur le bouton WhatsApp"
+        "title": "WhatsApp",
+        "description": "Configurer le numéro et message WhatsApp"
+      },
+      "legal": {
+        "title": "Mentions Légales",
+        "description": "Gérer les informations légales et mentions obligatoires"
+      },
+      "causes": {
+        "title": "Carousel des Cagnottes",
+        "description": "Gérer l'affichage et la sélection des projets en vedette"
+      }
+    },
+    "whatsapp": {
+      "title": "Configuration WhatsApp",
+      "numberLabel": "Numéro WhatsApp",
+      "numberPlaceholder": "Ex: +221771234567",
+      "numberHelp": "Format international avec le code pays (ex: +221 pour le Sénégal)",
+      "messageLabel": "Message par défaut",
+      "messagePlaceholder": "Message qui sera pré-rempli dans WhatsApp",
+      "messageHelp": "Ce message apparaîtra automatiquement quand les utilisateurs cliquent sur le bouton WhatsApp"
     },
     "navigation": {
       "dashboard": "Tableau de bord",
@@ -267,16 +276,20 @@ const enMessages = {
     "cta": "Download the app",
     "items": [
       {
+        "id": "causes",
+        "label": "Impact"
+      },
+      {
         "id": "solutions",
         "label": "Solutions"
       },
       {
-        "id": "how",
+        "id": "fonctions",
         "label": "How it works"
       },
       {
-        "id": "pricing",
-        "label": "Pricing"
+        "id": "temoignages",
+        "label": "Testimonials"
       },
       {
         "id": "faq",
@@ -346,16 +359,25 @@ const enMessages = {
     "subtitle": "Manage your group financial projects with tools tailored to your needs."
   },
   "how": {
-    "title": "How it works",
-    "subtitle": "Three simple steps to launch your collective project."
+    "steps": [
+      {
+        "title": "Download the app",
+        "description": "Your journey starts here. Install Cocoti on your smartphone and create your profile in seconds."
+      },
+      {
+        "title": "Build your network",
+        "description": "Invite your loved ones and build your circle of trust in one click. Money pool or solidarity project: start taking action with those who truly matter."
+      },
+      {
+        "title": "Save together",
+        "description": "Track your progress in real time, automate your payments, and achieve your goals with peace of mind."
+      }
+    ]
   },
   "why": {
-    "title": "Why choose Cocoti",
-    "subtitle": "Features designed for African solidarity."
-  },
-  "pricing": {
-    "title": "Transparent pricing",
-    "subtitle": "Choose the plan that fits your needs."
+    "title": "Why choose us?",
+    "subtitle": "A simple and reliable process.",
+    "valuesSubtitle": "The bridge between tradition and innovation."
   },
   "testimonials": {
     "title": "They trust us",
@@ -402,31 +424,31 @@ const enMessages = {
         "title": "FAQ",
         "description": "Manage frequently asked questions"
       },
-        "footer": {
-          "title": "Footer",
-          "description": "Manage footer links and information"
-        },
-        "whatsapp": {
-          "title": "WhatsApp",
-          "description": "Configure WhatsApp number and message"
-        },
-        "legal": {
-          "title": "Legal Notice",
-          "description": "Manage legal information and mandatory notices"
-        },
-        "causes": {
-          "title": "Money Pool Carousel",
-          "description": "Manage the display and selection of featured projects"
-        }
+      "footer": {
+        "title": "Footer",
+        "description": "Manage footer links and information"
       },
       "whatsapp": {
-        "title": "WhatsApp Configuration",
-        "numberLabel": "WhatsApp Number",
-        "numberPlaceholder": "Ex: +221771234567",
-        "numberHelp": "International format with country code (ex: +221 for Senegal)",
-        "messageLabel": "Default Message",
-        "messagePlaceholder": "Message that will be pre-filled in WhatsApp",
-        "messageHelp": "This message will appear automatically when users click the WhatsApp button"
+        "title": "WhatsApp",
+        "description": "Configure WhatsApp number and message"
+      },
+      "legal": {
+        "title": "Legal Notice",
+        "description": "Manage legal information and mandatory notices"
+      },
+      "causes": {
+        "title": "Money Pool Carousel",
+        "description": "Manage the display and selection of featured projects"
+      }
+    },
+    "whatsapp": {
+      "title": "WhatsApp Configuration",
+      "numberLabel": "WhatsApp Number",
+      "numberPlaceholder": "Ex: +221771234567",
+      "numberHelp": "International format with country code (ex: +221 for Senegal)",
+      "messageLabel": "Default Message",
+      "messagePlaceholder": "Message that will be pre-filled in WhatsApp",
+      "messageHelp": "This message will appear automatically when users click the WhatsApp button"
     },
     "navigation": {
       "dashboard": "Dashboard",
@@ -507,11 +529,11 @@ export const getTranslations = (locale: 'fr' | 'en') => {
 // Fonction pour interpréter les variables d'environnement dans les chaînes
 const interpolateEnvVars = (str: string): string => {
   if (typeof str !== 'string') return str;
-  
+
   return str.replace(/\$\{([^}]+)\}/g, (match, expression) => {
     // Gérer les expressions comme "NEXT_PUBLIC_DASHBOARD_URL || 'default'"
     const parts = expression.split('||').map((part: string) => part.trim());
-    
+
     for (const part of parts) {
       if (part.startsWith('NEXT_PUBLIC_')) {
         const envVar = part.replace(/['"]/g, '');
@@ -521,7 +543,7 @@ const interpolateEnvVars = (str: string): string => {
         return part.slice(1, -1); // Retourner la valeur par défaut sans les quotes
       }
     }
-    
+
     return match; // Retourner la chaîne originale si aucune substitution n'est possible
   });
 };
@@ -529,13 +551,13 @@ const interpolateEnvVars = (str: string): string => {
 export const translate = (key: string, locale: 'fr' | 'en', content?: any) => {
   const fallbackMessages = getTranslations(locale);
   const messages = content || fallbackMessages;
-  
+
   const keys = key.split('.');
   let value: any = messages;
   for (const k of keys) {
     value = value?.[k];
   }
-  
+
   // Si la valeur n'existe pas dans les données de l'API, essayer les fichiers JSON
   if (!value && content) {
     let fallbackValue: any = fallbackMessages;
@@ -544,7 +566,7 @@ export const translate = (key: string, locale: 'fr' | 'en', content?: any) => {
     }
     value = fallbackValue;
   }
-  
+
   // Interpréter les variables d'environnement dans la valeur finale
   return interpolateEnvVars(value || key);
 };

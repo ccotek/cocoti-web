@@ -7,16 +7,16 @@
     "cta": "Télécharger l'app",
     "items": [
       {
+        "id": "causes",
+        "label": "Notre impact"
+      },
+      {
         "id": "solutions",
         "label": "Nos solutions"
       },
       {
-        "id": "how",
-        "label": "Comment ça marche"
-      },
-      {
-        "id": "pricing",
-        "label": "Tarifs"
+        "id": "why",
+        "label": "Pourquoi nous choisir ?"
       },
       {
         "id": "faq",
@@ -83,27 +83,27 @@
       {
         "id": "cagnottes",
         "title": "Cagnotte solidaire",
-        "description": "Lancez un appel à contribution pour vos proches, associations ou événements, avec une transparence totale."
+        "description": "Donnez vie à la solidarité. Une solution simple et sécurisée pour soutenir vos proches et les causes qui vous tiennent à cœur."
       },
       {
         "id": "tontines",
         "title": "Tontine digitale",
-        "description": "Planifiez les tours, automatisez les rappels et versements, suivez la caisse minute par minute."
+        "description": "L'épargne de confiance, réinventée. Gérez vos cercles familiaux et amicaux avec une plateforme qui garantit équité et sérénité."
       },
       {
         "id": "crowdfunding",
         "title": "Financement participatif",
-        "description": "Financez vos projets communautaires grâce à des campagnes dynamiques et des alliés de confiance."
+        "description": "Bâtissez demain, ensemble. Connectez-vous à des alliés de confiance pour transformer vos idées collectives en réalités concrètes."
       },
       {
         "id": "group-buys",
         "title": "Achat groupé",
-        "description": "Négociez les meilleurs tarifs en vous regroupant pour vos achats collectifs."
+        "description": "Dépensez moins, ensemble. Profitez de prix imbattables sur vos produits essentiels en rejoignant des groupes d'achat solidaires."
       },
       {
         "id": "installments",
         "title": "Paiement échelonné",
-        "description": "Étalez vos paiements en toute sérénité pour vos projets et achats importants."
+        "description": "La liberté financière à votre portée. Concrétisez vos rêves sans pression budgétaire grâce à une gestion souple de vos paiements."
       }
     ]
   },
@@ -111,22 +111,23 @@
     "title": "Commencez en 3 étapes.",
     "steps": [
       {
-        "title": "Créez ou rejoignez",
-        "description": "Invitez vos proches ou découvrez des tontines ou projets publics adaptées à vos objectifs."
+        "title": "Téléchargez l'app",
+        "description": "Votre aventure commence ici. Installez Cocoti sur votre smartphone et créez votre profil en quelques secondes."
       },
       {
-        "title": "Contribuez facilement",
-        "description": "Programmez vos versements, recevez des rappels intelligents et payez en un clic."
+        "title": "Créez votre réseau",
+        "description": "Invitez vos proches et bâtissez votre cercle de confiance en un clic. Cagnotte ou projet solidaire : initiez l'action avec ceux qui comptent vraiment."
       },
       {
-        "title": "Suivez & retirez",
-        "description": "Visualisez l'évolution de la caisse, sécurisez vos retraits et recevez des reçus automatiques."
+        "title": "Épargnez ensemble",
+        "description": "Suivez vos progrès en temps réel, automatisez vos versements et réalisez vos objectifs sereinement."
       }
     ]
   },
   "why": {
     "title": "Pourquoi nous choisir ?",
-    "subtitle": "Une expérience pensée pour la diaspora et les communautés africaines.",
+    "subtitle": "Un processus simple et fiable.",
+    "valuesSubtitle": "L'alliance de la tradition et de l'innovation.",
     "values": [
       {
         "title": "Paiements fiables",
@@ -271,7 +272,8 @@
     ]
   },
   "faq": {
-    "title": "Vos questions fréquentes.",
+    "title": "Questions fréquentes.",
+    "subtitle": "Tout ce qu'il faut savoir pour bien démarrer avec Cocoti.",
     "items": [
       {
         "question": "Comment fonctionne Cocoti ?",
@@ -369,8 +371,8 @@
         "href": "#solutions"
       },
       {
-        "label": "Tarifs",
-        "href": "#pricing"
+        "label": "Pourquoi nous choisir",
+        "href": "#why"
       },
       {
         "label": "Support",

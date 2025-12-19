@@ -4,19 +4,19 @@
     "description": "Cocoti makes it simple to run digital tontines, solidarity funds and collective projects with a smooth, secure experience."
   },
   "navigation": {
-    "cta": "Download app",
+    "cta": "Download the app",
     "items": [
       {
+        "id": "causes",
+        "label": "Our impact"
+      },
+      {
         "id": "solutions",
-        "label": "Solutions"
+        "label": "Our solutions"
       },
       {
-        "id": "how",
-        "label": "How it works"
-      },
-      {
-        "id": "pricing",
-        "label": "Pricing"
+        "id": "why",
+        "label": "Why choose us?"
       },
       {
         "id": "faq",
@@ -83,27 +83,27 @@
       {
         "id": "cagnottes",
         "title": "Solidarity fund",
-        "description": "Launch contribution drives for family, associations or special events with full transparency."
+        "description": "Bring solidarity to life. A simple and secure solution to support your loved ones and the causes close to your heart."
       },
       {
         "id": "tontines",
         "title": "Digital tontine",
-        "description": "Schedule rounds, automate reminders and payouts, monitor the cash stack minute by minute."
+        "description": "Trust-based savings, reinvented. Manage your family and friend circles with a platform that guarantees fairness and peace of mind."
       },
       {
         "id": "crowdfunding",
         "title": "Crowdfunding",
-        "description": "Finance your community initiatives with dynamic campaigns and trusted allies."
+        "description": "Build tomorrow, together. Connect with trusted allies to turn your collective ideas into concrete realities."
       },
       {
         "id": "group-buys",
         "title": "Group buy",
-        "description": "Negotiate the best prices by banding together for your collective purchases."
+        "description": "Spend less, together. Benefit from unbeatable prices on your essential products by joining solidarity buying groups."
       },
       {
         "id": "installments",
         "title": "Installment payment",
-        "description": "Spread your payments smoothly for your major projects and purchases."
+        "description": "Financial freedom within reach. Make your dreams come true without budgetary pressure through flexible payment management."
       }
     ]
   },
@@ -111,22 +111,23 @@
     "title": "Get started in 3 steps.",
     "steps": [
       {
-        "title": "Create or join",
-        "description": "Invite your people or explore public tontines or projects tailored to your goals."
+        "title": "Download the app",
+        "description": "Your journey starts here. Install Cocoti on your smartphone and create your profile in seconds."
       },
       {
-        "title": "Contribute easily",
-        "description": "Schedule payments, receive smart reminders and pay in one tap."
+        "title": "Build your network",
+        "description": "Invite your loved ones and build your circle of trust in one click. Money pool or solidarity project: start taking action with those who truly matter."
       },
       {
-        "title": "Track & withdraw",
-        "description": "Visualize the cashflow, secure withdrawals and get automatic receipts."
+        "title": "Save together",
+        "description": "Track your progress in real time, automate your payments, and achieve your goals with peace of mind."
       }
     ]
   },
   "why": {
     "title": "Why choose us?",
-    "subtitle": "Designed for the diaspora and African communities everywhere.",
+    "subtitle": "A simple and reliable process.",
+    "valuesSubtitle": "The bridge between tradition and innovation.",
     "values": [
       {
         "title": "Trusted payments",
@@ -272,6 +273,7 @@
   },
   "faq": {
     "title": "Frequently asked questions.",
+    "subtitle": "Everything you need to know to get started with Cocoti.",
     "items": [
       {
         "question": "How does Cocoti work?",
@@ -392,8 +394,8 @@
         "href": "#solutions"
       },
       {
-        "label": "Pricing",
-        "href": "#pricing"
+        "label": "Why choose us",
+        "href": "#why"
       },
       {
         "label": "Support",
