@@ -33,13 +33,13 @@ export default function FooterSection({ footer }: FooterSectionProps) {
   const t = (key: string) => translate(key, locale);
 
   return (
-    <footer className="bg-white border-t border-cloud/30 py-12 relative overflow-hidden">
+    <footer className="bg-white border-t border-cloud/30 py-8 md:py-12 relative overflow-hidden">
       {/* Sub Brand-colored line on top for high-end feel */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-magenta/20 to-transparent" />
 
-      <div className="container flex flex-col items-center gap-10">
+      <div className="container flex flex-col items-center gap-6 md:gap-10">
         {/* Social Icons with enriched hover */}
-        <div className="flex justify-center gap-8">
+        <div className="flex justify-center gap-4 md:gap-8">
           {socialLinks.map((social, index) => (
             <a
               key={index}
@@ -66,27 +66,27 @@ export default function FooterSection({ footer }: FooterSectionProps) {
 
         {/* Legal & Copyright */}
         <div className="flex flex-col items-center gap-4 text-center">
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-2">
+          <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-8 gap-y-3">
             {legalLinks.map((link, index) => (
               <a
                 key={index}
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[11px] uppercase tracking-wider font-bold text-ink-muted/80 hover:text-night transition-colors"
+                className="text-[10px] md:text-[11px] uppercase tracking-wider font-bold text-ink-muted/80 hover:text-night transition-colors"
               >
                 {link.label}
               </a>
             ))}
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('open-cookie-settings'))}
-              className="text-[11px] uppercase tracking-wider font-bold text-ink-muted/80 hover:text-night transition-colors"
+              className="text-[10px] md:text-[11px] uppercase tracking-wider font-bold text-ink-muted/80 hover:text-night transition-colors"
             >
               {t("cookies.manageCookies")}
             </button>
           </div>
 
-          <p className="text-[11px] font-bold text-ink-muted/60 uppercase tracking-[0.2em] mt-2">
+          <p className="text-[9px] md:text-[11px] font-bold text-ink-muted/60 uppercase tracking-[0.2em] mt-2 px-4 leading-relaxed">
             © {new Date().getFullYear()} Cocoti — {footer.copyright || (locale === 'fr' ? 'Tous droits réservés' : 'All rights reserved')}
           </p>
         </div>
