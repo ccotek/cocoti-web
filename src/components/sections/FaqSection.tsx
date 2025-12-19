@@ -38,7 +38,7 @@ export default function FaqSection({ faq }: FaqSectionProps) {
   return (
     <section id="faq" className="section-padding bg-white">
       <div className="container space-y-8">
-        <motion.h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight" {...fadeInUp}>
+        <motion.h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight" {...fadeInUp}>
           {faq.title}
         </motion.h2>
         <div className="grid gap-4">
@@ -125,10 +125,10 @@ export default function FaqSection({ faq }: FaqSectionProps) {
               }
             }}
           >
-            <h3 className="text-lg md:text-xl font-semibold text-night mb-3">
+            <h3 className="text-lg md:text-xl font-bold text-night mb-3">
               {faq.cta?.title || "Vous ne trouvez pas votre réponse ?"}
             </h3>
-            <p className="text-sm md:text-base text-ink-muted mb-6 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-ink-muted mb-6 max-w-2xl mx-auto">
               {faq.cta?.description || "Notre équipe est là pour vous aider. Contactez-nous directement sur WhatsApp pour une réponse personnalisée."}
             </p>
             <div className="flex justify-center">

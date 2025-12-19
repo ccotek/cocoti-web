@@ -53,7 +53,7 @@ export default function PricingSection({ pricing, locale = 'fr' }: PricingSectio
     <section id="pricing" className="section-padding bg-white">
       <div className="container space-y-10">
         <motion.div className="max-w-2xl space-y-4" {...fadeInUp}>
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight">{pricing.title}</h2>
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">{pricing.title}</h2>
         </motion.div>
 
         {hasComparisonTable ? (

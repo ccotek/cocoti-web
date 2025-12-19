@@ -76,10 +76,10 @@ export default function CausesSection({ locale, apps = [] }: CausesSectionProps)
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-night mb-4 font-inter tracking-tight">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-night mb-4 font-inter tracking-tight">
             {carouselConfig.title}
           </h2>
-          <p className="text-base md:text-lg text-ink-muted max-w-2xl font-inter leading-relaxed">
+          <p className="text-lg text-ink-muted max-w-2xl font-inter">
             {carouselConfig.subtitle}
           </p>
         </motion.div>

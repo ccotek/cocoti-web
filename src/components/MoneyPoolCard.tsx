@@ -115,12 +115,12 @@ export default function MoneyPoolCard({
                             <span className="font-inter text-[10px] font-bold uppercase tracking-wider text-ink-muted mb-1">
                                 {locale === 'fr' ? 'Collecté' : 'Raised'}
                             </span>
-                            <span className={`font-inter font-black text-night ${layout === "horizontal" ? "text-lg md:text-2xl" : "text-lg"}`}>
+                            <span className={`font-inter font-bold text-night ${layout === "horizontal" ? "text-lg md:text-2xl" : "text-lg"}`}>
                                 {formattedRaised}
                                 {layout === "horizontal" && <span className="hidden md:inline text-sm font-medium text-ink-muted ml-1">/ {formattedTarget}</span>}
                             </span>
                         </div>
-                        <span className={`font-inter font-black text-magenta ${layout === "horizontal" ? "text-base md:text-lg" : "text-base"}`}>
+                        <span className={`font-inter font-bold text-magenta ${layout === "horizontal" ? "text-base md:text-lg" : "text-base"}`}>
                             {progress}%
                         </span>
                     </div>
@@ -149,8 +149,8 @@ export default function MoneyPoolCard({
                         </div>
 
                         <div className={`flex items-center gap-2 rounded-full px-5 py-2.5 font-black transition-all shadow-md hover:shadow-lg active:scale-95 ${isArchived
-                                ? "bg-cloud text-ink-muted cursor-not-allowed"
-                                : "bg-gradient-to-r from-sunset to-magenta text-white hover:scale-[1.02]"
+                            ? "bg-cloud text-ink-muted cursor-not-allowed"
+                            : "bg-gradient-to-r from-sunset to-magenta text-white hover:scale-[1.02]"
                             }`}>
                             <span className="text-[10px] md:text-xs uppercase tracking-widest">
                                 {isArchived ? (status === 'closed' ? (locale === 'fr' ? 'Fermée' : 'Closed') : (locale === 'fr' ? 'Archivée' : 'Archived')) : (locale === 'fr' ? 'Soutenir' : 'Support')}

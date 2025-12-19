@@ -30,7 +30,7 @@ export default function HowSection({ how }: HowSectionProps) {
   return (
     <section id="how" className="section-padding bg-white">
       <div className="container space-y-10">
-        <motion.h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight" {...fadeInUp}>
+        <motion.h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight" {...fadeInUp}>
           {how.title}
         </motion.h2>
         <div className="grid gap-6 md:grid-cols-3">

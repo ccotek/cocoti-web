@@ -46,8 +46,8 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
     <section id="testimonials" className="section-padding">
       <div className="container grid gap-10 md:grid-cols-[1fr_1.2fr] md:items-center">
         <motion.div className="space-y-4" {...fadeInUp}>
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight">{testimonials.title}</h2>
-          <p className="text-base md:text-lg text-ink-muted leading-relaxed">{testimonials.subtitle}</p>
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">{testimonials.title}</h2>
+          <p className="text-lg text-ink-muted">{testimonials.subtitle}</p>
           <div className="flex gap-3">
             {items && Array.isArray(items) && items.map((_, indicatorIndex) => (
               <button

@@ -40,8 +40,8 @@ export default function WhySection({ why }: WhySectionProps) {
     <section id="why" className="section-padding">
       <div className="container space-y-10">
         <motion.div className="max-w-2xl space-y-4" {...fadeInUp}>
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight">{why.title}</h2>
-          <p className="text-base md:text-lg text-ink-muted leading-relaxed">{why.subtitle}</p>
+          <h2 className="text-3xl font-bold sm:text-4xl">{why.title}</h2>
+          <p className="text-lg text-ink-muted">{why.subtitle}</p>
         </motion.div>
         <div className="grid gap-6 md:grid-cols-2">
           {why.values && Array.isArray(why.values) && why.values.map((value, index) => {
@@ -84,7 +84,7 @@ export default function WhySection({ why }: WhySectionProps) {
                 >
                   <Icon className="h-6 w-6" />
                 </motion.div>
-                <h3 className="text-xl font-semibold text-night">{value.title}</h3>
+                <h3 className="text-xl font-bold text-night">{value.title}</h3>
                 <p className="text-sm text-ink-muted">{value.description}</p>
               </motion.div>
             );
