@@ -152,7 +152,7 @@ export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
           <div className="w-full lg:w-[420px] shrink-0">
             <div
               ref={tabsContainerRef}
-              className="flex lg:flex-col gap-3 overflow-x-auto pb-4 lg:pb-0 scrollbar-hide snap-x snap-mandatory lg:snap-none"
+              className="flex lg:flex-col gap-4 lg:gap-3 px-4 lg:px-0 overflow-x-auto pb-4 lg:pb-0 scrollbar-hide snap-x snap-mandatory lg:snap-none"
             >
               {solutions.items?.map((item) => {
                 const Icon = solutionIcons[item.id] || SparklesIcon;
@@ -163,35 +163,48 @@ export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
                     key={item.id}
                     ref={el => { itemRefs.current[item.id] = el; }}
                     onClick={() => handleManualSelect(item.id)}
-                    className={`group relative flex-none lg:flex-1 text-left p-4 lg:p-6 rounded-[1.5rem] lg:rounded-[2.5rem] border-2 transition-all duration-500 overflow-hidden snap-center min-w-[200px] lg:min-w-0 ${isActive
+                    className={`group relative flex-none lg:flex-1 flex flex-col items-center lg:flex-row lg:items-center text-center lg:text-left p-2 lg:p-6 rounded-full lg:rounded-[2.5rem] border-2 transition-all duration-500 overflow-hidden snap-center min-w-[64px] lg:min-w-0 ${isActive
                       ? "border-magenta bg-white shadow-xl shadow-magenta/5 lg:translate-x-4"
-                      : "border-transparent bg-transparent hover:bg-white lg:hover:border-sunset/10 lg:hover:translate-x-2"
+                      : "border-transparent bg-transparent lg:hover:bg-white lg:hover:border-sunset/10 lg:hover:translate-x-2"
                       }`}
                   >
-                    <div className="flex items-center gap-4 lg:gap-5 relative z-10">
-                      <div className={`p-3 lg:p-4 rounded-xl lg:rounded-2xl transition-all duration-300 ${isActive
-                        ? "bg-gradient-to-br from-magenta to-sunset text-white shadow-lg shadow-magenta/20"
-                        : "bg-sunset/[0.05] text-night/60 group-hover:bg-magenta/10 group-hover:text-magenta"
-                        }`}>
-                        <Icon className="h-5 w-5 lg:h-6 lg:w-6" />
+                    <div className="flex flex-col lg:flex-row items-center gap-2 lg:gap-5 relative z-10 w-full justify-center lg:justify-start">
+                      <div className="relative p-1">
+                        {/* Circular Progress Loader */}
+                        {isActive && (
+                          <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full -rotate-90">
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r="48"
+                              className="stroke-night/5 fill-none"
+                              strokeWidth="4"
+                            />
+                            <motion.circle
+                              cx="50"
+                              cy="50"
+                              r="48"
+                              className="stroke-magenta fill-none"
+                              strokeWidth="4"
+                              strokeLinecap="round"
+                              initial={{ pathLength: 0 }}
+                              animate={{ pathLength: progress / 100 }}
+                              transition={{ duration: 0, ease: "linear" }}
+                            />
+                          </svg>
+                        )}
+                        <div className={`p-3 lg:p-4 rounded-full lg:rounded-2xl transition-all duration-300 ${isActive
+                          ? "bg-gradient-to-br from-magenta to-sunset text-white shadow-lg shadow-magenta/20"
+                          : "bg-sunset/[0.05] text-night/60 group-hover:bg-magenta/10 group-hover:text-magenta"
+                          }`}>
+                          <Icon className="h-5 w-5 lg:h-6 lg:w-6" />
+                        </div>
                       </div>
-                      <span className={`text-sm lg:text-xl font-bold transition-colors ${isActive ? "text-night" : "text-night/40 group-hover:text-night"
+                      <span className={`hidden lg:block text-xl font-bold transition-colors ${isActive ? "text-night" : "text-night/40 group-hover:text-night"
                         }`}>
                         {item.title}
                       </span>
                     </div>
-
-                    {/* Progress Bar (at the bottom) */}
-                    {isActive && (
-                      <div className="absolute bottom-0 left-0 h-1 lg:h-1.5 bg-sunset/[0.05] w-full z-10">
-                        <motion.div
-                          className="h-full bg-gradient-to-r from-magenta to-sunset"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progress}%` }}
-                          transition={{ ease: "linear" }}
-                        />
-                      </div>
-                    )}
                   </button>
                 );
               })}
