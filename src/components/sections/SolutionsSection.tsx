@@ -35,6 +35,7 @@ type SolutionsSectionProps = {
 export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
   const [activeId, setActiveId] = useState<string>("");
   const [progress, setProgress] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   const tabsContainerRef = useRef<HTMLDivElement>(null);
@@ -75,7 +76,10 @@ export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
   }, [activeId]);
 
   useEffect(() => {
-    if (!solutions.items?.length) return;
+    if (!solutions.items?.length || !isAutoPlaying) {
+      if (!isAutoPlaying) setProgress(0);
+      return;
+    }
 
     const startTimer = () => {
       startTimeRef.current = Date.now();
@@ -113,10 +117,11 @@ export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
         }
       }
     };
-  }, [solutions.items, activeId]);
+  }, [solutions.items, activeId, isAutoPlaying]);
 
   const handleManualSelect = (id: string) => {
     setActiveId(id);
+    setIsAutoPlaying(false);
     setProgress(0);
     startTimeRef.current = Date.now();
   };
