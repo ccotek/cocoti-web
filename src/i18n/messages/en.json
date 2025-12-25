@@ -82,7 +82,7 @@
     "items": [
       {
         "id": "cagnottes",
-        "title": "Solidarity fund",
+        "title": "Solidarity money pool",
         "description": "Bring solidarity to life. A simple and secure solution to support your loved ones and the causes close to your heart."
       },
       {
@@ -97,12 +97,12 @@
       },
       {
         "id": "group-buys",
-        "title": "Group buy",
+        "title": "Group buying",
         "description": "Spend less, together. Benefit from unbeatable prices on your essential products by joining solidarity buying groups."
       },
       {
         "id": "installments",
-        "title": "Installment payment",
+        "title": "Installment plan",
         "description": "Financial freedom within reach. Make your dreams come true without budgetary pressure through flexible payment management."
       }
     ]

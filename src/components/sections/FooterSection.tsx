@@ -87,7 +87,7 @@ export default function FooterSection({ footer }: FooterSectionProps) {
           </div>
 
           <p className="text-[9px] md:text-[11px] font-bold text-ink-muted/60 uppercase tracking-[0.2em] mt-2 px-4 leading-relaxed">
-            © {new Date().getFullYear()} Cocoti — {footer.copyright || (locale === 'fr' ? 'Tous droits réservés' : 'All rights reserved')}
+            © {new Date().getFullYear()} Cocoti — {footer.copyright || translate("footer.copyright", locale)}
           </p>
         </div>
       </div>

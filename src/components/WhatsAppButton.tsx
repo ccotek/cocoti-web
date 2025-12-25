@@ -3,28 +3,33 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChatBubbleLeftRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { translate } from "@/utils/translations";
 
 interface WhatsAppButtonProps {
   phoneNumber: string;
   message?: string;
   position?: "bottom-right" | "bottom-left";
+  locale: 'fr' | 'en';
 }
 
-export default function WhatsAppButton({ 
-  phoneNumber, 
-  message = "Bonjour ! Comment puis-je vous aider ?",
-  position = "bottom-right"
+export default function WhatsAppButton({
+  phoneNumber,
+  message,
+  position = "bottom-right",
+  locale
 }: WhatsAppButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const defaultMessage = translate("whatsapp.defaultMessage", locale);
+  const finalMessage = message || defaultMessage;
 
   const handleWhatsAppClick = () => {
-    const encodedMessage = encodeURIComponent(message);
+    const encodedMessage = encodeURIComponent(finalMessage);
     const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const positionClasses = position === "bottom-right" 
-    ? "bottom-6 right-6" 
+  const positionClasses = position === "bottom-right"
+    ? "bottom-6 right-6"
     : "bottom-6 left-6";
 
   return (
@@ -81,8 +86,8 @@ export default function WhatsAppButton({
                   <ChatBubbleLeftRightIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">Support WhatsApp</h3>
-                  <p className="text-sm text-green-100">Réponse rapide garantie</p>
+                  <h3 className="font-semibold">{translate("whatsapp.buttonTitle", locale)}</h3>
+                  <p className="text-sm text-green-100">{translate("whatsapp.guarantee", locale)}</p>
                 </div>
               </div>
             </div>
@@ -90,20 +95,20 @@ export default function WhatsAppButton({
             {/* Content */}
             <div className="p-4">
               <p className="text-gray-600 text-sm mb-4">
-                Besoin d'aide ? Notre équipe est disponible pour vous accompagner via WhatsApp.
+                {translate("whatsapp.description", locale)}
               </p>
-              
+
               <div className="space-y-3">
                 <button
                   onClick={handleWhatsAppClick}
                   className="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   <ChatBubbleLeftRightIcon className="w-5 h-5" />
-                  Ouvrir WhatsApp
+                  {translate("whatsapp.open", locale)}
                 </button>
-                
+
                 <div className="text-xs text-gray-500 text-center">
-                  Réponse sous 24h • 7j/7
+                  {translate("whatsapp.responseTime", locale)}
                 </div>
               </div>
             </div>
@@ -111,8 +116,8 @@ export default function WhatsAppButton({
             {/* Footer */}
             <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
               <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>💬 Support en direct</span>
-                <span>🕒 Disponible maintenant</span>
+                <span>💬 {translate("whatsapp.liveSupport", locale)}</span>
+                <span>🕒 {translate("whatsapp.availableNow", locale)}</span>
               </div>
             </div>
           </motion.div>

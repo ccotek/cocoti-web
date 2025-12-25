@@ -9,6 +9,8 @@ const frMessages = {
   },
   "language": {
     "label": "Langue",
+    "en": "English",
+    "fr": "Français",
     "switchTo": {
       "fr": "Passer en français",
       "en": "Switch to English"
@@ -37,7 +39,13 @@ const frMessages = {
   },
   "whatsapp": {
     "defaultMessage": "Bonjour ! Je suis intéressé(e) par Cocoti. Pouvez-vous m'en dire plus ?",
-    "buttonTitle": "Contacter via WhatsApp"
+    "buttonTitle": "Contacter via WhatsApp",
+    "guarantee": "Réponse rapide garantie",
+    "description": "Besoin d'aide ? Notre équipe est disponible pour vous accompagner via WhatsApp.",
+    "open": "Ouvrir WhatsApp",
+    "responseTime": "Réponse sous 24h • 7j/7",
+    "liveSupport": "Support en direct",
+    "availableNow": "Disponible maintenant"
   },
   "accessibility": {
     "toggleMenu": "Ouvrir le menu",
@@ -93,6 +101,7 @@ const frMessages = {
     "viewDashboard": "Commencer maintenant"
   },
   "solutions": {
+    "badge": "Votre allié quotidien",
     "title": "Une app, toutes vos solutions collectives.",
     "subtitle": "Gérez vos projets financiers en groupe avec des outils adaptés à vos besoins."
   },
@@ -113,15 +122,51 @@ const frMessages = {
     ]
   },
   "why": {
+    "badge": "Processus simple & fiable",
     "title": "Pourquoi nous choisir ?",
     "subtitle": "Un processus simple et fiable.",
     "valuesSubtitle": "L'alliance de la tradition et de l'innovation."
   },
   "testimonials": {
+    "badge": "Ils nous font confiance",
     "title": "Ils nous font confiance",
-    "subtitle": "Découvrez comment Cocoti transforme leurs projets collectifs."
+    "subtitle": "Découvrez comment Cocoti transforme leurs projets collectifs.",
+    "view": "Afficher le témoignage"
+  },
+  "causes": {
+    "badge": "Causes actuelles",
+    "prev": "Précédent",
+    "next": "Suivant",
+    "goToSlide": "Aller à la slide",
+    "title": "Configuration du Carousel des Cagnottes",
+    "subtitle": "Gérez l'affichage des projets en vedette sur la page d'accueil",
+    "settings": {
+      "enabled": "Activer le carousel",
+      "enabledDescription": "Afficher ou masquer la section carousel des cagnottes",
+      "autoRotate": "Rotation automatique",
+      "autoRotateDescription": "Faire défiler automatiquement les projets",
+      "rotationSpeed": "Vitesse de rotation (secondes)",
+      "maxProjects": "Nombre maximum de projets",
+      "maxProjectsDescription": "Nombre de projets à afficher dans le carousel"
+    },
+    "projects": {
+      "title": "Projets sélectionnés",
+      "subtitle": "Choisissez les projets à mettre en vedette",
+      "availableProjects": "Projets disponibles",
+      "selectedProjects": "Projets sélectionnés",
+      "dragToReorder": "Glissez pour réorganiser",
+      "noProjects": "Aucun projet disponible",
+      "loadingProjects": "Chargement des projets...",
+      "addProject": "Ajouter un projet",
+      "removeProject": "Retirer le projet"
+    },
+    "preview": {
+      "title": "Aperçu",
+      "subtitle": "Prévisualisation du carousel"
+    }
   },
   "faq": {
+    "badge": "Toujours à vos côtés",
     "title": "Questions fréquentes",
     "subtitle": "Tout ce que vous devez savoir sur Cocoti.",
     "cta": {
@@ -129,6 +174,17 @@ const frMessages = {
       "description": "Notre équipe est là pour vous aider. Contactez-nous directement sur WhatsApp pour une réponse personnalisée.",
       "whatsapp": "Nous écrire sur WhatsApp"
     }
+  },
+  "contact": {
+    "title": "Contactez-nous",
+    "description": "Nous sommes là pour vous aider. Une question sur Cocoti ? Une demande de partenariat ? N'hésitez pas à nous solliciter.",
+    "email": "Email",
+    "phone": "Téléphone",
+    "whatsapp": "WhatsApp",
+    "hours": "Horaires",
+    "call": "Appeler",
+    "responseTime": "Réponse rapide garantie",
+    "footer": "Développé entre Dakar et Paris pour digitaliser la solidarité humaine."
   },
   "admin": {
     "title": "Administration Cocoti",
@@ -230,34 +286,7 @@ const frMessages = {
     "saveChoices": "Sauvegarder mes choix",
     "manageCookies": "Gérer les cookies"
   },
-  "causes": {
-    "title": "Configuration du Carousel des Cagnottes",
-    "subtitle": "Gérez l'affichage des projets en vedette sur la page d'accueil",
-    "settings": {
-      "enabled": "Activer le carousel",
-      "enabledDescription": "Afficher ou masquer la section carousel des cagnottes",
-      "autoRotate": "Rotation automatique",
-      "autoRotateDescription": "Faire défiler automatiquement les projets",
-      "rotationSpeed": "Vitesse de rotation (secondes)",
-      "maxProjects": "Nombre maximum de projets",
-      "maxProjectsDescription": "Nombre de projets à afficher dans le carousel"
-    },
-    "projects": {
-      "title": "Projets sélectionnés",
-      "subtitle": "Choisissez les projets à mettre en vedette",
-      "availableProjects": "Projets disponibles",
-      "selectedProjects": "Projets sélectionnés",
-      "dragToReorder": "Glissez pour réorganiser",
-      "noProjects": "Aucun projet disponible",
-      "loadingProjects": "Chargement des projets...",
-      "addProject": "Ajouter un projet",
-      "removeProject": "Retirer le projet"
-    },
-    "preview": {
-      "title": "Aperçu",
-      "subtitle": "Prévisualisation du carousel"
-    }
-  }
+
 };
 
 const enMessages = {
@@ -267,6 +296,8 @@ const enMessages = {
   },
   "language": {
     "label": "Language",
+    "en": "English",
+    "fr": "Français",
     "switchTo": {
       "fr": "Passer en français",
       "en": "Switch to English"
@@ -295,7 +326,13 @@ const enMessages = {
   },
   "whatsapp": {
     "defaultMessage": "Hello! I'm interested in Cocoti. Can you tell me more?",
-    "buttonTitle": "Contact via WhatsApp"
+    "buttonTitle": "Contact via WhatsApp",
+    "guarantee": "Fast response guaranteed",
+    "description": "Need help? Our team is available to assist you via WhatsApp.",
+    "open": "Open WhatsApp",
+    "responseTime": "Response within 24h • 7d/7",
+    "liveSupport": "Live support",
+    "availableNow": "Available now"
   },
   "accessibility": {
     "toggleMenu": "Open menu",
@@ -351,6 +388,7 @@ const enMessages = {
     "viewDashboard": "Start now"
   },
   "solutions": {
+    "badge": "Your daily ally",
     "title": "One app, all your collective solutions.",
     "subtitle": "Manage your group financial projects with tools tailored to your needs."
   },
@@ -371,15 +409,51 @@ const enMessages = {
     ]
   },
   "why": {
+    "badge": "Simple & reliable process",
     "title": "Why choose us?",
     "subtitle": "A simple and reliable process.",
     "valuesSubtitle": "The bridge between tradition and innovation."
   },
   "testimonials": {
+    "badge": "Trust us",
     "title": "They trust us",
-    "subtitle": "Discover how Cocoti transforms their collective projects."
+    "subtitle": "Discover how Cocoti transforms their collective projects.",
+    "view": "View testimonial"
+  },
+  "causes": {
+    "badge": "Current causes",
+    "prev": "Previous",
+    "next": "Next",
+    "goToSlide": "Go to slide",
+    "title": "Money Pools Carousel Configuration",
+    "subtitle": "Manage the display of featured projects on the home page",
+    "settings": {
+      "enabled": "Enable carousel",
+      "enabledDescription": "Show or hide the money pools carousel section",
+      "autoRotate": "Auto-rotate",
+      "autoRotateDescription": "Automatically scroll through projects",
+      "rotationSpeed": "Rotation speed (seconds)",
+      "maxProjects": "Maximum projects",
+      "maxProjectsDescription": "Number of projects to display in the carousel"
+    },
+    "projects": {
+      "title": "Selected Projects",
+      "subtitle": "Choose which projects to feature",
+      "availableProjects": "Available projects",
+      "selectedProjects": "Selected projects",
+      "dragToReorder": "Drag to reorder",
+      "noProjects": "No projects available",
+      "loadingProjects": "Loading projects...",
+      "addProject": "Add project",
+      "removeProject": "Remove project"
+    },
+    "preview": {
+      "title": "Preview",
+      "subtitle": "Carousel preview"
+    }
   },
   "faq": {
+    "badge": "Always by your side",
     "title": "Frequently asked questions",
     "subtitle": "Everything you need to know about Cocoti.",
     "cta": {
@@ -387,6 +461,17 @@ const enMessages = {
       "description": "Our team is here to help. Contact us directly on WhatsApp for a personalized response.",
       "whatsapp": "Write to us on WhatsApp"
     }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "description": "We are here to help. A question about Cocoti? A partnership request? Feel free to reach out.",
+    "email": "Email",
+    "phone": "Phone",
+    "whatsapp": "WhatsApp",
+    "hours": "Hours",
+    "call": "Call",
+    "responseTime": "Fast response guaranteed",
+    "footer": "Developed between Dakar and Paris to digitize human solidarity."
   },
   "admin": {
     "title": "Cocoti Administration",
@@ -488,34 +573,7 @@ const enMessages = {
     "saveChoices": "Save my choices",
     "manageCookies": "Manage cookies"
   },
-  "causes": {
-    "title": "Money Pool Carousel Configuration",
-    "subtitle": "Manage the display of featured projects on the homepage",
-    "settings": {
-      "enabled": "Enable carousel",
-      "enabledDescription": "Show or hide the money pool carousel section",
-      "autoRotate": "Auto rotation",
-      "autoRotateDescription": "Automatically scroll through projects",
-      "rotationSpeed": "Rotation speed (seconds)",
-      "maxProjects": "Maximum number of projects",
-      "maxProjectsDescription": "Number of projects to display in the carousel"
-    },
-    "projects": {
-      "title": "Selected projects",
-      "subtitle": "Choose projects to feature",
-      "availableProjects": "Available projects",
-      "selectedProjects": "Selected projects",
-      "dragToReorder": "Drag to reorder",
-      "noProjects": "No projects available",
-      "loadingProjects": "Loading projects...",
-      "addProject": "Add project",
-      "removeProject": "Remove project"
-    },
-    "preview": {
-      "title": "Preview",
-      "subtitle": "Carousel preview"
-    }
-  }
+
 };
 
 export const getTranslations = (locale: 'fr' | 'en') => {

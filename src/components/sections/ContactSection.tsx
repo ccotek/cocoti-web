@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { EnvelopeOpenIcon, PhoneIcon, ClockIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
+import { translate } from "@/utils/translations";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 24 },
@@ -38,19 +39,20 @@ type ContactSectionProps = {
     };
   };
   onOpenModal: () => void;
+  locale: 'fr' | 'en';
 };
 
-export default function ContactSection({ contact, onOpenModal }: ContactSectionProps) {
+export default function ContactSection({ contact, onOpenModal, locale }: ContactSectionProps) {
   return (
     <section id="contact" className="section-padding bg-ivory/30">
       <div className="container">
         {/* Header */}
         <motion.div className="text-center mb-16" {...fadeInUp}>
-          <h2 className="text-3xl font-bold sm:text-4xl mb-4">{contact.title || 'Contactez-nous'}</h2>
+          <h2 className="text-3xl font-bold sm:text-4xl mb-4">{contact.title || translate("contact.title", locale)}</h2>
           {contact.subtitle && (
             <p className="text-lg text-magenta font-medium mb-4">{contact.subtitle}</p>
           )}
-          <p className="text-lg text-ink-muted max-w-2xl mx-auto">{contact.description || 'Nous sommes là pour vous aider'}</p>
+          <p className="text-lg text-ink-muted max-w-2xl mx-auto">{contact.description || translate("contact.description", locale)}</p>
         </motion.div>
 
         <div className="grid gap-8 lg:grid-cols-3">
@@ -65,7 +67,7 @@ export default function ContactSection({ contact, onOpenModal }: ContactSectionP
                 <div className="w-10 h-10 bg-gradient-to-br from-sunset to-magenta rounded-lg flex items-center justify-center">
                   <EnvelopeOpenIcon className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-night">Email</h3>
+                <h3 className="text-lg font-semibold text-night">{translate("contact.email", locale)}</h3>
               </div>
               <p className="text-ink-muted mb-4">{contact.email || 'Email non configuré'}</p>
               <button
@@ -82,14 +84,14 @@ export default function ContactSection({ contact, onOpenModal }: ContactSectionP
                 <div className="w-10 h-10 bg-gradient-to-br from-turquoise to-magenta rounded-lg flex items-center justify-center">
                   <PhoneIcon className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-night">Téléphone</h3>
+                <h3 className="text-lg font-semibold text-night">{translate("contact.phone", locale)}</h3>
               </div>
-                  <p className="text-ink-muted mb-4">{contact.phone || 'Téléphone non configuré'}</p>
+              <p className="text-ink-muted mb-4">{contact.phone || 'Téléphone non configuré'}</p>
               <a
                 href={`tel:${contact.phone?.replace(/\s/g, '') || ''}`}
                 className="w-full border border-turquoise text-turquoise py-2 px-4 rounded-lg font-medium hover:bg-turquoise hover:text-white transition-all inline-block text-center"
               >
-                Appeler
+                {translate("contact.call", locale)}
               </a>
             </div>
 
@@ -103,8 +105,8 @@ export default function ContactSection({ contact, onOpenModal }: ContactSectionP
                   </div>
                   <h3 className="text-lg font-semibold text-night">{contact.hours.title}</h3>
                 </div>
-                    <p className="text-ink-muted text-sm mb-2">{contact.hours.description || 'Horaires non configurés'}</p>
-                    <p className="text-ink-muted text-sm">{contact.hours.weekend || 'Weekend non configuré'}</p>
+                <p className="text-ink-muted text-sm mb-2">{contact.hours.description || 'Horaires non configurés'}</p>
+                <p className="text-ink-muted text-sm">{contact.hours.weekend || 'Weekend non configuré'}</p>
               </div>
             )}
           </motion.div>
@@ -117,9 +119,9 @@ export default function ContactSection({ contact, onOpenModal }: ContactSectionP
                 <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
                   <ChatBubbleLeftRightIcon className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-night">WhatsApp</h3>
+                <h3 className="text-lg font-semibold text-night">{translate("contact.whatsapp", locale)}</h3>
               </div>
-              <p className="text-ink-muted text-sm mb-4">Réponse rapide garantie</p>
+              <p className="text-ink-muted text-sm mb-4">{translate("contact.responseTime", locale)}</p>
               <a
                 href={contact.whatsappLink || '#'}
                 target="_blank"
@@ -134,7 +136,7 @@ export default function ContactSection({ contact, onOpenModal }: ContactSectionP
             {contact.social && (
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-cloud">
                 <h3 className="text-lg font-semibold text-night mb-2">{contact.social.title || 'Réseaux sociaux'}</h3>
-                    <p className="text-ink-muted text-sm mb-4">{contact.social.description || 'Réseaux sociaux non configurés'}</p>
+                <p className="text-ink-muted text-sm mb-4">{contact.social.description || 'Réseaux sociaux non configurés'}</p>
                 <div className="flex gap-3">
                   <a href="https://facebook.com/cocoti" target="_blank" rel="noopener noreferrer" className="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors">
                     📘

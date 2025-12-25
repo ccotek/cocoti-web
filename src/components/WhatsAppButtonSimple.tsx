@@ -3,17 +3,21 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
+import { translate } from "@/utils/translations";
 
 interface WhatsAppButtonSimpleProps {
   phoneNumber?: string;
   message?: string;
+  locale: 'fr' | 'en';
 }
 
-export default function WhatsAppButtonSimple({ 
+export default function WhatsAppButtonSimple({
   phoneNumber = "+221771234567",
-  message = "Bonjour ! Je suis intéressé(e) par Cocoti. Pouvez-vous m'en dire plus ?"
+  message,
+  locale
 }: WhatsAppButtonSimpleProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const finalMessage = message || translate("whatsapp.defaultMessage", locale);
 
   useEffect(() => {
     // Afficher le bouton après un délai
@@ -26,9 +30,9 @@ export default function WhatsAppButtonSimple({
 
   const handleWhatsAppClick = () => {
     const cleanPhone = phoneNumber.replace(/\D/g, '');
-    const encodedMessage = encodeURIComponent(message);
+    const encodedMessage = encodeURIComponent(finalMessage);
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
-    
+
     console.log('🚀 Ouverture WhatsApp:', whatsappUrl);
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
@@ -48,7 +52,7 @@ export default function WhatsAppButtonSimple({
         initial={{ scale: 0, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        title="Contacter via WhatsApp"
+        title={translate("whatsapp.buttonTitle", locale)}
       >
         <ChatBubbleLeftRightIcon className="w-6 h-6" />
       </motion.button>

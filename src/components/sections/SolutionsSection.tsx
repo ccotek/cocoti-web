@@ -9,6 +9,7 @@ import {
   ShoppingBagIcon,
   CreditCardIcon
 } from "@heroicons/react/24/outline";
+import { translate } from "@/utils/translations";
 
 const solutionIcons: Record<string, any> = {
   tontines: UsersIcon,
@@ -30,9 +31,10 @@ type SolutionsSectionProps = {
       description: string;
     }>;
   };
+  locale: 'fr' | 'en';
 };
 
-export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
+export default function SolutionsSection({ solutions, locale }: SolutionsSectionProps) {
   const [activeId, setActiveId] = useState<string>("");
   const [progress, setProgress] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -140,7 +142,7 @@ export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
           className="max-w-3xl mb-12 lg:mb-16 text-left scroll-mt-[100px]"
         >
           <span className="inline-block px-4 py-1.5 rounded-full bg-magenta/10 text-magenta text-xs font-bold uppercase tracking-widest mb-6">
-            Votre allié quotidien
+            {translate("solutions.badge", locale)}
           </span>
           <h2 className="text-3xl md:text-5xl font-bold text-night mb-6 leading-tight">
             {solutions.title}
@@ -175,9 +177,9 @@ export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
                   >
                     <div className="flex flex-col lg:flex-row items-center gap-2 lg:gap-5 relative z-10 w-full justify-center lg:justify-start">
                       <div className="relative p-1">
-                        {/* Circular Progress Loader */}
+                        {/* Circular Progress Loader - Mobile Only */}
                         {isActive && (
-                          <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full -rotate-90">
+                          <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full -rotate-90 lg:hidden">
                             <circle
                               cx="50"
                               cy="50"
@@ -210,6 +212,18 @@ export default function SolutionsSection({ solutions }: SolutionsSectionProps) {
                         {item.title}
                       </span>
                     </div>
+
+                    {/* Desktop: Border-bottom loader */}
+                    {isActive && (
+                      <div className="hidden lg:block absolute bottom-0 left-0 w-full h-1 bg-magenta/10 overflow-hidden">
+                        <motion.div
+                          className="h-full bg-magenta"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress}%` }}
+                          transition={{ duration: 0, ease: "linear" }}
+                        />
+                      </div>
+                    )}
                   </button>
                 );
               })}

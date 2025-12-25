@@ -48,12 +48,17 @@ export default function CompleteLandingPage() {
 
   // Extraire les données des traductions
   const navItemsRaw = t("navigation.items") as unknown as Array<{ id: string; label: string }>;
-  const navItems = (Array.isArray(navItemsRaw) ? navItemsRaw : [
+  const navItems = (Array.isArray(navItemsRaw) ? navItemsRaw : (locale === 'fr' ? [
     { id: 'causes', label: 'Notre impact' },
     { id: 'solutions', label: 'Nos solutions' },
     { id: 'why', label: 'Pourquoi nous choisir ?' },
     { id: 'faq', label: 'FAQ' },
-  ]).filter(item => {
+  ] : [
+    { id: 'causes', label: 'Our impact' },
+    { id: 'solutions', label: 'Our solutions' },
+    { id: 'why', label: 'Why choose us?' },
+    { id: 'faq', label: 'FAQ' },
+  ])).filter(item => {
     // Si l'item est 'causes' (Impact), on ne l'affiche que s'il y a des projets
     if (item.id === 'causes') {
       return projects && projects.length > 0;
@@ -155,9 +160,9 @@ export default function CompleteLandingPage() {
       <main>
         <HeroSection hero={hero} />
         <CausesSection locale={locale} apps={hero.apps} />
-        <SolutionsSection solutions={solutions} />
-        <WhySection why={why} how={how} testimonials={testimonials} />
-        <FaqSection faq={faq} />
+        <SolutionsSection solutions={solutions} locale={locale} />
+        <WhySection why={why} how={how} testimonials={testimonials} locale={locale} />
+        <FaqSection faq={faq} locale={locale} />
       </main>
 
       <FooterSection footer={footer} />

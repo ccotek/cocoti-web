@@ -61,7 +61,7 @@ export default function HeaderSection({ navItems, navCta, locale, onLocaleChange
                 onClick={() => onLocaleChange(locale === 'fr' ? 'en' : 'fr')}
                 className="rounded-full border border-cloud px-3 py-1 font-semibold uppercase text-night transition hover:border-magenta hover:text-magenta"
               >
-                {locale === 'fr' ? 'English' : 'Français'}
+                {locale === 'fr' ? translate("language.en", locale) : translate("language.fr", locale)}
               </button>
             </div>
             <a
@@ -115,7 +115,7 @@ export default function HeaderSection({ navItems, navCta, locale, onLocaleChange
             </div>
             <div className="mt-10 flex flex-col gap-4">
               <div className="flex flex-wrap items-center gap-2 text-xs uppercase text-ink-muted">
-                <span>Langue</span>
+                <span>{translate("language.label", locale)}</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -124,7 +124,7 @@ export default function HeaderSection({ navItems, navCta, locale, onLocaleChange
                   }}
                   className="rounded-full border border-cloud px-3 py-1 font-semibold text-night transition hover:border-magenta hover:text-magenta"
                 >
-                  {locale === 'fr' ? 'English' : 'Français'}
+                  {locale === 'fr' ? translate("language.en", locale) : translate("language.fr", locale)}
                 </button>
               </div>
               <a

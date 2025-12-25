@@ -12,6 +12,7 @@ import {
   EyeIcon,
   GlobeAltIcon
 } from "@heroicons/react/24/outline";
+import { translate } from "@/utils/translations";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -60,9 +61,10 @@ type WhySectionProps = {
       avatar: string;
     }>;
   };
+  locale: 'fr' | 'en';
 };
 
-export default function WhySection({ why, how, testimonials }: WhySectionProps) {
+export default function WhySection({ why, how, testimonials, locale }: WhySectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const items = Array.isArray(testimonials?.items) ? testimonials.items : [];
@@ -101,7 +103,7 @@ export default function WhySection({ why, how, testimonials }: WhySectionProps) 
           {...fadeInUp}
         >
           <span className="inline-block px-4 py-1.5 rounded-full bg-magenta/10 text-magenta text-xs font-bold uppercase tracking-widest mb-6">
-            Processus simple & fiable
+            {translate("why.badge", locale)}
           </span>
           <h2 className="text-3xl md:text-5xl font-bold text-night mb-6 leading-tight tracking-tight">
             {why.title}
@@ -243,7 +245,7 @@ export default function WhySection({ why, how, testimonials }: WhySectionProps) 
                       onClick={() => setIndex(indicatorIndex)}
                       className={`h-2.5 rounded-full transition-all duration-300 ${indicatorIndex === index ? "w-10 bg-magenta" : "w-2.5 bg-cloud hover:bg-cloud-dark"
                         }`}
-                      aria-label={`Afficher le témoignage ${indicatorIndex + 1}`}
+                      aria-label={`${translate("testimonials.view", locale)} ${indicatorIndex + 1}`}
                     />
                   ))}
                 </div>
