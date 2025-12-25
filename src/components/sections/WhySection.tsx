@@ -10,7 +10,8 @@ import {
   BanknotesIcon,
   ShieldCheckIcon,
   EyeIcon,
-  GlobeAltIcon
+  GlobeAltIcon,
+  TrophyIcon
 } from "@heroicons/react/24/outline";
 import { translate } from "@/utils/translations";
 
@@ -24,7 +25,7 @@ const fadeInUp = {
 const stepIcons = [
   DevicePhoneMobileIcon,
   UserGroupIcon,
-  SparklesIcon
+  TrophyIcon
 ];
 
 const valueIcons: Record<number, any> = {
@@ -66,6 +67,7 @@ type WhySectionProps = {
 
 export default function WhySection({ why, how, testimonials, locale }: WhySectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const stepsRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const items = Array.isArray(testimonials?.items) ? testimonials.items : [];
 
@@ -84,7 +86,12 @@ export default function WhySection({ why, how, testimonials, locale }: WhySectio
     offset: ["start center", "end center"]
   });
 
-  const pathLength = useTransform(scrollYProgress, [0, 0.45], [0, 1]); // Complete line by halfway through section
+  const { scrollYProgress: stepsScrollProgress } = useScroll({
+    target: stepsRef,
+    offset: ["start 80%", "end 20%"]
+  });
+
+  const pathLength = useTransform(stepsScrollProgress, [0, 0.8], [0, 1]);
 
   return (
     <section className="section-padding bg-sand relative overflow-hidden" ref={containerRef}>
@@ -114,7 +121,7 @@ export default function WhySection({ why, how, testimonials, locale }: WhySectio
         </motion.div>
 
         {/* Part 1: How it Works (Process Flow) */}
-        <div className="relative mb-16 lg:mb-24">
+        <div className="relative mb-16 lg:mb-24" ref={stepsRef}>
           {/* Connection Path (Desktop) */}
           <div className="hidden lg:block absolute top-[80px] left-[15%] right-[15%] h-[2px] bg-cloud/30">
             <motion.div

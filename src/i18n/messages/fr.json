@@ -43,7 +43,7 @@
   "hero": {
     "badge": "L'app qui digitalise la solidarité humaine.",
     "title": "La finance collective, simple et transparente.",
-    "subtitle": "Avec Cocoti, gérez vos tontines, cagnottes et projets en toute simplicité. Invitez votre communauté, automatisez les contributions et suivez vos progrès en temps réel.",
+    "subtitle": "La plateforme qui modernise la solidarité financière. Fédérez votre communauté, automatisez vos fonds partagés et donnez vie à vos ambitions collectives plus rapidement.",
     "download": "Télécharger l'app",
     "viewDashboard": "Commencer maintenant",
     "viewDashboardLink": "${NEXT_PUBLIC_DASHBOARD_URL || 'https://app.cocoti.sn'}/fr",
@@ -78,7 +78,7 @@
   },
   "solutions": {
     "title": "Une app, toutes vos solutions collectives.",
-    "subtitle": "Centralisez vos projets en un seul espace sécurisé et animé en temps réel.",
+    "subtitle": "Centralisez vos projets financiers en un seul espace sécurisé et animé en temps réel.",
     "items": [
       {
         "id": "cagnottes",
@@ -119,8 +119,8 @@
         "description": "Invitez vos proches et bâtissez votre cercle de confiance en un clic. Cagnotte ou projet solidaire : initiez l'action avec ceux qui comptent vraiment."
       },
       {
-        "title": "Épargnez ensemble",
-        "description": "Suivez vos progrès en temps réel, automatisez vos versements et réalisez vos objectifs sereinement."
+        "title": "Gérez et Réussissez",
+        "description": "Bénéficiez d'une visibilité totale sur vos flux financiers, automatisez le suivi et sécurisez la réalisation de toutes vos ambitions collectives."
       }
     ]
   },

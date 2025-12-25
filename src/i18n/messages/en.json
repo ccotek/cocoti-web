@@ -43,7 +43,7 @@
   "hero": {
     "badge": "The app digitizing human solidarity",
     "title": "Simple and transparent community finance.",
-    "subtitle": "With Cocoti, manage your tontines, group savings, and community projects effortlessly. Invite your crew, automate contributions, and track progress in real time.",
+    "subtitle": "The platform for modern collective finance. Bring your people together, automate shared funds, and turn community dreams into reality, faster.",
     "download": "Download the app",
     "viewDashboard": "Start now",
     "viewDashboardLink": "${NEXT_PUBLIC_DASHBOARD_URL || 'https://app.cocoti.sn'}/en",
@@ -78,7 +78,7 @@
   },
   "solutions": {
     "title": "One app, all your collective solutions.",
-    "subtitle": "Bring every community project together in a secure, real-time workspace.",
+    "subtitle": "Bring every financial project together in a secure, real-time workspace.",
     "items": [
       {
         "id": "cagnottes",
@@ -119,8 +119,8 @@
         "description": "Invite your loved ones and build your circle of trust in one click. Money pool or solidarity project: start taking action with those who truly matter."
       },
       {
-        "title": "Save together",
-        "description": "Track your progress in real time, automate your payments, and achieve your goals with peace of mind."
+        "title": "Manage & Succeed",
+        "description": "Benefit from full visibility on your financial flows, automate tracking, and secure the achievement of all your collective ambitions."
       }
     ]
   },

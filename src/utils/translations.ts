@@ -96,7 +96,7 @@ const frMessages = {
   "hero": {
     "badge": "L'app qui digitalise la solidarité humaine",
     "title": "La finance collective, simple et transparente.",
-    "subtitle": "Avec Cocoti, gérez vos tontines, cagnottes et projets en toute simplicité. Invitez votre communauté, automatisez les contributions et suivez vos progrès en temps réel.",
+    "subtitle": "La plateforme qui modernise la solidarité financière. Fédérez votre communauté, automatisez vos fonds partagés et donnez vie à vos ambitions collectives plus rapidement.",
     "download": "Télécharger l'app",
     "viewDashboard": "Commencer maintenant"
   },
@@ -116,8 +116,8 @@ const frMessages = {
         "description": "Invitez vos proches et bâtissez votre cercle de confiance en un clic. Cagnotte ou projet solidaire : initiez l'action avec ceux qui comptent vraiment."
       },
       {
-        "title": "Épargnez ensemble",
-        "description": "Suivez vos progrès en temps réel, automatisez vos versements et réalisez vos objectifs sereinement."
+        "title": "Gérez et Réussissez",
+        "description": "Bénéficiez d'une visibilité totale sur vos flux financiers, automatisez le suivi et sécurisez la réalisation de toutes vos ambitions collectives."
       }
     ]
   },
@@ -383,7 +383,7 @@ const enMessages = {
   "hero": {
     "badge": "The app digitizing human solidarity",
     "title": "Simple and transparent community finance.",
-    "subtitle": "With Cocoti, manage your tontines, group savings, and community projects effortlessly. Invite your crew, automate contributions, and track progress in real time.",
+    "subtitle": "The platform for modern collective finance. Bring your people together, automate shared funds, and turn community dreams into reality, faster.",
     "download": "Download the app",
     "viewDashboard": "Start now"
   },
@@ -403,8 +403,8 @@ const enMessages = {
         "description": "Invite your loved ones and build your circle of trust in one click. Money pool or solidarity project: start taking action with those who truly matter."
       },
       {
-        "title": "Save together",
-        "description": "Track your progress in real time, automate your payments, and achieve your goals with peace of mind."
+        "title": "Manage & Succeed",
+        "description": "Benefit from full visibility on your financial flows, automate tracking, and secure the achievement of all your collective ambitions."
       }
     ]
   },
