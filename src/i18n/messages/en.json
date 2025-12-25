@@ -276,24 +276,32 @@
     "subtitle": "Everything you need to know to get started with Cocoti.",
     "items": [
       {
-        "question": "How does Cocoti work?",
-        "answer": "Cocoti lets you create or join tontines, cagnottes, or collective projects online. Every contribution is recorded, and you can track your funds in real time through the app or web dashboard."
+        "question": "What exactly is Cocoti?",
+        "answer": "Cocoti is a digital platform that modernizes collective solidarity. It allows you to collect, manage, and distribute funds transparently within trusted groups."
       },
       {
-        "question": "Do I need an account to contribute?",
-        "answer": "No for public cagnottes: you only need a participation link. Yes for tontines and private projects, to ensure traceability and transparency."
+        "question": "Is the platform secure?",
+        "answer": "Yes. We use advanced security protocols and integrate recognized payment solutions (Wave, Orange Money, Stripe). Your data is encrypted, and every transaction is tracked."
       },
       {
-        "question": "What happens if a member doesn’t pay in a tontine?",
-        "answer": "Each tontine sets its own rules. In a Cocoti-managed tontine, reminders and tracking are in place. The administrator can replace the defaulting member or adjust the round."
+        "question": "What are the usage fees?",
+        "answer": "Registration is free. Minimal service fees may apply depending on the project type and the chosen plan. Everything is clearly displayed before each transaction."
       },
       {
-        "question": "Which payment methods can I use?",
-        "answer": "Cocoti relies on existing, proven payment services: Wave, Orange Money, bank cards (via Stripe), bank transfers, Sendwave, and Wero."
+        "question": "How do I withdraw the collected funds?",
+        "answer": "You can request a withdrawal to your Mobile Money account or via bank transfer once your project conditions are met. Funds are transferred directly to the configured payment method."
       },
       {
-        "question": "Is Cocoti only available in Senegal?",
-        "answer": "Cocoti launches in Senegal, France, and Belgium, with plans to expand to other African countries and their diaspora."
+        "question": "Is it suitable for people living abroad?",
+        "answer": "Yes, this is one of our key strengths. Cocoti connects the diaspora with their projects or loved ones. It is possible to contribute by credit card from abroad for projects managed locally."
+      },
+      {
+        "question": "What happens if a member does not fulfill their commitment?",
+        "answer": "The platform automates reminders and provides rigorous tracking. Managers have tools to adjust management, and the transparency of the history encourages the fulfillment of collective commitments."
+      },
+      {
+        "question": "Is Cocoti a bank?",
+        "answer": "No, Cocoti is not a bank. We are a technical facilitator (management platform) that relies on licensed financial partners to secure fund flows."
       }
     ]
   },

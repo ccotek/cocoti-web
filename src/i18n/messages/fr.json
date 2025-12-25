@@ -276,24 +276,32 @@
     "subtitle": "Tout ce qu'il faut savoir pour bien démarrer avec Cocoti.",
     "items": [
       {
-        "question": "Comment fonctionne Cocoti ?",
-        "answer": "Cocoti vous permet de créer ou rejoindre des tontines, cagnottes ou projets collectifs en ligne. Chaque contribution est enregistrée, et vous suivez vos flux en temps réel depuis l’application ou le tableau de bord web."
+        "question": "Qu'est-ce que Cocoti exactement ?",
+        "answer": "Cocoti est une plateforme digitale qui modernise la solidarité collective. Elle permet de collecter, gérer et distribuer des fonds en toute transparence au sein de groupes de confiance."
       },
       {
-        "question": "Dois-je avoir un compte pour contribuer ?",
-        "answer": "Non pour les cagnottes publiques : il suffit d’un lien de participation. Oui pour les tontines et projets privés afin de garantir la traçabilité et la transparence."
+        "question": "La plateforme est-elle sécurisée ?",
+        "answer": "Oui. Nous utilisons des protocoles de sécurité avancés et intégrons des solutions de paiement reconnues (Wave, Orange Money, Stripe). Vos données sont cryptées et chaque transaction est tracée."
       },
       {
-        "question": "Que se passe-t-il si un membre ne paie pas dans une tontine ?",
-        "answer": "Chaque tontine définit ses règles. Dans une tontine gérée par Cocoti, un système de rappel et de suivi est activé. L’administrateur peut décider de remplacer le membre défaillant ou d’ajuster le tour."
+        "question": "Quels sont les frais d'utilisation ?",
+        "answer": "L'inscription est gratuite. Des frais de service minimes peuvent s'appliquer selon le type de projet et le plan choisi. Tout est affiché clairement avant chaque transaction."
       },
       {
-        "question": "Quels moyens de paiement puis-je utiliser ?",
-        "answer": "Cocoti s’appuie sur des services de paiement existants et éprouvés : Wave, Orange Money, cartes bancaires (via Stripe), virements bancaires, Sendwave et Wero."
+        "question": "Comment récupérer les fonds collectés ?",
+        "answer": "Vous pouvez demander un retrait vers votre compte Mobile Money ou par virement bancaire une fois les conditions de votre projet remplies. Les fonds sont transférés directement sur le mode de paiement configuré."
       },
       {
-        "question": "Cocoti est-il disponible uniquement au Sénégal ?",
-        "answer": "Cocoti démarre au Sénégal, en France et en Belgique, mais a vocation à s’étendre à d’autres pays africains et à leur diaspora."
+        "question": "Est-ce adapté pour les personnes vivant à l'étranger ?",
+        "answer": "Oui, c'est l'un de nos points forts. Cocoti connecte la diaspora avec leurs projets ou leurs proches. Il est possible de contribuer par carte bancaire depuis l'étranger pour des projets gérés localement."
+      },
+      {
+        "question": "Que se passe-t-il si un membre ne respecte pas son engagement ?",
+        "answer": "La plateforme automatise les rappels et offre un suivi rigoureux. Les responsables disposent d'outils pour ajuster la gestion, et la transparence de l'historique encourage le respect des engagements collectifs."
+      },
+      {
+        "question": "Cocoti est-il une banque ?",
+        "answer": "Non, Cocoti est un facilitateur technologique. Nous fournissons la plateforme de gestion et nous nous appuyons sur des partenaires financiers agréés pour sécuriser les flux de fonds."
       }
     ]
   },
