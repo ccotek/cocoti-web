@@ -28,8 +28,8 @@ const frMessages = {
         "label": "Nos solutions"
       },
       {
-        "id": "why",
-        "label": "Pourquoi nous choisir ?"
+        "id": "how",
+        "label": "Comment ça marche ?"
       },
       {
         "id": "faq",
@@ -123,7 +123,7 @@ const frMessages = {
   },
   "why": {
     "badge": "Processus simple & fiable",
-    "title": "Pourquoi nous choisir ?",
+    "title": "Comment ça marche ?",
     "subtitle": "Un processus simple et fiable.",
     "valuesSubtitle": "L'alliance de la tradition et de l'innovation."
   },
@@ -203,7 +203,7 @@ const frMessages = {
         "description": "Éditer les étapes du processus"
       },
       "why": {
-        "title": "Pourquoi nous choisir",
+        "title": "Comment ça marche",
         "description": "Gérer les valeurs et avantages"
       },
       "pricing": {

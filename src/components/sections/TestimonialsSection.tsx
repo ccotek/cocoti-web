@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
+import { ShieldCheckIcon, UserGroupIcon, EyeIcon } from "@heroicons/react/24/solid";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 24 },
@@ -19,7 +19,7 @@ type TestimonialsSectionProps = {
       name: string;
       role: string;
       quote: string;
-      avatar: string;
+      avatar?: string;
     }>;
   };
 };
@@ -41,6 +41,10 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
   if (items.length === 0) {
     return null;
   }
+
+  // Map icons to carousel items
+  const iconMap = [ShieldCheckIcon, UserGroupIcon, EyeIcon];
+  const CurrentIcon = iconMap[index % iconMap.length];
 
   return (
     <section id="testimonials" className="section-padding">
@@ -91,7 +95,7 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
             >
               <div className="flex items-center gap-4">
                 <motion.div
-                  className="relative"
+                  className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-magenta to-sunset shadow-lg ring-2 ring-white relative"
                   whileHover={{
                     scale: 1.1,
                     rotate: 5,
@@ -106,14 +110,8 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
                     }
                   }}
                 >
-                  <Image
-                    src={items[index]?.avatar || '/placeholder-avatar.jpg'}
-                    alt={items[index]?.name || 'Utilisateur'}
-                    width={64}
-                    height={64}
-                    className="h-16 w-16 rounded-full object-cover shadow-lg ring-2 ring-white"
-                  />
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-magenta/20 to-sunset/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                  <CurrentIcon className="h-8 w-8 text-white" />
+                  <div className="absolute inset-0 rounded-full bg-black/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                 </motion.div>
                 <div>
                   <p className="text-lg font-semibold text-night">{items[index]?.name || 'Utilisateur'}</p>

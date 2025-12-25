@@ -51,12 +51,12 @@ export default function CompleteLandingPage() {
   const navItems = (Array.isArray(navItemsRaw) ? navItemsRaw : (locale === 'fr' ? [
     { id: 'causes', label: 'Notre impact' },
     { id: 'solutions', label: 'Nos solutions' },
-    { id: 'why', label: 'Pourquoi nous choisir ?' },
+    { id: 'how', label: 'Comment ça marche ?' },
     { id: 'faq', label: 'FAQ' },
   ] : [
     { id: 'causes', label: 'Our impact' },
     { id: 'solutions', label: 'Our solutions' },
-    { id: 'why', label: 'Why choose us?' },
+    { id: 'how', label: 'How it Works?' },
     { id: 'faq', label: 'FAQ' },
   ])).filter(item => {
     // Si l'item est 'causes' (Impact), on ne l'affiche que s'il y a des projets

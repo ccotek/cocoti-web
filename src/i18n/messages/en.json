@@ -15,8 +15,8 @@
         "label": "Our solutions"
       },
       {
-        "id": "why",
-        "label": "Why choose us?"
+        "id": "how",
+        "label": "How it Works?"
       },
       {
         "id": "faq",
@@ -62,15 +62,15 @@
     "stats": [
       {
         "value": "1K+",
-        "label": "Members onboarded"
+        "label": "Families connected"
       },
       {
         "value": "500K+ FCFA",
-        "label": "Collected through Cocoti"
+        "label": "Saved together"
       },
       {
         "value": "6",
-        "label": "Countries connected"
+        "label": "Countries, 1 community"
       }
     ],
     "mockupAlt": "Preview of the Cocoti mobile application",
@@ -125,7 +125,7 @@
     ]
   },
   "why": {
-    "title": "Why choose us?",
+    "title": "How it Works?",
     "subtitle": "A simple and reliable process.",
     "valuesSubtitle": "The bridge between tradition and innovation.",
     "values": [
@@ -248,26 +248,26 @@
     }
   },
   "testimonials": {
-    "title": "Communities thriving with Cocoti.",
-    "subtitle": "Engaged communities.",
+    "title": "Our Commitments.",
+    "subtitle": "The values that guide every innovation at Cocoti.",
     "items": [
       {
-        "name": "Aminata Diop",
-        "role": "Founder, Tontine Mame Diarra",
-        "quote": "We digitized a 120-member tontine without losing our family spirit. Cocoti saves us so much time.",
-        "avatar": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80"
+        "name": "Maximum Security",
+        "role": "Our Priority",
+        "quote": "We use bank-grade security protocols and work with certified payment partners to protect every transaction.",
+        "avatar": "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&w=200&q=80"
       },
       {
-        "name": "Youssou Ndoye",
-        "role": "Cooperative Diaspora Growth",
-        "quote": "Our fundraising campaigns are smooth and transparent. Members abroad follow everything live.",
-        "avatar": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=200&q=80"
+        "name": "Digital Solidarity",
+        "role": "Our Mission",
+        "quote": "Digitizing African traditions to strengthen human bonds, not replace them. Technology at the service of community.",
+        "avatar": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=200&q=80"
       },
       {
-        "name": "Fatoumata Barry",
-        "role": "Association Women Solidaires Paris",
-        "quote": "Managing contributions and receipts has never been easier. The support team is outstanding.",
-        "avatar": "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=200&q=80"
+        "name": "Total Transparency",
+        "role": "Our Vision",
+        "quote": "Every flow, every contribution, every transaction is visible and traceable. Clarity is our greatest value.",
+        "avatar": "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=200&q=80"
       }
     ]
   },

@@ -15,8 +15,8 @@
         "label": "Nos solutions"
       },
       {
-        "id": "why",
-        "label": "Pourquoi nous choisir ?"
+        "id": "how",
+        "label": "Comment ça marche ?"
       },
       {
         "id": "faq",
@@ -62,15 +62,15 @@
     "stats": [
       {
         "value": "1K+",
-        "label": "Membres accompagnés"
+        "label": "Familles connectées"
       },
       {
         "value": "500K+ FCFA",
-        "label": "Collectés avec Cocoti"
+        "label": "Épargnés ensemble"
       },
       {
         "value": "6",
-        "label": "Pays connectés"
+        "label": "Pays, 1 communauté"
       }
     ],
     "mockupAlt": "Aperçu de l'application mobile Cocoti",
@@ -125,7 +125,7 @@
     ]
   },
   "why": {
-    "title": "Pourquoi nous choisir ?",
+    "title": "Comment ça marche ?",
     "subtitle": "Un processus simple et fiable.",
     "valuesSubtitle": "L'alliance de la tradition et de l'innovation.",
     "values": [
@@ -248,26 +248,26 @@
     }
   },
   "testimonials": {
-    "title": "Ils font confiance à Cocoti.",
-    "subtitle": "Des communautés engagées.",
+    "title": "Nos engagements.",
+    "subtitle": "Les valeurs qui guident chaque innovation chez Cocoti.",
     "items": [
       {
-        "name": "Aminata Diop",
-        "role": "Fondatrice, Tontine Mame Diarra",
-        "quote": "Nous avons digitalisé une tontine de 120 membres sans perdre notre esprit de famille. Cocoti nous fait gagner un temps fou.",
-        "avatar": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80"
+        "name": "Sécurité maximale",
+        "role": "Notre priorité",
+        "quote": "Nous utilisons des protocoles de sécurité bancaire et collaborons avec des partenaires de paiement certifiés pour protéger chaque transaction.",
+        "avatar": "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&w=200&q=80"
       },
       {
-        "name": "Youssou Ndoye",
-        "role": "Coopérative Diaspora Growth",
-        "quote": "Les campagnes de financement sont fluides et transparentes. Les membres en Europe suivent tout en direct.",
-        "avatar": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=200&q=80"
+        "name": "Solidarité digitale",
+        "role": "Notre mission",
+        "quote": "Digitaliser les traditions africaines pour renforcer les liens humains, pas pour les remplacer. La technologie au service de la communauté.",
+        "avatar": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=200&q=80"
       },
       {
-        "name": "Fatoumata Barry",
-        "role": "Association Femmes Solidaires Paris",
-        "quote": "La gestion des contributions et des justificatifs n'a jamais été aussi simple. L'équipe support est remarquable.",
-        "avatar": "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=200&q=80"
+        "name": "Transparence totale",
+        "role": "Notre vision",
+        "quote": "Chaque flux, chaque contribution, chaque transaction est visible et traçable. La clarté est notre plus grande valeur.",
+        "avatar": "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=200&q=80"
       }
     ]
   },

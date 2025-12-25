@@ -105,7 +105,7 @@ export default function WhySection({ why, how, testimonials, locale }: WhySectio
       <div className="container relative z-10">
         {/* Header Section */}
         <motion.div
-          id="why"
+          id="how"
           className="max-w-3xl mb-16 lg:mb-24 scroll-mt-[100px]"
           {...fadeInUp}
         >
@@ -189,46 +189,7 @@ export default function WhySection({ why, how, testimonials, locale }: WhySectio
           </div>
         </div>
 
-        {/* Part 2: Values Transition & Grid */}
-        <div id="valeurs" className="mt-8 lg:mt-12 mb-12 lg:mb-16">
-          <motion.div
-            className="text-center mb-16 lg:mb-24"
-            {...fadeInUp}
-          >
-            <h3 className="text-2xl md:text-3xl font-bold text-night mb-4">
-              {why.valuesSubtitle}
-            </h3>
-            <div className="w-12 h-1 bg-gradient-to-r from-magenta to-sunset mx-auto rounded-full" />
-          </motion.div>
-
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {why.values && Array.isArray(why.values) && why.values.map((value, index) => {
-              const Icon = valueIcons[index] ?? BanknotesIcon;
-              return (
-                <motion.div
-                  key={value.title}
-                  className="group relative flex flex-col gap-6 rounded-[2rem] border border-cloud/60 bg-white/40 p-8 shadow-sm backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:bg-white/80 hover:border-magenta/20 overflow-hidden"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.1 * index }}
-                >
-                  {/* Subtle hover glow accent */}
-                  <div className="absolute -top-24 -right-24 w-48 h-48 bg-magenta/10 rounded-full blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-
-                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-gradient-to-br from-magenta/[0.08] to-sunset/[0.08] text-magenta group-hover:scale-110 group-hover:bg-gradient-to-br group-hover:from-magenta group-hover:to-sunset group-hover:text-white transition-all duration-500 shadow-sm">
-                    <Icon className="h-7 w-7" />
-                  </div>
-
-                  <div>
-                    <h4 className="text-xl font-bold text-night mb-3 group-hover:text-magenta transition-colors">{value.title}</h4>
-                    <p className="text-base text-ink-muted leading-relaxed">{value.description}</p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
+        {/* Values section removed to eliminate redundancy with carousel */}
 
         {/* Part 3: Testimonials Integration */}
         {items.length > 0 && (
@@ -273,13 +234,10 @@ export default function WhySection({ why, how, testimonials, locale }: WhySectio
                     </div>
 
                     <div className="flex items-center gap-6 mb-8">
-                      <div className="relative h-16 w-16 md:h-20 md:w-20 rounded-full overflow-hidden border-2 border-white shadow-lg shrink-0">
-                        <Image
-                          src={items[index]?.avatar || '/placeholder-avatar.jpg'}
-                          alt={items[index]?.name || 'Utilisateur'}
-                          fill
-                          className="object-cover"
-                        />
+                      <div className="relative h-16 w-16 md:h-20 md:w-20 rounded-full flex items-center justify-center bg-gradient-to-br from-magenta to-sunset border-2 border-white shadow-lg shrink-0">
+                        {index === 0 && <ShieldCheckIcon className="h-8 w-8 md:h-10 md:w-10 text-white" />}
+                        {index === 1 && <UserGroupIcon className="h-8 w-8 md:h-10 md:w-10 text-white" />}
+                        {index === 2 && <EyeIcon className="h-8 w-8 md:h-10 md:w-10 text-white" />}
                       </div>
                       <div>
                         <p className="text-xl font-bold text-night mb-1">{items[index]?.name}</p>
