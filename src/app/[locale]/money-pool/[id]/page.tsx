@@ -1825,20 +1825,28 @@ export default function MoneyPoolDetailsPage() {
 
                 {/* Option anonyme - seulement si autorisée */}
                 {moneyPool?.settings?.allow_anonymous !== false && (
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="anonymous"
-                      checked={anonymous}
-                      onChange={(e) => {
-                        setAnonymous(e.target.checked);
-                        // La logique de sauvegarde/restauration est gérée par le useEffect
-                      }}
-                      className="mr-2 h-4 w-4 text-magenta focus:ring-magenta border-gray-300 rounded"
-                    />
-                    <label htmlFor="anonymous" className="text-sm text-gray-700">
-                      {t('contributeAnonymously')}
-                    </label>
+                  <div className="mt-2">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="anonymous"
+                        checked={anonymous}
+                        onChange={(e) => {
+                          setAnonymous(e.target.checked);
+                          // La logique de sauvegarde/restauration est gérée par le useEffect
+                        }}
+                        className="mr-2 h-4 w-4 text-magenta focus:ring-magenta border-gray-300 rounded cursor-pointer"
+                      />
+                      <label htmlFor="anonymous" className="text-sm text-gray-700 font-medium cursor-pointer select-none">
+                        {t('contributeAnonymously')}
+                      </label>
+                    </div>
+
+                    {anonymous && (
+                      <p className="text-xs text-gray-500 mt-1 ml-6 bg-gray-50 p-2 rounded border border-gray-100 italic">
+                        {t('anonymousWarning')}
+                      </p>
+                    )}
                   </div>
                 )}
 

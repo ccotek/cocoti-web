@@ -311,7 +311,7 @@
     "button": "Contactez-nous",
     "whatsapp": "Continuer sur WhatsApp",
     "whatsappLink": "https://wa.me/221771234567",
-    "email": "contact@cocoti.sn",
+    "email": "support@cocoti.app",
     "phone": "+221331245678"
   },
   "finalCta": {
@@ -339,37 +339,37 @@
     "socialLinks": [
       {
         "label": "",
-        "href": "https://x.com/cocotiapp",
+        "href": "https://x.com/cocoti_sn",
         "icon": "x"
       },
       {
         "label": "",
-        "href": "https://youtube.com/cocoti",
+        "href": "https://www.youtube.com/channel/UCcO31j_5CVVzNwFYlDPfu8w",
         "icon": "youtube"
       },
       {
         "label": "",
-        "href": "https://linkedin.com/company/cocoti",
+        "href": "https://www.linkedin.com/company/cocotisn",
         "icon": "linkedin"
       },
       {
         "label": "",
-        "href": "https://tiktok.com/cocoti",
+        "href": "https://tiktok.com/@cocotiapp",
         "icon": "tiktok"
       },
       {
         "label": "",
-        "href": "https://whatsapp.com/cocoti",
+        "href": "https://whatsapp.com/channel/0029VbBzrRd42Dcc5wsrgA0Z",
         "icon": "whatsapp"
       },
       {
         "label": "",
-        "href": "https://facebook.com/cocoti",
+        "href": "https://facebook.com/cocotisn",
         "icon": "facebook"
       },
       {
         "label": "",
-        "href": "https://instagram.com/cocoti",
+        "href": "https://instagram.com/cocoti_sn",
         "icon": "instagram"
       }
     ],
@@ -505,7 +505,7 @@
         "contactTitle": "Prêts à lancer votre communauté ?",
         "contactDescription": "Notre équipe est là pour vous accompagner",
         "contactButton": "Contactez-nous pour une démo personnalisée...",
-        "contactEmail": "contact@cocoti.sn",
+        "contactEmail": "support@cocoti.app",
         "contactPhone": "+221331455871",
         "contactWhatsapp": "Continuer sur WhatsApp",
         "contactWhatsappLink": "https://wa.me/221771234567",
@@ -528,7 +528,7 @@
           "name": "Coco Technologies SAS",
           "address": "123 Avenue de la République, 75011 Paris, France",
           "phone": "+33 1 23 45 67 89",
-          "email": "contact@cocoti.sn"
+          "email": "support@cocoti.app"
         }
       },
       {
@@ -600,7 +600,7 @@
     "message": "Message",
     "optional": "optionnel",
     "messagePlaceholder": "Ajoutez un message de soutien...",
-    "contributeAnonymously": "Contribuer anonymement",
+    "contributeAnonymously": "Masquer mon nom publiquement",
     "cancel": "Annuler",
     "noContributors": "Aucun contributeur pour le moment",
     "enterValidAmount": "Veuillez saisir un montant valide",
@@ -608,8 +608,8 @@
     "minAmount": "Le montant minimum est",
     "maxAmount": "Le montant maximum est",
     "thankYou": "Merci pour votre contribution!",
-    "thankYouTitle": "Merci pour votre générosité !",
-    "thankYouMessage": "Votre contribution a été enregistrée avec succès. Votre soutien fait la différence !",
+    "thankYouTitle": "Merci pour votre participation",
+    "thankYouMessage": "Votre soutien a bien été pris en compte.",
     "thankYouClose": "Fermer",
     "contributionError": "Erreur lors de la contribution:",
     "errorContributing": "Error contributing:",
@@ -624,6 +624,7 @@
     "noPaymentMethodAvailable": "Aucun moyen de paiement disponible pour cette cagnotte.",
     "pay": "Payer",
     "anonymousNotAllowed": "Les contributions anonymes ne sont pas autorisées pour cette cagnotte.",
+    "anonymousWarning": "La plateforme conserve votre identité car elle est nécessaire pour le traitement du paiement.",
     "archivedFundsCollected": "Cette cagnotte est archivée. Les fonds ont été récupérés.",
     "paymentInfo": {
       "title": "Informations de paiement",

@@ -185,7 +185,7 @@ export default function ContactEditor({ contact, onUpdate, locale }: ContactEdit
                 value={localContact.email || ''}
                 onChange={(e) => updateField('email', e.target.value)}
                 className="w-full px-3 py-2 border border-cloud rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta transition-colors bg-white"
-                placeholder="contact@cocoti.sn"
+                placeholder="support@cocoti.app"
               />
             </div>
 
