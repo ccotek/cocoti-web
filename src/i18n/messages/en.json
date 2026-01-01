@@ -46,7 +46,7 @@
     "subtitle": "The platform for modern collective finance. Bring your people together, automate shared funds, and turn community dreams into reality, faster.",
     "download": "Download the app",
     "viewDashboard": "Start now",
-    "viewDashboardLink": "${NEXT_PUBLIC_DASHBOARD_URL || 'https://app.cocoti.sn'}/en",
+    "viewDashboardLink": "${NEXT_PUBLIC_DASHBOARD_URL || 'https://cocoti.app'}/en",
     "apps": [
       {
         "store": "App Store",
@@ -310,7 +310,7 @@
     "subtitle": "Our team is here to support you in your project.",
     "description": "Book a tailored walkthrough or drop us a quick message.",
     "button": "Contact us",
-    "email": "contact@cocoti.com",
+    "email": "contact@cocoti.app",
     "phone": "+33 1 23 45 67 89",
     "whatsapp": "Continue on WhatsApp",
     "whatsappLink": "https://wa.me/221771234567",
@@ -524,7 +524,7 @@
         "heroDescription": "With Cocoti, manage your tontines, money pots and projects with ease...",
         "heroDownload": "Download the app",
         "heroDashboard": "View dashboard",
-        "heroLink": "https://app.cocoti.com",
+        "heroLink": "https://join.cocoti.app",
         "contactTitle": "Ready to launch your community?",
         "contactDescription": "Our team is here to support you",
         "contactButton": "Contact us for a personalized demo...",
@@ -572,7 +572,7 @@
       },
       {
         "title": "Hyperlinks",
-        "content": "Hyperlinks may be present on the site. The user is informed that by clicking on these links, they will leave the cocoti.com site."
+        "content": "Hyperlinks may be present on the site. The user is informed that by clicking on these links, they will leave the cocoti.app site."
       }
     ]
   },

@@ -74,7 +74,7 @@ export default function CmsLoginPage() {
                 value={credentials.email}
                 onChange={(e) => setCredentials(prev => ({ ...prev, email: e.target.value }))}
                 className="w-full px-4 py-3 border border-cloud rounded-2xl focus:ring-2 focus:ring-magenta focus:border-magenta transition-colors bg-ivory"
-                placeholder="admin@cocoti.com"
+                placeholder="admin@cocoti.app"
               />
             </div>
 

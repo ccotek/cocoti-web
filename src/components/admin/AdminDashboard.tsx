@@ -424,7 +424,7 @@ export default function AdminDashboard() {
                     name: 'Cocoti SAS',
                     address: '123 Avenue de la République, 75011 Paris, France',
                     phone: '+33 1 23 45 67 89',
-                    email: 'contact@cocoti.com'
+                    email: 'contact@cocoti.app'
                   }
                 },
                 {
@@ -445,7 +445,7 @@ export default function AdminDashboard() {
                 },
                 {
                   title: locale === 'fr' ? 'Liens hypertextes' : 'Hyperlinks',
-                  content: locale === 'fr' ? 'Des liens hypertextes peuvent être présents sur le site. L\'utilisateur est informé qu\'en cliquant sur ces liens, il sortira du site cocoti.com.' : 'Hyperlinks may be present on the site. The user is informed that by clicking on these links, they will leave the cocoti.com site.'
+                  content: locale === 'fr' ? 'Des liens hypertextes peuvent être présents sur le site. L\'utilisateur est informé qu\'en cliquant sur ces liens, il sortira du site cocoti.app.' : 'Hyperlinks may be present on the site. The user is informed that by clicking on these links, they will leave the cocoti.app site.'
                 }
               ]
             }}

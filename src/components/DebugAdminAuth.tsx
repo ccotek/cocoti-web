@@ -26,7 +26,7 @@ export default function DebugAdminAuth() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: 'admin@cocoti.com',
+          email: 'admin@cocoti.app',
           password: 'admin123'
         }),
       });
@@ -64,7 +64,7 @@ export default function DebugAdminAuth() {
     
     try {
       const result = await adminAuthService.login({
-        email: 'admin@cocoti.com',
+        email: 'admin@cocoti.app',
         password: 'admin123'
       });
       
@@ -87,7 +87,7 @@ export default function DebugAdminAuth() {
     addDebugInfo("🔍 Test du hook useAdminAuth...");
     
     try {
-      const result = await login('admin@cocoti.com', 'admin123');
+      const result = await login('admin@cocoti.app', 'admin123');
       addDebugInfo(`Hook result: ${JSON.stringify(result)}`);
       addDebugInfo(`Authenticated: ${isAuthenticated}`);
       addDebugInfo(`User: ${user ? user.email : 'null'}`);

@@ -46,7 +46,7 @@
     "subtitle": "La plateforme qui modernise la solidarité financière. Fédérez votre communauté, automatisez vos fonds partagés et donnez vie à vos ambitions collectives plus rapidement.",
     "download": "Télécharger l'app",
     "viewDashboard": "Commencer maintenant",
-    "viewDashboardLink": "${NEXT_PUBLIC_DASHBOARD_URL || 'https://app.cocoti.sn'}/fr",
+    "viewDashboardLink": "${NEXT_PUBLIC_DASHBOARD_URL || 'https://cocoti.app'}/fr",
     "apps": [
       {
         "store": "App Store",
@@ -501,7 +501,7 @@
         "heroDescription": "Avec Cocoti, gérez vos tontines, cagnottes et projets en toute simplicité...",
         "heroDownload": "Télécharger l'app",
         "heroDashboard": "Voir le dashboard",
-        "heroLink": "https://app.cocoti.com",
+        "heroLink": "https://join.cocoti.app",
         "contactTitle": "Prêts à lancer votre communauté ?",
         "contactDescription": "Notre équipe est là pour vous accompagner",
         "contactButton": "Contactez-nous pour une démo personnalisée...",
@@ -549,7 +549,7 @@
       },
       {
         "title": "Liens hypertextes",
-        "content": "Des liens hypertextes peuvent être présents sur le site. L'utilisateur est informé qu'en cliquant sur ces liens, il sortira du site cocoti.com."
+        "content": "Des liens hypertextes peuvent être présents sur le site. L'utilisateur est informé qu'en cliquant sur ces liens, il sortira du site cocoti.app."
       }
     ]
   },

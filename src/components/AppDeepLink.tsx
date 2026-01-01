@@ -34,7 +34,7 @@ export function AppDeepLink({ moneyPoolId, locale = 'fr' }: AppDeepLinkProps) {
     const appUrl = `cocoti://money-pool/${moneyPoolId}`;
     
     // URL universelle (pour iOS/Android avec Universal/App Links)
-    const universalUrl = `https://cocoti.sn/${locale}/money-pool/${moneyPoolId}`;
+    const universalUrl = `https://cocoti.app/${locale}/money-pool/${moneyPoolId}`;
     
     // Essayer d'abord le deep link direct
     window.location.href = appUrl;
