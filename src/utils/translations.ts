@@ -585,7 +585,7 @@ const interpolateEnvVars = (str: string): string => {
   if (typeof str !== 'string') return str;
 
   return str.replace(/\$\{([^}]+)\}/g, (match, expression) => {
-    // Gérer les expressions comme "NEXT_PUBLIC_DASHBOARD_URL || 'default'"
+    // Gérer les expressions comme "NEXT_PUBLIC_SITE_URL || 'default'"
     const parts = expression.split('||').map((part: string) => part.trim());
 
     for (const part of parts) {

@@ -1533,7 +1533,7 @@ export default function CreateMoneyPoolPage() {
                 <label htmlFor="charter-accept" className="text-sm text-ink-muted cursor-pointer flex-1 leading-relaxed">
                   {t('acceptTerms')}{' '}
                   <a 
-                    href={APP_CONFIG.TERMS_URL} 
+                    href={`/${locale}/terms-of-service`} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-magenta hover:underline"
@@ -1543,7 +1543,7 @@ export default function CreateMoneyPoolPage() {
                   </a>{' '}
                   {t('and')}{' '}
                   <a 
-                    href={APP_CONFIG.PRIVACY_URL} 
+                    href={`/${locale}/privacy-policy`} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-magenta hover:underline"
@@ -2020,7 +2020,7 @@ export default function CreateMoneyPoolPage() {
 
                 {/* Bouton "Gérer dans le dashboard" - toujours affiché */}
                 <a
-                  href={`${APP_CONFIG.DASHBOARD_URL}/${locale}`}
+                  href={`${APP_CONFIG.WEB_APP_URL}/${locale}/money-pools`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-6 py-3 bg-white border-2 border-sunset rounded-2xl text-sunset font-semibold hover:bg-sunset/5 hover:border-magenta transition-all font-inter flex items-center gap-2"

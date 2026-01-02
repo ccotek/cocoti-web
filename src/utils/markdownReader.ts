@@ -38,14 +38,14 @@ export interface TermsOfServiceData {
 export function readPrivacyPolicyMarkdown(locale: 'fr' | 'en'): PrivacyPolicyData {
   try {
     // Utiliser la variable d'environnement ou le chemin par défaut
-    const legalFilesPath = process.env.LEGAL_FILES_PATH || '_resources/legal';
+    const legalFilesPath = process.env.NEXT_PUBLIC_LEGAL_FILES_PATH || '_resources/legal';
     const filePath = join(process.cwd(), legalFilesPath, locale, 'privacy-policy.md');
     
     // Vérifier si le fichier existe
     if (!existsSync(filePath)) {
       console.warn(`⚠️  Fichier privacy-policy.md non trouvé pour ${locale} dans ${legalFilesPath}`);
       console.warn(`📁 Chemin recherché: ${filePath}`);
-      console.warn(`🔧 Variable LEGAL_FILES_PATH: ${process.env.LEGAL_FILES_PATH || 'non définie (utilise le défaut: _resources/legal)'}`);
+      console.warn(`🔧 Variable NEXT_PUBLIC_LEGAL_FILES_PATH: ${process.env.NEXT_PUBLIC_LEGAL_FILES_PATH || 'non définie (utilise le défaut: _resources/legal)'}`);
       // Retourner un message temporairement indisponible
       return {
         title: locale === 'fr' ? 'Politique de Confidentialité' : 'Privacy Policy',
@@ -199,14 +199,14 @@ export function readPrivacyPolicyMarkdown(locale: 'fr' | 'en'): PrivacyPolicyDat
 export function readTermsOfServiceMarkdown(locale: 'fr' | 'en'): TermsOfServiceData {
   try {
     // Utiliser la variable d'environnement ou le chemin par défaut
-    const legalFilesPath = process.env.LEGAL_FILES_PATH || '_resources/legal';
+    const legalFilesPath = process.env.NEXT_PUBLIC_LEGAL_FILES_PATH || '_resources/legal';
     const filePath = join(process.cwd(), legalFilesPath, locale, 'terms-of-service.md');
     
     // Vérifier si le fichier existe
     if (!existsSync(filePath)) {
       console.warn(`⚠️  Fichier terms-of-service.md non trouvé pour ${locale} dans ${legalFilesPath}`);
       console.warn(`📁 Chemin recherché: ${filePath}`);
-      console.warn(`🔧 Variable LEGAL_FILES_PATH: ${process.env.LEGAL_FILES_PATH || 'non définie (utilise le défaut: _resources/legal)'}`);
+      console.warn(`🔧 Variable NEXT_PUBLIC_LEGAL_FILES_PATH: ${process.env.NEXT_PUBLIC_LEGAL_FILES_PATH || 'non définie (utilise le défaut: _resources/legal)'}`);
       // Retourner un message temporairement indisponible
       return {
         title: locale === 'fr' ? 'Conditions Générales d\'Utilisation' : 'Terms of Service',
@@ -376,7 +376,7 @@ export function readTermsOfServiceMarkdown(locale: 'fr' | 'en'): TermsOfServiceD
  * Obtient la configuration actuelle des fichiers légaux
  */
 export function getLegalFilesConfig() {
-  const legalFilesPath = process.env.LEGAL_FILES_PATH || '_resources/legal';
+  const legalFilesPath = process.env.NEXT_PUBLIC_LEGAL_FILES_PATH || '_resources/legal';
   const basePath = join(process.cwd(), legalFilesPath);
   
   return {

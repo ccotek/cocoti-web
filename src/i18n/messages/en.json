@@ -46,7 +46,7 @@
     "subtitle": "The platform for modern collective finance. Bring your people together, automate shared funds, and turn community dreams into reality, faster.",
     "download": "Download the app",
     "viewDashboard": "Start now",
-    "viewDashboardLink": "${NEXT_PUBLIC_DASHBOARD_URL || 'https://cocoti.app'}/en",
+    "viewDashboardLink": "${NEXT_PUBLIC_SITE_URL || 'https://cocoti.app'}/en",
     "apps": [
       {
         "store": "App Store",

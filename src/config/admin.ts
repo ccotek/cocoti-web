@@ -3,9 +3,6 @@ export const ADMIN_CONFIG = {
   // Protection par variable d'environnement
   ENABLED: process.env.NEXT_PUBLIC_ADMIN_ENABLED === 'true',
   
-  // URL de l'API d'authentification
-  AUTH_API_URL: process.env.NEXT_PUBLIC_AUTH_API_URL || 'http://localhost:8000/api/v1',
-  
   // Configuration de sécurité
   SECURITY: {
     // Durée de session (en heures)

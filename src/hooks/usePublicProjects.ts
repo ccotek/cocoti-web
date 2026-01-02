@@ -52,18 +52,30 @@ export function usePublicProjects(locale: 'fr' | 'en' = 'fr'): UsePublicProjects
         setError(null);
 
         // URL directe vers le backend - pas de proxy Next.js
-        // Ajout du tri par date de création décroissante et filtre sur les cagnottes vérifiées
-        const url = `${API_URL}/api/v1/money-pools/public?limit=10&page=1&sort=-createdAt&verified=true`;
+        // L'endpoint /public n'accepte que page et limit, pas sort ni verified
+        // On filtre et trie côté client après récupération
+        const url = `${API_URL}/api/v1/money-pools/public?limit=100&page=1`;
 
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          // Ajouter les options pour éviter les problèmes CORS
-          mode: 'cors',
-          credentials: 'omit',
-        });
+        let response: Response;
+        try {
+          response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            // Ajouter les options pour éviter les problèmes CORS
+            mode: 'cors',
+            credentials: 'omit',
+          });
+        } catch (fetchError) {
+          // Erreur réseau (CORS, connexion, etc.)
+          console.error('Network error fetching money pools:', fetchError);
+          throw new Error(
+            fetchError instanceof TypeError && fetchError.message === 'Failed to fetch'
+              ? 'Unable to connect to the API. Please check if the API server is running and CORS is configured correctly.'
+              : `Network error: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`
+          );
+        }
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -83,28 +95,35 @@ export function usePublicProjects(locale: 'fr' | 'en' = 'fr'): UsePublicProjects
 
         // Convert API data to PublicProject format
         // Filtrer et valider les cagnottes avant de les mapper
-        const validPools = data.filter((pool: any) => {
-          // Valider que la cagnotte a toutes les données essentielles
-          // Et que l'ID est valide (ObjectId MongoDB = 24 caractères hexadécimaux)
-          const isValidId = pool.id &&
-            typeof pool.id === 'string' &&
-            pool.id.length === 24 &&
-            /^[0-9a-fA-F]{24}$/.test(pool.id);
+        const validPools = data
+          .filter((pool: any) => {
+            // Valider que la cagnotte a toutes les données essentielles
+            // Et que l'ID est valide (ObjectId MongoDB = 24 caractères hexadécimaux)
+            const isValidId = pool.id &&
+              typeof pool.id === 'string' &&
+              pool.id.length === 24 &&
+              /^[0-9a-fA-F]{24}$/.test(pool.id);
 
-          return pool &&
-            isValidId &&
-            pool.name &&
-            pool.name.trim() !== '' &&
-            pool.settings &&
-            typeof pool.settings.target_amount === 'number' &&
-            pool.settings.target_amount > 0 &&
-            typeof pool.current_amount === 'number' &&
-            pool.current_amount >= 0 &&
-            pool.currency &&
-            pool.status === 'active' && // S'assurer que seules les cagnottes actives sont affichées
-            pool.visibility === 'public' && // S'assurer que seules les cagnottes publiques sont affichées
-            pool.verified === true; // Uniquement les cagnottes vérifiées
-        });
+            return pool &&
+              isValidId &&
+              pool.name &&
+              pool.name.trim() !== '' &&
+              pool.settings &&
+              typeof pool.settings.target_amount === 'number' &&
+              pool.settings.target_amount > 0 &&
+              typeof pool.current_amount === 'number' &&
+              pool.current_amount >= 0 &&
+              pool.currency &&
+              pool.status === 'active' && // S'assurer que seules les cagnottes actives sont affichées
+              pool.visibility === 'public' && // S'assurer que seules les cagnottes publiques sont affichées
+              (pool.verified === true || pool.verification_status === 'true'); // Uniquement les cagnottes vérifiées
+          })
+          // Trier par date de création décroissante (les plus récentes en premier)
+          .sort((a: any, b: any) => {
+            const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return dateB - dateA; // Décroissant
+          });
 
 
         // Le backend filtre maintenant les documents invalides

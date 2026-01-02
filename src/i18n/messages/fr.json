@@ -46,7 +46,7 @@
     "subtitle": "La plateforme qui modernise la solidarité financière. Fédérez votre communauté, automatisez vos fonds partagés et donnez vie à vos ambitions collectives plus rapidement.",
     "download": "Télécharger l'app",
     "viewDashboard": "Commencer maintenant",
-    "viewDashboardLink": "${NEXT_PUBLIC_DASHBOARD_URL || 'https://cocoti.app'}/fr",
+    "viewDashboardLink": "${NEXT_PUBLIC_SITE_URL || 'https://cocoti.app'}/fr",
     "apps": [
       {
         "store": "App Store",
